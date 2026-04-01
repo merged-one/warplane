@@ -14,5 +14,9 @@
     "build": "tsc -b",
     "start": "node dist/index.js",
     "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^4.3.6"
   }
 }

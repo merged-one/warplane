@@ -22,9 +22,12 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "dev": "pnpm --filter @warplane/api run dev",
+    "docs:dev": "pnpm --filter @warplane/docs-site run dev",
+    "docs:build": "pnpm --filter @warplane/docs-site run build",
     "demo:day1": "bash scripts/demo-day1.sh",
-    "docs:llms": "bash scripts/docs-llms.sh",
+    "docs:llms": "node scripts/generate-llms.mjs",
     "ai:pack": "bash scripts/ai-pack.sh",
+    "ai:pack:docs": "bash scripts/ai-pack.sh docs",
     "mcp:docs": "pnpm --filter @warplane/docs-mcp run start"
   },
   "devDependencies": {

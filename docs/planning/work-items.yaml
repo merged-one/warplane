@@ -93,12 +93,24 @@ work_items:
     dependencies: []
     milestone: m1
     acceptance_criteria:
-      - Go module compiles
+      - Go module compiles with Ginkgo/Gomega
       - Smoke test passes
+      - E2E suite gated by RUN_E2E env var
+      - L1TestInfo and NetworkInfo types defined
+      - CreateNetworkWithTeleporter helper scaffolded
+      - Artifact management writes network.json
+      - make e2e-compile passes without Avalanche binaries
+      - Unit tests for types and artifacts pass
     files_expected:
       - harness/tmpnet/main.go
       - harness/tmpnet/main_test.go
       - harness/tmpnet/go.mod
+      - harness/tmpnet/teleporter_suite_test.go
+      - harness/tmpnet/pkg/harness/types.go
+      - harness/tmpnet/pkg/harness/network.go
+      - harness/tmpnet/pkg/harness/artifacts.go
+      - harness/tmpnet/README.md
+      - docs/runbooks/full-e2e.md
 
   - id: WP-008
     title: CLI with ping command
@@ -212,6 +224,37 @@ work_items:
       - RELEASE.md
       - docs/planning/working-agreement.md
 
+  - id: WP-014
+    title: Agentic documentation system
+    status: done
+    priority: p1
+    owner: unassigned
+    dependencies: [WP-006]
+    milestone: m1
+    acceptance_criteria:
+      - VitePress docs site has full navigation (Product, Architecture, Planning, ADRs, API, CLI, Runbooks)
+      - llms.txt and llms-full.txt generate deterministically
+      - docs/ai/context-map.json indexes important files
+      - MCP docs server builds and runs with resources, prompts, and tools
+      - AGENTS.md documents repo conventions for coding agents
+      - docs/ai/ has prompting guide, repo map, MCP usage, repomix guide
+      - repomix.config.json and ai:pack scripts work
+    files_expected:
+      - AGENTS.md
+      - llms.txt
+      - llms-full.txt
+      - repomix.config.json
+      - scripts/generate-llms.mjs
+      - docs/ai/README.md
+      - docs/ai/context-map.json
+      - docs/ai/prompting-guide.md
+      - docs/ai/repo-map.md
+      - docs/ai/mcp-usage.md
+      - docs/ai/repomix.md
+      - packages/docs-mcp/src/index.ts
+      - packages/docs-mcp/README.md
+      - apps/docs/.vitepress/config.ts
+
   # --- Milestone 2 items (backlog) ---
 
   - id: WP-100
@@ -274,5 +317,9 @@ work_items:
     milestone: m2
     acceptance_criteria:
       - make e2e runs real tmpnet-based tests
+      - CreateNetworkWithTeleporter uses real tmpnet API
+      - Teleporter contracts deployed on both L1s
+      - Cross-chain send/receive scenario passes
     files_expected:
-      - harness/tmpnet/e2e_test.go
+      - harness/tmpnet/teleporter_suite_test.go
+      - harness/tmpnet/pkg/harness/network.go

@@ -1,0 +1,49 @@
+{
+  "output": {
+    "filePath": "repomix-output.txt",
+    "style": "markdown",
+    "showLineNumbers": true,
+    "removeComments": false,
+    "removeEmptyLines": false
+  },
+  "include": [
+    "README.md",
+    "AGENTS.md",
+    "CONTRIBUTING.md",
+    "package.json",
+    "tsconfig.json",
+    "tsconfig.base.json",
+    "Makefile",
+    "packages/*/src/**/*.ts",
+    "packages/*/package.json",
+    "apps/api/src/**/*.ts",
+    "apps/web/src/**/*.tsx",
+    "apps/web/src/**/*.ts",
+    "docs/**/*.md",
+    "docs/**/*.yaml",
+    "docs/ai/**/*.json",
+    "scripts/*.mjs",
+    "scripts/*.sh",
+    "harness/tmpnet/main.go",
+    "harness/tmpnet/main_test.go"
+  ],
+  "ignore": {
+    "useGitignore": true,
+    "useDefaultPatterns": true,
+    "customPatterns": [
+      "node_modules/**",
+      "dist/**",
+      ".git/**",
+      "pnpm-lock.yaml",
+      ".env*",
+      "apps/docs/.vitepress/cache/**",
+      "apps/docs/.vitepress/dist/**",
+      "**/*.tsbuildinfo",
+      "llms.txt",
+      "llms-full.txt",
+      "repomix-output*.txt",
+      "coverage/**",
+      "*.log"
+    ]
+  }
+}

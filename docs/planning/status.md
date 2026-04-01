@@ -38,13 +38,22 @@ system. All code deliverables are complete. Planning and governance artifacts ar
 ## Harness
 
 - [x] Go tmpnet module compiles and has smoke test
+- [x] Ginkgo/Gomega E2E suite with RUN_E2E gate
+- [x] L1TestInfo and NetworkInfo types in pkg/harness
+- [x] CreateNetworkWithTeleporter helper (scaffold — real tmpnet wiring in M2)
+- [x] Artifact management: writes `artifacts/network/network.json`
+- [x] Unit tests for types, URL builders, and artifact round-trip
+- [x] `make e2e-compile` target for compile-only checks
+- [x] `make e2e` target for full E2E runs
+- [x] `docs/runbooks/full-e2e.md` with prerequisites and fallback story
+- [x] `harness/tmpnet/README.md` with structure and env vars
 
 ## CI / Scripts
 
 - [x] `demo:day1` script
 - [x] `docs:llms` script
 - [x] `ai:pack` script
-- [x] Makefile with bootstrap, build, test, check targets
+- [x] Makefile with bootstrap, build, test, check, e2e-compile, e2e targets
 
 ## Planning and tracking
 
@@ -77,6 +86,19 @@ system. All code deliverables are complete. Planning and governance artifacts ar
 - [x] SECURITY.md with disclosure process
 - [x] RELEASE.md with versioning and release steps
 - [x] CONTRIBUTING.md (existing, updated cross-links)
+
+## Documentation system
+
+- [x] VitePress docs site with full navigation (Product, Architecture, Planning, ADRs, API, CLI, Runbooks, AI)
+- [x] AI docs section in VitePress with agents-md, prompting-guide, repo-map, MCP, repomix, llms-txt pages
+- [x] `llms.txt` and `llms-full.txt` generated deterministically from docs structure
+- [x] `docs/ai/context-map.json` machine-readable file index (deterministic, no date field)
+- [x] `scripts/generate-llms.mjs` deterministic generation script
+- [x] MCP docs server (`@warplane/docs-mcp`) with resources, prompts, and tools
+- [x] `AGENTS.md` with repo conventions for coding agents
+- [x] `docs/ai/` directory with prompting guide, repo map, MCP usage, repomix guide
+- [x] `repomix.config.json` (full) and `repomix-docs.config.json` (docs-only)
+- [x] `ai:pack` and `ai:pack:docs` scripts with repomix config support
 
 ## Backlog (deferred to M2+)
 

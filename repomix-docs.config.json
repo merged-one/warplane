@@ -1,0 +1,32 @@
+{
+  "output": {
+    "filePath": "repomix-docs-output.txt",
+    "style": "markdown",
+    "showLineNumbers": false,
+    "removeComments": false,
+    "removeEmptyLines": false
+  },
+  "include": [
+    "README.md",
+    "AGENTS.md",
+    "CONTRIBUTING.md",
+    "docs/**/*.md",
+    "docs/**/*.yaml",
+    "docs/ai/**/*.json",
+    "apps/docs/**/*.md",
+    "packages/docs-mcp/README.md"
+  ],
+  "ignore": {
+    "useGitignore": true,
+    "useDefaultPatterns": true,
+    "customPatterns": [
+      "node_modules/**",
+      "dist/**",
+      ".git/**",
+      "apps/docs/.vitepress/cache/**",
+      "apps/docs/.vitepress/dist/**",
+      "repomix-output*.txt",
+      "repomix-docs-output*.txt"
+    ]
+  }
+}

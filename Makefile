@@ -1,4 +1,4 @@
-.PHONY: bootstrap build test check demo-day1 e2e clean
+.PHONY: bootstrap build test check demo-day1 e2e e2e-compile clean
 
 bootstrap:
 	pnpm install
@@ -15,12 +15,21 @@ test:
 check:
 	pnpm run check
 
+# Compile-only check for the Go E2E harness (no binaries required).
+e2e-compile:
+	cd harness/tmpnet && go test -run ^$$ -count=0 ./...
+	cd harness/tmpnet && go vet ./...
+	@echo "e2e-compile: harness compiles and passes vet"
+
+# Full E2E run — requires AvalancheGo and subnet-evm binaries.
+# See docs/runbooks/full-e2e.md for prerequisites.
+e2e:
+	cd harness/tmpnet && RUN_E2E=1 go test -v -timeout 10m ./...
+
 demo-day1:
 	bash scripts/demo-day1.sh
-
-e2e:
-	@echo "e2e: not yet wired — see docs/planning/backlog.md"
 
 clean:
 	pnpm -r run clean
 	rm -rf node_modules
+	rm -rf harness/tmpnet/artifacts

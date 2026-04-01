@@ -1,0 +1,1446 @@
+# Warplane — Full Documentation Context
+
+> Complete documentation for LLM consumption. Generated deterministically from source docs.
+
+---
+## File: README.md
+
+# Warplane
+
+**Interchain Control Plane for Avalanche L1s**
+
+Observe, manage, and orchestrate Avalanche L1 subnets from a single pane of glass.
+
+## Repo layout
+
+```
+apps/
+  api/          Fastify API server — chain status, lifecycle operations
+  web/          React + Vite dashboard
+  docs/         VitePress documentation site
+packages/
+  domain/       Core types and domain logic (ChainId, Subnet, HealthStatus)
+  storage/      Persistence interfaces for chain state and metrics
+  ingest/       Data ingestion pipeline — polls Avalanche nodes
+  cli/          CLI tool for managing and monitoring L1s
+  docs-mcp/     MCP server exposing docs for LLM consumption
+harness/
+  tmpnet/       Go harness for spinning up temporary Avalanche networks (e2e)
+docs/
+  planning/     Roadmap, work items, status, risk register
+  product/      Product one-pager
+  decisions/    Architecture Decision Records (MADR)
+scripts/        Build, demo, and AI helper scripts
+.github/        Issue templates, PR template, CI workflows
+```
+
+## Milestone 1 goal
+
+Ship a working monorepo skeleton with:
+- Domain types modelling Avalanche L1 chains and subnets
+- A Fastify API with `/healthz` and `/api/v1/chains`
+- A React dashboard shell
+- A VitePress docs site
+- A Go test harness for tmpnet integration
+- CI-ready build, test, and lint pipelines
+
+## Quick start
+
+```bash
+# Prerequisites: Node >= 20, pnpm >= 10, Go >= 1.22
+make bootstrap   # install all deps
+make build        # build everything
+make test         # run all tests
+make check        # lint + typecheck
+```
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Start the API server in dev mode |
+| `pnpm demo:day1` | Run the Milestone 1 demo |
+| `pnpm docs:llms` | Bundle docs for LLM consumption |
+| `pnpm ai:pack` | Generate AI context pack |
+| `pnpm mcp:docs` | Start the docs MCP server |
+
+## Planning and governance
+
+| Document | Purpose |
+|----------|---------|
+| [Product one-pager](docs/product/one-pager.md) | What Warplane is and why |
+| [Roadmap](docs/planning/roadmap.md) | Milestone breakdown and timeline |
+| [Work items](docs/planning/work-items.yaml) | Machine-readable task tracking |
+| [Status](docs/planning/status.md) | Current milestone progress |
+| [Risk register](docs/planning/risk-register.md) | Known risks and mitigations |
+| [Decision log](docs/decisions/README.md) | Architecture Decision Records |
+| [Working agreement](docs/planning/working-agreement.md) | Coding and review rules |
+| [Contributing](CONTRIBUTING.md) | How to contribute |
+| [Security](SECURITY.md) | Vulnerability disclosure process |
+| [Release process](RELEASE.md) | Versioning and release steps |
+
+## License
+
+Apache-2.0 — see [LICENSE](LICENSE).
+
+---
+## File: AGENTS.md
+
+# AGENTS.md — Warplane
+
+> Conventions and context for coding agents working in this repo.
+
+## What is Warplane?
+
+An interchain control plane for Avalanche L1s. TypeScript + Go monorepo providing unified observability, lifecycle management, and cross-chain orchestration for subnet operators.
+
+## Repo Structure
+
+```
+apps/
+  api/          Fastify REST API server (@warplane/api)
+  web/          React + Vite dashboard (@warplane/web)
+  docs/         VitePress documentation site (@warplane/docs-site)
+packages/
+  domain/       Core types: ChainId, Subnet, HealthStatus, ChainStatus (@warplane/domain)
+  storage/      Persistence interfaces (@warplane/storage)
+  ingest/       Data ingestion pipeline (@warplane/ingest)
+  cli/          CLI tool (@warplane/cli)
+  docs-mcp/     MCP server for docs (@warplane/docs-mcp)
+harness/
+  tmpnet/       Go test harness for Avalanche tmpnet
+docs/
+  planning/     Roadmap, status, work-items.yaml, backlog, risk-register
+  decisions/    Architecture Decision Records (MADR format)
+  product/      Product one-pager
+  ai/           AI-facing docs, context map, prompting guide
+scripts/        Build, demo, and generation scripts
+```
+
+## Key Commands
+
+| Command | Purpose |
+|---------|---------|
+| `make bootstrap` | Install all dependencies (pnpm + Go) |
+| `make build` | Build all packages |
+| `make test` | Run all tests (vitest + Go) |
+| `make check` | Lint + typecheck |
+| `pnpm dev` | Start API server in dev mode |
+| `pnpm demo:day1` | Run Milestone 1 demo |
+| `pnpm docs:dev` | Start docs site dev server |
+| `pnpm docs:build` | Build docs site |
+| `pnpm docs:llms` | Generate llms.txt, llms-full.txt, context-map.json |
+| `pnpm ai:pack` | Generate full AI context bundle (source + docs) |
+| `pnpm ai:pack:docs` | Generate docs-only AI context bundle |
+| `pnpm mcp:docs` | Start docs MCP server (stdio) |
+
+## Quality Rules
+
+Before any PR:
+
+1. `pnpm build` must pass
+2. `pnpm test` must pass
+3. `pnpm run check` (lint + typecheck) must pass
+4. New code should have tests
+5. No placeholder TODOs without a backlog entry in `docs/planning/backlog.md`
+6. Every package must have a `description` in its `package.json`
+
+## TypeScript Conventions
+
+- Strict mode everywhere (`"strict": true`)
+- `readonly` for interface properties that shouldn't be mutated
+- Explicit return types on exported functions
+- No `any` — use `unknown` and narrow
+- `node:` prefix for Node built-in imports
+- `workspace:*` protocol for internal dependencies
+- Composite project references (`tsc -b`)
+
+## Go Conventions
+
+- Standard `gofmt` and `go vet`
+- `_test.go` suffix for test files
+- The harness wraps tmpnet only — no application logic
+
+## Commit Messages
+
+Imperative mood: `feat: Add chain polling`, not `feat: Added chain polling`.
+
+Types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `ci`
+
+## ADRs
+
+Non-trivial architecture decisions get an ADR:
+
+```bash
+node scripts/new-adr.mjs "Title of decision"
+```
+
+ADRs live in `docs/decisions/` using Structured MADR format. They are validated in CI.
+
+## Work Tracking
+
+- `docs/planning/work-items.yaml` — machine-readable tasks
+- `docs/planning/status.md` — milestone progress
+- `docs/planning/backlog.md` — deferred items
+- `docs/planning/risk-register.md` — known risks
+
+## MCP Server
+
+The docs MCP server (`@warplane/docs-mcp`) exposes documentation over stdio:
+
+```bash
+pnpm mcp:docs
+```
+
+See `packages/docs-mcp/README.md` for resources, prompts, and tools.
+
+## AI Context
+
+- `llms.txt` — LLM discovery file with sections and links (generated)
+- `llms-full.txt` — full documentation content for LLM consumption (generated)
+- `docs/ai/context-map.json` — machine-readable file index with priorities (generated)
+- `docs/ai/prompting-guide.md` — effective prompt patterns for this repo
+- `docs/ai/repo-map.md` — machine-friendly repo structure map
+- `docs/ai/mcp-usage.md` — MCP server setup and usage guide
+- `docs/ai/repomix.md` — Repomix context packing documentation
+- `repomix.config.json` — full bundle config (source + docs)
+- `repomix-docs.config.json` — docs-only bundle config
+
+## Current State
+
+- **Milestone 1** is complete (monorepo skeleton, domain types, API, web shell, docs, Go harness)
+- Data is fixture-based (no real Avalanche RPC calls yet)
+- No CI pipeline yet (M2 priority)
+- See `docs/planning/status.md` for full details
+
+---
+## File: docs/product/one-pager.md
+
+# Warplane -- Product One-Pager
+
+## Problem
+
+Avalanche L1 operators manage multiple subnets and chains across fragmented tooling.
+There is no unified control plane to observe health, trigger lifecycle operations, or
+orchestrate cross-chain workflows. Operators resort to ad-hoc scripts, manual RPC calls,
+and separate dashboards per chain.
+
+## Vision
+
+A single pane of glass for Avalanche L1 management: observe chain health, manage subnet
+lifecycles, and orchestrate cross-chain operations from one interface (web, CLI, or API).
+
+## Target users
+
+| Persona | Need |
+|---------|------|
+| **L1 Operator** | Real-time health monitoring, alerting, lifecycle automation |
+| **Subnet Developer** | Fast local dev loops, fixture-based testing, deployment tooling |
+| **Platform Team** | Multi-chain visibility, governance, compliance dashboards |
+
+## Key capabilities (Milestone 1 -- Day-1 MVP)
+
+1. **Domain model** -- Typed representation of chains, subnets, and health states
+2. **Ingest pipeline** -- Poll Avalanche nodes for chain status (fixture data in M1)
+3. **REST API** -- `/healthz`, `/api/v1/chains` for programmatic access
+4. **Web dashboard** -- React shell showing chain status
+5. **CLI** -- `warplane ping` for basic connectivity checks
+6. **Docs site** -- VitePress-powered documentation
+7. **Test harness** -- Go-based tmpnet integration for e2e testing
+
+## Success metrics
+
+| Metric | M1 Target |
+|--------|-----------|
+| Build + test pass rate | 100% on CI |
+| Domain model coverage | Core types for Chain, Subnet, HealthStatus |
+| API endpoints | `/healthz` + `/api/v1/chains` responding |
+| e2e harness | Go tmpnet compiles and has smoke test |
+
+## Risks
+
+- Avalanche RPC API changes could break ingest pipeline
+- tmpnet stability is experimental; e2e tests may be flaky
+- Monorepo tooling (pnpm workspaces + Go modules) adds build complexity
+
+## Non-goals (Milestone 1)
+
+- Production deployment or hosting
+- Real RPC polling (fixture data only)
+- Authentication or authorization
+- Multi-tenant support
+
+## Architecture
+
+See [ADR-0002](../decisions/0002-use-monorepo-with-ts-and-go.md) for monorepo rationale.
+
+```
+┌─────────┐  ┌─────────┐  ┌─────────┐
+│  Web UI │  │   CLI   │  │ Docs MCP│
+└────┬────┘  └────┬────┘  └────┬────┘
+     │            │            │
+     └──────┬─────┘            │
+            ▼                  │
+       ┌─────────┐             │
+       │   API   │◄────────────┘
+       └────┬────┘
+            │
+     ┌──────┴──────┐
+     ▼             ▼
+┌─────────┐  ┌─────────┐
+│ Domain  │  │ Storage │
+└────┬────┘  └─────────┘
+     │
+     ▼
+┌─────────┐
+│ Ingest  │──► Avalanche Nodes
+└─────────┘
+```
+
+## Links
+
+- [Roadmap](../planning/roadmap.md)
+- [Work items](../planning/work-items.yaml)
+- [Decision log](../decisions/README.md)
+
+---
+## File: docs/planning/roadmap.md
+
+# Warplane Roadmap
+
+## Milestone 1 -- Monorepo Skeleton & Day-1 MVP
+
+**Goal:** Ship a working monorepo with domain types, API shell, web dashboard, docs site,
+Go test harness, and CI-ready pipelines.
+
+**Status:** In progress -- see [status.md](status.md)
+
+### Deliverables
+
+| # | Deliverable | Package(s) | Status |
+|---|-------------|------------|--------|
+| 1 | Core domain types | `packages/domain` | Done |
+| 2 | Storage interfaces | `packages/storage` | Done |
+| 3 | Ingest pipeline stub | `packages/ingest` | Done |
+| 4 | Fastify API (`/healthz`, `/api/v1/chains`) | `apps/api` | Done |
+| 5 | React dashboard shell | `apps/web` | Done |
+| 6 | VitePress docs site | `apps/docs` | Done |
+| 7 | Go tmpnet harness | `harness/tmpnet` | Done |
+| 8 | CLI with `ping` command | `packages/cli` | Done |
+| 9 | Build, test, lint pipelines | root config | Done |
+| 10 | Planning, ADR, and governance system | `docs/`, `.github/` | In progress |
+
+### Key dates
+
+| Event | Target |
+|-------|--------|
+| M1 code complete | Week of 2026-03-31 |
+| M1 governance & docs complete | Week of 2026-04-07 |
+| M1 demo | TBD |
+
+## Milestone 2 -- Real Data & CI (planned)
+
+- CI pipeline (GitHub Actions) for lint, test, build
+- Real Avalanche RPC polling in `@warplane/ingest`
+- SQLite/Postgres storage adapter
+- Docker Compose for local dev
+- e2e test wiring with tmpnet
+
+## Milestone 3 -- Operations & Observability (planned)
+
+- CLI commands: status, deploy, logs, config
+- Web dashboard data fetching and state management
+- MCP docs server with MCP SDK
+- Alerting and notification system
+- Metrics and observability
+
+## Links
+
+- [Work items (machine-readable)](work-items.yaml)
+- [Risk register](risk-register.md)
+- [Decision log](../decisions/README.md)
+- [Product one-pager](../product/one-pager.md)
+
+---
+## File: docs/planning/status.md
+
+# Milestone 1 -- Status
+
+Last updated: 2026-04-01
+
+## Summary
+
+Milestone 1 delivers the monorepo skeleton, day-1 MVP code, and the planning/governance
+system. All code deliverables are complete. Planning and governance artifacts are now in place.
+
+## Monorepo skeleton
+
+- [x] `pnpm install` works
+- [x] `pnpm build` works
+- [x] `pnpm test` works (3 tests, 2 files)
+- [x] `go test ./...` works in `harness/tmpnet`
+- [x] Typecheck passes (`tsc -b`)
+- [x] README documents repo layout and M1 goal
+
+## Domain model
+
+- [x] Core types: ChainId, Subnet, HealthStatus, ChainStatus
+- [x] Storage interfaces defined
+- [x] Ingest pipeline stub
+
+## API
+
+- [x] Fastify server with `/healthz`
+- [x] `/api/v1/chains` endpoint stub
+
+## Web dashboard
+
+- [x] React + Vite app shell
+
+## Docs
+
+- [x] VitePress site with intro page
+
+## Harness
+
+- [x] Go tmpnet module compiles and has smoke test
+
+## CI / Scripts
+
+- [x] `demo:day1` script
+- [x] `docs:llms` script
+- [x] `ai:pack` script
+- [x] Makefile with bootstrap, build, test, check targets
+
+## Planning and tracking
+
+- [x] Product one-pager (`docs/product/one-pager.md`)
+- [x] Roadmap with milestone breakdown (`docs/planning/roadmap.md`)
+- [x] Machine-readable work items (`docs/planning/work-items.yaml`)
+- [x] Risk register (`docs/planning/risk-register.md`)
+- [x] Decision index (`docs/planning/decision-index.md`)
+- [x] Working agreement (`docs/planning/working-agreement.md`)
+
+## Architecture decisions
+
+- [x] ADR system with Structured MADR template
+- [x] ADR-0001: Use Structured MADR
+- [x] ADR-0002: Use monorepo with TypeScript and Go
+- [x] ADR-0003: Fixture-first approach for Day-1 MVP
+- [x] `new-adr.mjs` scaffolding script
+- [x] ADR validation CI workflow
+
+## GitHub contribution flow
+
+- [x] Issue templates: feature, bug, task (YAML forms)
+- [x] PR template with checklist
+- [x] Label definitions (`.github/labels.json`)
+- [x] Label sync script (`scripts/sync-labels.mjs`)
+
+## Repo governance
+
+- [x] CODEOWNERS
+- [x] SECURITY.md with disclosure process
+- [x] RELEASE.md with versioning and release steps
+- [x] CONTRIBUTING.md (existing, updated cross-links)
+
+## Documentation system
+
+- [x] VitePress docs site with full navigation (Product, Architecture, Planning, ADRs, API, CLI, Runbooks, AI)
+- [x] AI docs section in VitePress with agents-md, prompting-guide, repo-map, MCP, repomix, llms-txt pages
+- [x] `llms.txt` and `llms-full.txt` generated deterministically from docs structure
+- [x] `docs/ai/context-map.json` machine-readable file index (deterministic, no date field)
+- [x] `scripts/generate-llms.mjs` deterministic generation script
+- [x] MCP docs server (`@warplane/docs-mcp`) with resources, prompts, and tools
+- [x] `AGENTS.md` with repo conventions for coding agents
+- [x] `docs/ai/` directory with prompting guide, repo map, MCP usage, repomix guide
+- [x] `repomix.config.json` (full) and `repomix-docs.config.json` (docs-only)
+- [x] `ai:pack` and `ai:pack:docs` scripts with repomix config support
+
+## Backlog (deferred to M2+)
+
+See [`backlog.md`](backlog.md) and [`work-items.yaml`](work-items.yaml) for full details.
+
+- CI pipeline (GitHub Actions)
+- Real Avalanche RPC polling
+- Storage implementations
+- Docker Compose
+- e2e test wiring
+
+## Links
+
+- [Roadmap](roadmap.md)
+- [Work items](work-items.yaml)
+- [Risk register](risk-register.md)
+- [Decision log](../decisions/README.md)
+- [Product one-pager](../product/one-pager.md)
+
+---
+## File: docs/planning/working-agreement.md
+
+# Working Agreement
+
+Rules and conventions for contributing to Warplane. See also [CONTRIBUTING.md](../../CONTRIBUTING.md).
+
+## Coding standards
+
+### TypeScript
+
+- Strict mode (`"strict": true`) in all packages
+- Use `readonly` for interface properties that shouldn't be mutated
+- Prefer explicit return types on exported functions
+- No `any` -- use `unknown` and narrow
+- Imports use `node:` prefix for Node built-ins
+
+### Go
+
+- Follow standard Go conventions (`gofmt`, `go vet`)
+- Test files use `_test.go` suffix
+- Keep the harness focused: it wraps tmpnet, nothing else
+
+### General
+
+- No placeholder TODOs without a matching backlog entry
+- Every package has a `description` in its `package.json`
+- Prefer small, focused commits over large batches
+
+## Branching and PRs
+
+- `main` is the default branch; it should always build and pass tests
+- Feature branches: `feat/short-description`
+- Bug fixes: `fix/short-description`
+- Tasks/chores: `chore/short-description`
+- PRs require at least one approval before merge
+- Squash-merge to keep history clean
+- Delete branches after merge
+
+## Commit messages
+
+Imperative mood, concise: "Add chain polling", not "Added chain polling".
+
+Format:
+```
+<type>: <short summary>
+
+<optional body explaining why, not what>
+```
+
+Types: `feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `ci`
+
+## Code review
+
+- Review within 1 business day
+- Focus on: correctness, security, clarity, test coverage
+- Use "Request changes" sparingly -- prefer suggestions
+- Approve if the code meets the quality bar, even if you'd write it differently
+
+## Architecture decisions
+
+- Non-trivial decisions get an ADR: `node scripts/new-adr.mjs "Title"`
+- ADRs are reviewed like code (via PR)
+- Accepted ADRs are binding until superseded
+
+## Planning and tracking
+
+- Work items tracked in `docs/planning/work-items.yaml`
+- Status updated in `docs/planning/status.md` at each milestone boundary
+- Risks reviewed in `docs/planning/risk-register.md`
+
+## Quality bar
+
+Before merging:
+
+1. `make build` passes
+2. `make test` passes
+3. `make check` (lint + typecheck) passes
+4. New code has tests
+5. ADR created if architectural decision was made
+6. PR template checklist is complete
+
+## Links
+
+- [CONTRIBUTING.md](../../CONTRIBUTING.md)
+- [Roadmap](roadmap.md)
+- [Risk register](risk-register.md)
+- [ADR process](../decisions/README.md)
+
+---
+## File: docs/planning/backlog.md
+
+# Backlog — Intentionally Deferred
+
+Items listed here are recognized as needed but explicitly deferred from Milestone 1.
+
+## Infrastructure
+
+- **CI pipeline** (GitHub Actions): lint, test, build matrix for Node + Go
+- **Docker Compose**: local dev environment with API + web + database
+- **e2e test wiring**: `make e2e` currently prints a stub; needs tmpnet integration
+
+## Features
+
+- **Real chain polling**: `@warplane/ingest` returns static data; needs Avalanche RPC client
+- **Storage implementations**: `@warplane/storage` defines interfaces only; needs SQLite/Postgres adapter
+- **CLI commands beyond `ping`**: status, deploy, logs, config
+- **MCP docs server enhancements**: auth, network transports, additional resources (OpenAPI, trace samples), SSE transport
+- **Web dashboard data fetching**: React app is a static shell; needs API client and state management
+
+## Quality
+
+- **ESLint CI enforcement**: config is present but not yet run in CI
+- **Prettier format check in CI**
+- **Test coverage thresholds**
+- **Go linter (golangci-lint) integration**
+
+---
+## File: docs/planning/risk-register.md
+
+# Warplane -- Risk Register
+
+| ID | Risk | Likelihood | Impact | Mitigation | Owner | Status |
+|----|------|-----------|--------|------------|-------|--------|
+| R1 | Avalanche RPC API changes break ingest pipeline | Medium | High | Pin RPC versions; abstract behind interface; fixture-first testing | unassigned | Open |
+| R2 | tmpnet instability causes flaky e2e tests | High | Medium | Isolate e2e from CI gate initially; retry logic; fallback to fixture mode | unassigned | Open |
+| R3 | pnpm + Go monorepo tooling complexity | Medium | Medium | Makefile abstracts common ops; document setup in CONTRIBUTING.md | unassigned | Mitigated |
+| R4 | Scope creep beyond M1 MVP | Medium | High | Strict backlog discipline; work-items.yaml tracks scope; ADRs document decisions | unassigned | Mitigated |
+| R5 | Single-contributor bus factor | High | High | Document decisions via ADRs; automate what can be automated; clear onboarding docs | unassigned | Open |
+| R6 | No CI pipeline yet | High | Medium | M2 priority; local `make check` and `make test` serve as stopgap | unassigned | Open |
+| R7 | Dist artifacts committed to repo | Low | Low | Add to .gitignore once CI builds artifacts; currently needed for demo | unassigned | Accepted |
+
+## Review cadence
+
+Reviewed at each milestone boundary. Update likelihood, impact, and status as the project evolves.
+
+## Links
+
+- [Roadmap](roadmap.md)
+- [Work items](work-items.yaml)
+- [Decision log](../decisions/README.md)
+
+---
+## File: docs/decisions/README.md
+
+# Architecture Decision Records
+
+This directory contains Architecture Decision Records (ADRs) for the Warplane project,
+using [Structured MADR](https://adr.github.io/madr/) format.
+
+## Decisions
+
+| ADR | Title | Status |
+|-----|-------|--------|
+| [0001](0001-use-structured-madr.md) | Use Structured MADR for architecture decisions | Accepted |
+| [0002](0002-use-monorepo-with-ts-and-go.md) | Use monorepo with TypeScript and Go | Accepted |
+| [0003](0003-fixture-first-day1-mvp.md) | Fixture-first approach for Day-1 MVP | Accepted |
+
+## Creating a new ADR
+
+```bash
+node scripts/new-adr.mjs "Title of your decision"
+```
+
+This scaffolds a new ADR from the [Structured MADR template](templates/structured-madr.md),
+assigns the next sequential number, and opens it for editing.
+
+After writing the ADR:
+
+1. Update the table above
+2. Update [`docs/planning/decision-index.md`](../planning/decision-index.md)
+3. Commit with message: `Add ADR-NNNN: Title`
+
+## ADR lifecycle
+
+| Status | Meaning |
+|--------|---------|
+| Proposed | Under discussion, not yet decided |
+| Accepted | Decision made, in effect |
+| Deprecated | Superseded by a later ADR |
+| Superseded | Replaced by another ADR (link to successor) |
+
+## Validation
+
+ADR structure is validated in CI via `.github/workflows/adr-validation.yml`.
+Every ADR file (`docs/decisions/NNNN-*.md`) must contain the required MADR sections.
+
+## Links
+
+- [Decision index](../planning/decision-index.md)
+- [MADR homepage](https://adr.github.io/madr/)
+
+---
+## File: docs/decisions/0001-use-structured-madr.md
+
+# ADR-0001: Use Structured MADR for Architecture Decisions
+
+## Status
+
+Accepted
+
+## Date
+
+2026-04-01
+
+## Context and Problem Statement
+
+The Warplane project needs a lightweight, consistent way to record architecture decisions.
+Decisions should be version-controlled alongside the code, readable by both humans and
+automated tools, and easy to create without heavy process overhead.
+
+## Decision Drivers
+
+- Decisions must be discoverable and searchable in the repo
+- Format should be lightweight enough for a small team
+- Tooling and CI validation should be possible
+- Both human contributors and AI agents will read and write ADRs
+
+## Considered Options
+
+1. Structured MADR (Markdown Any Decision Records)
+2. Unstructured markdown notes in a wiki
+3. ADR Tools (adr-tools shell scripts)
+4. RFCs in a separate repo
+
+## Decision Outcome
+
+Chosen option: "Structured MADR", because it provides a well-defined template that is
+both human-readable and machine-parseable, lives in the repo alongside code, and has
+an active community and ecosystem.
+
+### Consequences
+
+**Good:**
+
+- Consistent structure across all decisions
+- CI-validatable (required sections can be checked)
+- Easy to scaffold with a simple script
+- Widely adopted in the ADR community
+
+**Bad:**
+
+- Template may feel heavy for trivial decisions
+- Requires discipline to keep the index updated
+
+**Neutral:**
+
+- Numbering scheme (0001, 0002, ...) is simple but requires manual coordination
+
+## Pros and Cons of the Options
+
+### Structured MADR
+
+- Good, because it has a clear template with required sections
+- Good, because it is markdown and lives in the repo
+- Good, because it supports CI validation
+- Bad, because the template has many sections for small decisions
+
+### Unstructured markdown notes
+
+- Good, because it is zero-overhead
+- Bad, because inconsistent format makes decisions hard to find and compare
+- Bad, because no CI validation possible
+
+### ADR Tools (adr-tools)
+
+- Good, because it provides CLI tooling out of the box
+- Bad, because it is shell-based and less portable
+- Bad, because the template is less structured than MADR
+
+### RFCs in a separate repo
+
+- Good, because it separates discussion from implementation
+- Bad, because it adds friction and context-switching
+- Bad, because decisions drift from the code they describe
+
+## More Information
+
+- [MADR homepage](https://adr.github.io/madr/)
+- [ADR GitHub organization](https://adr.github.io/)
+
+---
+## File: docs/decisions/0002-use-monorepo-with-ts-and-go.md
+
+# ADR-0002: Use Monorepo with TypeScript and Go
+
+## Status
+
+Accepted
+
+## Date
+
+2026-04-01
+
+## Context and Problem Statement
+
+Warplane spans multiple concerns: a web dashboard, a REST API, a CLI, domain logic,
+data ingestion, storage, documentation, and a Go-based test harness for Avalanche's
+tmpnet. We need to decide on repository structure and language choices.
+
+## Decision Drivers
+
+- Minimize context-switching between repos for related changes
+- TypeScript is the team's primary language for application code
+- Go is required for tmpnet integration (Avalanche SDK is Go-native)
+- Shared types between API, web, CLI, and ingest must stay in sync
+- Build and test must be fast and CI-friendly
+
+## Considered Options
+
+1. Monorepo with pnpm workspaces (TS) + Go module (harness)
+2. Polyrepo -- separate repos per package/app
+3. Monorepo with Nx or Turborepo
+4. All-Go monorepo
+
+## Decision Outcome
+
+Chosen option: "Monorepo with pnpm workspaces + Go module", because it gives us
+shared TypeScript types via workspace protocol, a single CI pipeline, atomic
+cross-package changes, and the Go harness lives cleanly in `harness/tmpnet` with
+its own `go.mod`.
+
+### Consequences
+
+**Good:**
+
+- Atomic changes across domain, API, web, and CLI
+- Single `make build` / `make test` for everything
+- pnpm workspaces handle TS dependency graph efficiently
+- Go module is self-contained and doesn't interfere with Node tooling
+
+**Bad:**
+
+- Two language toolchains (Node + Go) required for full builds
+- Monorepo scale issues if the project grows very large
+- Go module in a subdirectory is slightly non-standard
+
+**Neutral:**
+
+- Makefile serves as the glue between Node and Go build systems
+
+## Pros and Cons of the Options
+
+### Monorepo with pnpm workspaces + Go module
+
+- Good, because shared types stay in sync automatically
+- Good, because single CI pipeline
+- Good, because pnpm is fast and handles workspaces well
+- Bad, because dual toolchain requirement
+
+### Polyrepo
+
+- Good, because each repo has independent CI and versioning
+- Bad, because cross-repo type changes require coordinated releases
+- Bad, because developer context-switching between repos
+
+### Monorepo with Nx or Turborepo
+
+- Good, because advanced caching and task orchestration
+- Bad, because additional tooling complexity for a small team
+- Bad, because Nx/Turborepo don't natively handle Go
+
+### All-Go monorepo
+
+- Good, because single toolchain
+- Bad, because Go is not ideal for web dashboards and docs sites
+- Bad, because the team's primary expertise is TypeScript
+
+## More Information
+
+- [pnpm workspaces](https://pnpm.io/workspaces)
+- [Go modules in subdirectories](https://go.dev/ref/mod)
+
+---
+## File: docs/decisions/0003-fixture-first-day1-mvp.md
+
+# ADR-0003: Fixture-First Approach for Day-1 MVP
+
+## Status
+
+Accepted
+
+## Date
+
+2026-04-01
+
+## Context and Problem Statement
+
+Milestone 1 aims to ship a working monorepo skeleton quickly. The ingest pipeline,
+storage layer, and API need to return data, but integrating with real Avalanche nodes
+and databases adds significant complexity and risk. We need to decide how to handle
+data in the MVP.
+
+## Decision Drivers
+
+- Speed to a working demo is the top priority for M1
+- Real Avalanche RPC integration is complex and error-prone
+- The domain model and API contracts should be validated early
+- e2e testing with tmpnet is not yet wired
+- Contributors should be able to run the full stack without external dependencies
+
+## Considered Options
+
+1. Fixture-first: static/mock data throughout, real integrations in M2
+2. Real data from day one: integrate Avalanche RPC and database immediately
+3. Record-replay: capture real data once, replay in dev/test
+
+## Decision Outcome
+
+Chosen option: "Fixture-first", because it lets us ship a working end-to-end skeleton
+in M1 without external dependencies. The domain types, API contracts, and UI components
+are validated against realistic fixture data. Real integrations are explicitly deferred
+to M2 (tracked in `docs/planning/backlog.md` and `work-items.yaml`).
+
+### Consequences
+
+**Good:**
+
+- Fast iteration on domain model and API contracts
+- Zero external dependencies for local development
+- Clear separation between "shape of the system" (M1) and "real data" (M2)
+- Reduces risk of M1 being blocked by infra issues
+
+**Bad:**
+
+- Fixture data may diverge from real Avalanche responses
+- Some bugs will only surface when real data flows through
+- Risk of fixture code becoming load-bearing if not replaced
+
+**Neutral:**
+
+- Backlog explicitly tracks every fixture-to-real transition
+
+## Pros and Cons of the Options
+
+### Fixture-first
+
+- Good, because zero external dependencies
+- Good, because fast to implement and demo
+- Good, because validates types and contracts
+- Bad, because fixture/real divergence risk
+
+### Real data from day one
+
+- Good, because no fixture/real divergence
+- Bad, because requires Avalanche node access for every developer
+- Bad, because database setup adds onboarding friction
+- Bad, because integration bugs block M1 delivery
+
+### Record-replay
+
+- Good, because data is realistic
+- Good, because no live dependency after recording
+- Bad, because recording infrastructure is its own project
+- Bad, because recordings go stale as APIs evolve
+
+## More Information
+
+- [Backlog of deferred items](../planning/backlog.md)
+- [Work items](../planning/work-items.yaml)
+- [Risk register](../planning/risk-register.md)
+
+---
+## File: CONTRIBUTING.md
+
+# Contributing to Warplane
+
+## Local setup
+
+```bash
+# Clone and bootstrap
+git clone <repo-url> && cd warplane
+make bootstrap
+```
+
+Requirements: Node >= 20, pnpm >= 10, Go >= 1.22.
+
+## Quality bar
+
+Before opening a PR:
+
+1. **Build passes**: `pnpm build` and `cd harness/tmpnet && go build ./...`
+2. **Tests pass**: `pnpm test` and `cd harness/tmpnet && go test ./...`
+3. **Lint + typecheck pass**: `pnpm run check`
+4. **No placeholder TODOs** without a matching entry in `docs/planning/backlog.md`
+5. **Every package has a purpose** documented in its `package.json` description
+
+## Monorepo conventions
+
+- Packages use `workspace:*` protocol for internal dependencies.
+- TypeScript packages use project references (`composite: true`).
+- All TypeScript is strict mode.
+- The root `vitest.config.ts` runs tests across packages and `apps/api`.
+- The `apps/web` and `apps/docs` packages build with Vite/VitePress (no `tsc`).
+
+## Commit style
+
+Use concise, imperative commit messages: "Add chain polling", not "Added chain polling".
+
+---
+## File: packages/domain/src/index.ts
+
+/** Identifies a chain by its blockchain ID on the Avalanche Primary Network. */
+export interface ChainId {
+  readonly blockchainId: string;
+}
+
+/** Represents an Avalanche L1 subnet with its associated chains. */
+export interface Subnet {
+  readonly subnetId: string;
+  readonly name: string;
+  readonly chains: ChainId[];
+}
+
+/** Health status of a monitored chain. */
+export type HealthStatus = "healthy" | "degraded" | "down" | "unknown";
+
+/** Snapshot of a chain's current operational state. */
+export interface ChainStatus {
+  readonly chain: ChainId;
+  readonly health: HealthStatus;
+  readonly blockHeight: bigint;
+  readonly timestamp: Date;
+}
+
+/** Creates a ChainId from a blockchain ID string. */
+export function chainId(blockchainId: string): ChainId {
+  if (!blockchainId) throw new Error("blockchainId must be non-empty");
+  return { blockchainId };
+}
+
+---
+## File: packages/storage/src/index.ts
+
+import type { ChainId, ChainStatus } from "@warplane/domain";
+
+/** Read-side interface for chain status storage. */
+export interface ChainStatusReader {
+  get(chain: ChainId): Promise<ChainStatus | undefined>;
+}
+
+/** Write-side interface for chain status storage. */
+export interface ChainStatusWriter {
+  put(status: ChainStatus): Promise<void>;
+}
+
+/** Combined storage interface. */
+export type ChainStatusStore = ChainStatusReader & ChainStatusWriter;
+
+---
+## File: packages/ingest/src/index.ts
+
+import type { ChainId, ChainStatus, HealthStatus } from "@warplane/domain";
+
+/** Polls an Avalanche node for chain health. */
+export async function pollChainHealth(chain: ChainId): Promise<ChainStatus> {
+  const health: HealthStatus = "unknown";
+  return {
+    chain,
+    health,
+    blockHeight: 0n,
+    timestamp: new Date(),
+  };
+}
+
+---
+## File: apps/api/src/index.ts
+
+import Fastify from "fastify";
+
+const app = Fastify({ logger: true });
+
+app.get("/healthz", async () => ({ status: "ok" }));
+
+app.get("/api/v1/chains", async () => ({
+  chains: [],
+  message: "No chains registered yet",
+}));
+
+const port = Number(process.env["PORT"] ?? 3100);
+
+try {
+  await app.listen({ port, host: "0.0.0.0" });
+} catch (err) {
+  app.log.error(err);
+  process.exit(1);
+}
+
+---
+## File: packages/cli/src/index.ts
+
+#!/usr/bin/env node
+
+import { chainId } from "@warplane/domain";
+
+const args = process.argv.slice(2);
+
+if (args[0] === "ping") {
+  const id = chainId(args[1] ?? "default-chain");
+  console.log(`warplane: pinging chain ${id.blockchainId}`);
+} else {
+  console.log("warplane CLI — Interchain Control Plane for Avalanche L1s");
+  console.log("Usage: warplane ping <chain-id>");
+}
+
+---
+## File: docs/ai/README.md
+
+# AI-Facing Documentation
+
+This directory contains documentation optimized for AI agents and LLMs working with the Warplane codebase.
+
+## Files
+
+| File | Purpose |
+|------|---------|
+| [context-map.json](context-map.json) | Machine-readable index of important files with roles and priorities |
+| [prompting-guide.md](prompting-guide.md) | How to prompt effectively about this repo |
+| [repo-map.md](repo-map.md) | Detailed repo structure and package descriptions |
+| [mcp-usage.md](mcp-usage.md) | How to use the docs MCP server |
+| [repomix.md](repomix.md) | How to use repomix for AI context packing |
+
+## Quick Context Loading
+
+For LLMs that support llms.txt:
+- `llms.txt` (repo root) — discovery file with links and descriptions
+- `llms-full.txt` (repo root) — full documentation content
+
+For MCP-capable agents:
+- Run `pnpm mcp:docs` to start the docs MCP server
+- See [mcp-usage.md](mcp-usage.md) for configuration
+
+For repomix bundles:
+- Run `pnpm ai:pack` to generate a context bundle
+- See [repomix.md](repomix.md) for details
+
+## Regenerating Artifacts
+
+```bash
+pnpm docs:llms          # regenerate llms.txt, llms-full.txt, context-map.json
+pnpm ai:pack            # regenerate AI context bundle
+pnpm ai:pack:docs       # pack docs only
+```
+
+---
+## File: docs/ai/prompting-guide.md
+
+# Prompting Guide for Warplane
+
+How to get the best results when asking an AI agent about this codebase.
+
+## Loading Context
+
+Before asking questions, load relevant context:
+
+1. **Start with AGENTS.md** — contains repo conventions, commands, and quality rules
+2. **Load llms.txt** — for a discovery overview of all documentation
+3. **Load specific files** from `docs/ai/context-map.json` based on your task
+
+## Effective Prompts by Task
+
+### Understanding the Project
+
+> Read AGENTS.md and docs/product/one-pager.md. What is Warplane and what problem does it solve?
+
+### Working on Domain Types
+
+> Read packages/domain/src/index.ts and packages/storage/src/index.ts. I want to add a new type for validator nodes. Show me how it should fit the existing pattern.
+
+### Planning Work
+
+> Read docs/planning/roadmap.md, docs/planning/work-items.yaml, and docs/planning/backlog.md. Generate work items for adding a SQLite storage adapter.
+
+### Writing an ADR
+
+> Read docs/decisions/0001-use-structured-madr.md as an example. Write an ADR for switching from Fastify to Hono.
+
+### Understanding Build System
+
+> Read package.json, Makefile, and tsconfig.json. Explain the build pipeline and how packages depend on each other.
+
+### Reviewing a Change
+
+> Read CONTRIBUTING.md and docs/planning/working-agreement.md. Review this PR against the quality bar.
+
+## MCP Prompts
+
+If connected via the docs MCP server, use built-in prompts:
+
+- `summarize-adr` — summarize any ADR by slug
+- `explain-trace` — explain the domain/trace model
+- `generate-task-plan` — generate tasks from a goal
+- `review-runbook` — review a runbook for quality
+
+## Tips
+
+- The repo uses **fixture data** in M1 — no real Avalanche nodes needed
+- TypeScript is **strict mode** everywhere — no `any`
+- Internal deps use `workspace:*` protocol
+- Every non-trivial decision should be an ADR
+- Work items go in `docs/planning/work-items.yaml`
+
+---
+## File: docs/ai/repo-map.md
+
+# Repo Map
+
+Machine-friendly map of the Warplane repository structure.
+
+## Packages
+
+### apps/api — @warplane/api
+- **Role:** Fastify REST API server
+- **Entry:** `src/index.ts`
+- **Endpoints:** `/healthz`, `/api/v1/chains`
+- **Depends on:** `@warplane/domain`
+- **Test:** `src/index.test.ts`
+
+### apps/web — @warplane/web
+- **Role:** React + Vite dashboard shell
+- **Entry:** `src/main.tsx`
+- **Component:** `src/App.tsx`
+- **Build:** Vite (not tsc)
+
+### apps/docs — @warplane/docs-site
+- **Role:** VitePress documentation site
+- **Config:** `.vitepress/config.ts`
+- **Home:** `index.md`
+- **Build:** VitePress
+
+### packages/domain — @warplane/domain
+- **Role:** Core domain types and validation
+- **Entry:** `src/index.ts`
+- **Exports:** `ChainId`, `Subnet`, `HealthStatus`, `ChainStatus`, `chainId()`
+- **Test:** `src/index.test.ts`
+
+### packages/storage — @warplane/storage
+- **Role:** Persistence interfaces
+- **Entry:** `src/index.ts`
+- **Exports:** `ChainStatusReader`, `ChainStatusWriter`, `ChainStatusStore`
+- **Depends on:** `@warplane/domain`
+
+### packages/ingest — @warplane/ingest
+- **Role:** Data ingestion pipeline (fixture data in M1)
+- **Entry:** `src/index.ts`
+- **Exports:** `pollChainHealth()`
+- **Depends on:** `@warplane/domain`
+
+### packages/cli — @warplane/cli
+- **Role:** Command-line tool
+- **Entry:** `src/index.ts`
+- **Commands:** `ping`
+- **Depends on:** `@warplane/domain`
+
+### packages/docs-mcp — @warplane/docs-mcp
+- **Role:** MCP server for documentation access
+- **Entry:** `src/index.ts`
+- **Transport:** stdio
+- **Dependencies:** `@modelcontextprotocol/sdk`, `zod`
+
+### harness/tmpnet
+- **Role:** Go test harness for Avalanche tmpnet
+- **Entry:** `main.go`
+- **Test:** `main_test.go`
+- **Language:** Go
+
+## Documentation
+
+| Path | Content |
+|------|---------|
+| `docs/planning/roadmap.md` | Milestone breakdown |
+| `docs/planning/status.md` | Current progress |
+| `docs/planning/work-items.yaml` | Machine-readable tasks |
+| `docs/planning/backlog.md` | Deferred items |
+| `docs/planning/risk-register.md` | Known risks |
+| `docs/planning/working-agreement.md` | Coding standards |
+| `docs/decisions/*.md` | Architecture Decision Records |
+| `docs/product/one-pager.md` | Product vision |
+| `docs/ai/` | AI-facing docs and context map |
+
+## Config Files
+
+| File | Purpose |
+|------|---------|
+| `package.json` | Root workspace scripts and deps |
+| `pnpm-workspace.yaml` | Workspace member globs |
+| `tsconfig.json` | Root project references |
+| `tsconfig.base.json` | Shared TS compiler options |
+| `vitest.config.ts` | Test runner config |
+| `eslint.config.js` | Linting rules |
+| `prettier.config.js` | Formatting rules |
+| `Makefile` | Build orchestration (Node + Go) |
+| `.editorconfig` | Editor settings |
+| `.nvmrc` | Node version (20) |
+
+## Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/demo-day1.sh` | M1 demo runner |
+| `scripts/generate-llms.mjs` | Generate llms.txt artifacts |
+| `scripts/docs-llms.sh` | Shell wrapper for llms generation |
+| `scripts/ai-pack.sh` | AI context bundle generator |
+| `scripts/new-adr.mjs` | ADR scaffolding |
+| `scripts/sync-labels.mjs` | GitHub label sync |
+
+---
+## File: docs/ai/mcp-usage.md
+
+# Using the Docs MCP Server
+
+The `@warplane/docs-mcp` package provides an MCP server that exposes Warplane documentation to LLM-powered tools.
+
+## Setup
+
+### Build
+
+```bash
+pnpm --filter @warplane/docs-mcp run build
+```
+
+### Run
+
+```bash
+pnpm mcp:docs
+```
+
+Or directly:
+
+```bash
+node packages/docs-mcp/dist/index.js
+```
+
+### Configure in Claude Code
+
+Add to `.claude/settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "warplane-docs": {
+      "command": "node",
+      "args": ["packages/docs-mcp/dist/index.js"],
+      "cwd": "/path/to/warplane"
+    }
+  }
+}
+```
+
+## Available Resources
+
+### Planning Documents
+
+Read the roadmap, status, backlog, risk register, or working agreement:
+
+```
+warplane://docs/docs/planning/roadmap.md
+warplane://docs/docs/planning/status.md
+warplane://docs/docs/planning/backlog.md
+warplane://docs/docs/planning/risk-register.md
+warplane://docs/docs/planning/working-agreement.md
+warplane://docs/docs/planning/work-items.yaml
+```
+
+### Architecture Decision Records
+
+List and read ADRs by slug:
+
+```
+warplane://adrs/0001-use-structured-madr
+warplane://adrs/0002-use-monorepo-with-ts-and-go
+warplane://adrs/0003-fixture-first-day1-mvp
+```
+
+### Schemas and Source
+
+```
+warplane://schemas/domain     — Core domain types
+warplane://schemas/storage    — Storage interfaces
+warplane://source/api         — API server source
+warplane://docs/product/one-pager — Product vision
+```
+
+## Available Prompts
+
+| Prompt | Description | Args |
+|--------|-------------|------|
+| `summarize-adr` | Summarize an ADR | `slug`: ADR filename slug |
+| `explain-trace` | Explain the trace/domain model | (none) |
+| `generate-task-plan` | Plan tasks for a goal | `goal`: what to plan |
+| `review-runbook` | Review runbook quality | `content`: runbook text |
+
+## Available Tools
+
+| Tool | Description | Args |
+|------|-------------|------|
+| `search_docs` | Search all docs for a query | `query`: search text |
+| `list_adrs` | List all ADRs with status | (none) |
+| `get_trace_schema` | Get domain + storage types | (none) |
+
+## Example Session
+
+Once configured, an agent can:
+
+1. Call `list_adrs` to see all architecture decisions
+2. Call `search_docs` with query "fixture" to find fixture-related docs
+3. Use the `summarize-adr` prompt with slug "0003-fixture-first-day1-mvp"
+4. Read `warplane://schemas/domain` for the current type definitions
+
+---
+## File: docs/ai/repomix.md
+
+# Repomix — AI Context Packing
+
+Repomix packs the repo into AI-friendly bundles for use with LLMs that don't support MCP.
+
+## Quick Start
+
+```bash
+# Pack core source + docs
+pnpm ai:pack
+
+# Pack docs only
+pnpm ai:pack:docs
+```
+
+## What Gets Packed
+
+### Default Bundle (`ai:pack`)
+
+- All TypeScript source files (`packages/*/src/**`, `apps/*/src/**`)
+- Documentation (`docs/**/*.md`, `docs/**/*.yaml`)
+- Root config files (`package.json`, `tsconfig.json`, `Makefile`, etc.)
+- Agent docs (`AGENTS.md`, `docs/ai/**`)
+- Schemas and type definitions
+
+### Docs Bundle (`ai:pack:docs`)
+
+- All markdown documentation
+- Work items and planning YAML
+- ADRs and governance docs
+- AI-facing docs
+
+### Excluded
+
+- `node_modules/`, `dist/`, `.git/`
+- Build output and cache directories
+- Lock files (`pnpm-lock.yaml`)
+- Environment files (`.env*`)
+- VitePress cache and build output
+
+## Configuration
+
+The `repomix.config.json` at the repo root controls what gets packed. Edit it to adjust includes/excludes.
+
+## Output
+
+Bundles are written to stdout by default. Redirect to a file:
+
+```bash
+pnpm ai:pack > warplane-context.txt
+pnpm ai:pack:docs > warplane-docs.txt
+```
+
+## When to Use
+
+- **repomix** — when pasting repo context into an LLM chat
+- **llms.txt** — when the LLM supports llms.txt discovery
+- **MCP server** — when the LLM client supports MCP (best experience)

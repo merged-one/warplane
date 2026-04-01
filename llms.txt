@@ -1,0 +1,55 @@
+# Warplane
+
+> Interchain Control Plane for Avalanche L1s. Observe, manage, and orchestrate
+> Avalanche L1 subnets from a single pane of glass.
+
+Warplane is a TypeScript + Go monorepo providing unified observability, lifecycle
+management, and cross-chain orchestration for Avalanche subnet operators.
+
+## Product
+
+- [docs/product/one-pager.md](docs/product/one-pager.md): Product vision, target users, and key capabilities
+
+## Architecture
+
+- [packages/domain/src/index.ts](packages/domain/src/index.ts): Core domain types: ChainId, Subnet, HealthStatus, ChainStatus
+- [packages/storage/src/index.ts](packages/storage/src/index.ts): Storage interfaces for chain state persistence
+- [packages/ingest/src/index.ts](packages/ingest/src/index.ts): Data ingestion pipeline stub
+
+## Planning
+
+- [docs/planning/roadmap.md](docs/planning/roadmap.md): Milestone breakdown and timeline
+- [docs/planning/status.md](docs/planning/status.md): Current milestone progress
+- [docs/planning/work-items.yaml](docs/planning/work-items.yaml): Machine-readable task tracking
+- [docs/planning/backlog.md](docs/planning/backlog.md): Deferred items for future milestones
+- [docs/planning/risk-register.md](docs/planning/risk-register.md): Known risks and mitigations
+- [docs/planning/working-agreement.md](docs/planning/working-agreement.md): Coding standards and conventions
+
+## Architecture Decisions
+
+- [docs/decisions/README.md](docs/decisions/README.md): ADR index and process
+- [docs/decisions/0001-use-structured-madr.md](docs/decisions/0001-use-structured-madr.md): ADR-0001: Use Structured MADR
+- [docs/decisions/0002-use-monorepo-with-ts-and-go.md](docs/decisions/0002-use-monorepo-with-ts-and-go.md): ADR-0002: Monorepo with TS + Go
+- [docs/decisions/0003-fixture-first-day1-mvp.md](docs/decisions/0003-fixture-first-day1-mvp.md): ADR-0003: Fixture-first MVP
+
+## Governance
+
+- [CONTRIBUTING.md](CONTRIBUTING.md): How to contribute, quality bar, monorepo conventions
+- [SECURITY.md](SECURITY.md): Vulnerability disclosure process
+- [RELEASE.md](RELEASE.md): Versioning and release steps
+
+## AI & Agents
+
+- [AGENTS.md](AGENTS.md): Agent conventions, repo map, and quality rules
+- [docs/ai/README.md](docs/ai/README.md): AI-facing documentation index
+- [docs/ai/prompting-guide.md](docs/ai/prompting-guide.md): How to prompt effectively about this repo
+- [docs/ai/repo-map.md](docs/ai/repo-map.md): Machine-friendly repo structure map
+- [docs/ai/mcp-usage.md](docs/ai/mcp-usage.md): How to use the docs MCP server
+- [docs/ai/repomix.md](docs/ai/repomix.md): AI context packing with Repomix
+
+## Optional — Lower Priority
+
+- [SECURITY.md](SECURITY.md): Vulnerability disclosure process
+- [RELEASE.md](RELEASE.md): Versioning and release steps
+- [CODEOWNERS](CODEOWNERS): Code ownership routing
+- [.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md): PR checklist

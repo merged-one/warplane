@@ -1,0 +1,161 @@
+{
+  "version": 1,
+  "files": [
+    {
+      "path": "README.md",
+      "role": "Project overview and quick start",
+      "priority": "high",
+      "exists": true
+    },
+    {
+      "path": "AGENTS.md",
+      "role": "Agent conventions and repo map",
+      "priority": "high",
+      "exists": true
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "role": "Contribution guidelines and quality bar",
+      "priority": "high",
+      "exists": true
+    },
+    {
+      "path": "docs/product/one-pager.md",
+      "role": "Product vision and target users",
+      "priority": "high",
+      "exists": true
+    },
+    {
+      "path": "docs/planning/roadmap.md",
+      "role": "Milestone breakdown",
+      "priority": "high",
+      "exists": true
+    },
+    {
+      "path": "docs/planning/status.md",
+      "role": "Current milestone progress",
+      "priority": "medium",
+      "exists": true
+    },
+    {
+      "path": "docs/planning/work-items.yaml",
+      "role": "Machine-readable task tracking",
+      "priority": "medium",
+      "exists": true
+    },
+    {
+      "path": "docs/planning/backlog.md",
+      "role": "Deferred items",
+      "priority": "medium",
+      "exists": true
+    },
+    {
+      "path": "docs/planning/risk-register.md",
+      "role": "Known risks",
+      "priority": "medium",
+      "exists": true
+    },
+    {
+      "path": "docs/planning/working-agreement.md",
+      "role": "Coding standards",
+      "priority": "high",
+      "exists": true
+    },
+    {
+      "path": "docs/decisions/README.md",
+      "role": "ADR index",
+      "priority": "medium",
+      "exists": true
+    },
+    {
+      "path": "docs/decisions/0001-use-structured-madr.md",
+      "role": "ADR: Structured MADR",
+      "priority": "low",
+      "exists": true
+    },
+    {
+      "path": "docs/decisions/0002-use-monorepo-with-ts-and-go.md",
+      "role": "ADR: Monorepo structure",
+      "priority": "medium",
+      "exists": true
+    },
+    {
+      "path": "docs/decisions/0003-fixture-first-day1-mvp.md",
+      "role": "ADR: Fixture-first approach",
+      "priority": "medium",
+      "exists": true
+    },
+    {
+      "path": "packages/domain/src/index.ts",
+      "role": "Core domain types",
+      "priority": "high",
+      "exists": true
+    },
+    {
+      "path": "packages/storage/src/index.ts",
+      "role": "Storage interfaces",
+      "priority": "medium",
+      "exists": true
+    },
+    {
+      "path": "packages/ingest/src/index.ts",
+      "role": "Ingest pipeline",
+      "priority": "medium",
+      "exists": true
+    },
+    {
+      "path": "apps/api/src/index.ts",
+      "role": "API server entry point",
+      "priority": "high",
+      "exists": true
+    },
+    {
+      "path": "apps/web/src/App.tsx",
+      "role": "Web dashboard root component",
+      "priority": "medium",
+      "exists": true
+    },
+    {
+      "path": "packages/cli/src/index.ts",
+      "role": "CLI entry point",
+      "priority": "medium",
+      "exists": true
+    },
+    {
+      "path": "packages/docs-mcp/src/index.ts",
+      "role": "MCP docs server",
+      "priority": "medium",
+      "exists": true
+    },
+    {
+      "path": "harness/tmpnet/main.go",
+      "role": "Go test harness",
+      "priority": "low",
+      "exists": true
+    },
+    {
+      "path": "package.json",
+      "role": "Root workspace config and scripts",
+      "priority": "high",
+      "exists": true
+    },
+    {
+      "path": "tsconfig.base.json",
+      "role": "Base TypeScript config",
+      "priority": "low",
+      "exists": true
+    },
+    {
+      "path": "Makefile",
+      "role": "Build orchestration",
+      "priority": "medium",
+      "exists": true
+    },
+    {
+      "path": "docs/ai/context-map.json",
+      "role": "Machine-readable file index",
+      "priority": "high",
+      "exists": true
+    }
+  ]
+}

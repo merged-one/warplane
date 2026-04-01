@@ -23,6 +23,7 @@ coverage/
 
 # Go
 harness/tmpnet/tmpnet
+harness/tmpnet/artifacts/network/
 
 # VitePress
 apps/docs/.vitepress/dist/
