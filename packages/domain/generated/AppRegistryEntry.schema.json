@@ -1,0 +1,41 @@
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "chains": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "blockchainId": {
+            "type": "string"
+          },
+          "contractAddress": {
+            "type": "string"
+          },
+          "deployTxHash": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "blockchainId",
+          "contractAddress"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "name",
+    "chains"
+  ],
+  "additionalProperties": false
+}

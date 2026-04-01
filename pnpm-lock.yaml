@@ -82,7 +82,11 @@ importers:
         specifier: ^4.3.6
         version: 4.3.6
 
-  packages/domain: {}
+  packages/domain:
+    dependencies:
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
 
   packages/ingest:
     dependencies:

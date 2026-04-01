@@ -1,0 +1,47 @@
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "blockchainId": {
+      "type": "string"
+    },
+    "subnetId": {
+      "type": "string"
+    },
+    "evmChainId": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "nodeUris": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      }
+    },
+    "teleporterAddress": {
+      "type": "string"
+    },
+    "teleporterRegistryAddress": {
+      "type": "string"
+    },
+    "rpcUrl": {
+      "type": "string",
+      "format": "uri"
+    },
+    "explorerUrl": {
+      "type": "string",
+      "format": "uri"
+    }
+  },
+  "required": [
+    "name",
+    "blockchainId",
+    "subnetId",
+    "evmChainId"
+  ],
+  "additionalProperties": false
+}

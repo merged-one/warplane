@@ -255,6 +255,36 @@ work_items:
       - packages/docs-mcp/README.md
       - apps/docs/.vitepress/config.ts
 
+  - id: WP-015
+    title: Canonical domain model with Zod schemas
+    status: done
+    priority: p0
+    owner: unassigned
+    dependencies: [WP-001, WP-007]
+    milestone: m1
+    acceptance_criteria:
+      - Zod v4 schemas for MessageTrace, MessageEvent (11-kind discriminated union), NetworkManifest, ScenarioRun, registry types
+      - All golden trace fixtures validate against schemas
+      - JSON Schemas generated under packages/domain/generated/
+      - OpenAPI 3.1 component bundle generated
+      - Trace model documented in docs/runbooks/trace-model.md
+      - ADR-0004 records Zod decision
+      - Domain package builds and 33 tests pass
+    files_expected:
+      - packages/domain/src/events.ts
+      - packages/domain/src/trace.ts
+      - packages/domain/src/registry.ts
+      - packages/domain/src/scenarios.ts
+      - packages/domain/src/json-schema.ts
+      - packages/domain/src/openapi.ts
+      - packages/domain/src/index.ts
+      - packages/domain/src/index.test.ts
+      - packages/domain/scripts/generate-schemas.mjs
+      - packages/domain/generated/MessageTrace.schema.json
+      - packages/domain/generated/openapi-components.json
+      - docs/runbooks/trace-model.md
+      - docs/decisions/0004-zod-single-schema-approach.md
+
   # --- Milestone 2 items (backlog) ---
 
   - id: WP-100

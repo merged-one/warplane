@@ -1,0 +1,31 @@
+{
+  "type": "object",
+  "properties": {
+    "messageId": {
+      "type": "string"
+    },
+    "scenario": {
+      "type": "string"
+    },
+    "file": {
+      "type": "string"
+    },
+    "execution": {
+      "type": "string",
+      "enum": [
+        "success",
+        "retry_success",
+        "replay_blocked",
+        "failed",
+        "pending"
+      ]
+    }
+  },
+  "required": [
+    "messageId",
+    "scenario",
+    "file",
+    "execution"
+  ],
+  "additionalProperties": false
+}

@@ -8,6 +8,7 @@ Full records are in [`docs/decisions/`](../decisions/README.md).
 | [0001](../decisions/0001-use-structured-madr.md) | Use Structured MADR for architecture decisions | Accepted | 2026-04-01 |
 | [0002](../decisions/0002-use-monorepo-with-ts-and-go.md) | Use monorepo with TypeScript and Go | Accepted | 2026-04-01 |
 | [0003](../decisions/0003-fixture-first-day1-mvp.md) | Fixture-first approach for Day-1 MVP | Accepted | 2026-04-01 |
+| [0004](../decisions/0004-zod-single-schema-approach.md) | Zod as single schema source for domain model | Accepted | 2026-04-01 |
 
 ## How to add a new decision
 

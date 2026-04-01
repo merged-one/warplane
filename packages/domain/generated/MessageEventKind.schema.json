@@ -1,0 +1,16 @@
+{
+  "type": "string",
+  "enum": [
+    "message_sent",
+    "warp_message_extracted",
+    "signatures_aggregated",
+    "relay_submitted",
+    "delivery_confirmed",
+    "execution_failed",
+    "retry_requested",
+    "retry_succeeded",
+    "fee_added",
+    "receipts_sent",
+    "replay_blocked"
+  ]
+}

@@ -11,7 +11,7 @@ system. All code deliverables are complete. Planning and governance artifacts ar
 
 - [x] `pnpm install` works
 - [x] `pnpm build` works
-- [x] `pnpm test` works (3 tests, 2 files)
+- [x] `pnpm test` works (33 tests, 2 files)
 - [x] `go test ./...` works in `harness/tmpnet`
 - [x] Typecheck passes (`tsc -b`)
 - [x] README documents repo layout and M1 goal
@@ -21,6 +21,12 @@ system. All code deliverables are complete. Planning and governance artifacts ar
 - [x] Core types: ChainId, Subnet, HealthStatus, ChainStatus
 - [x] Storage interfaces defined
 - [x] Ingest pipeline stub
+- [x] Canonical domain schemas (Zod v4): MessageTrace, MessageEvent, NetworkManifest, ScenarioRun, registry types
+- [x] Discriminated union for 11 event kinds
+- [x] JSON Schema generation (`packages/domain/generated/*.schema.json`)
+- [x] OpenAPI 3.1 component bundle (`packages/domain/generated/openapi-components.json`)
+- [x] Golden fixture validation (all 8 traces, 5 scenarios, network manifest)
+- [x] Trace model runbook (`docs/runbooks/trace-model.md`)
 
 ## API
 
@@ -70,6 +76,7 @@ system. All code deliverables are complete. Planning and governance artifacts ar
 - [x] ADR-0001: Use Structured MADR
 - [x] ADR-0002: Use monorepo with TypeScript and Go
 - [x] ADR-0003: Fixture-first approach for Day-1 MVP
+- [x] ADR-0004: Zod as single schema source for domain model
 - [x] `new-adr.mjs` scaffolding script
 - [x] ADR validation CI workflow
 

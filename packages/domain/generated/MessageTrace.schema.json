@@ -1,0 +1,640 @@
+{
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "default": "1.0.0",
+      "type": "string"
+    },
+    "messageId": {
+      "type": "string"
+    },
+    "scenario": {
+      "type": "string"
+    },
+    "execution": {
+      "type": "string",
+      "enum": [
+        "success",
+        "retry_success",
+        "replay_blocked",
+        "failed",
+        "pending"
+      ]
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "blockchainId": {
+          "type": "string"
+        },
+        "subnetId": {
+          "type": "string"
+        },
+        "evmChainId": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "name",
+        "blockchainId",
+        "subnetId",
+        "evmChainId"
+      ],
+      "additionalProperties": false
+    },
+    "destination": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "blockchainId": {
+          "type": "string"
+        },
+        "subnetId": {
+          "type": "string"
+        },
+        "evmChainId": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "name",
+        "blockchainId",
+        "subnetId",
+        "evmChainId"
+      ],
+      "additionalProperties": false
+    },
+    "sender": {
+      "type": "string"
+    },
+    "recipient": {
+      "type": "string"
+    },
+    "sourceTxHash": {
+      "type": "string"
+    },
+    "destinationTxHash": {
+      "type": "string"
+    },
+    "relayTxHash": {
+      "type": "string"
+    },
+    "timestamps": {
+      "type": "object",
+      "properties": {
+        "sendTime": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+        },
+        "receiveTime": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+        },
+        "blockSend": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "blockRecv": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "sendTime",
+        "receiveTime",
+        "blockSend"
+      ],
+      "additionalProperties": false
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+              },
+              "details": {
+                "type": "string"
+              },
+              "blockNumber": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "txHash": {
+                "type": "string"
+              },
+              "chain": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "const": "message_sent"
+              }
+            },
+            "required": [
+              "timestamp",
+              "blockNumber",
+              "txHash",
+              "chain",
+              "kind"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+              },
+              "details": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "const": "warp_message_extracted"
+              },
+              "chain": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "timestamp",
+              "kind",
+              "chain"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+              },
+              "details": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "const": "signatures_aggregated"
+              }
+            },
+            "required": [
+              "timestamp",
+              "kind"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+              },
+              "details": {
+                "type": "string"
+              },
+              "blockNumber": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "txHash": {
+                "type": "string"
+              },
+              "chain": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "const": "relay_submitted"
+              }
+            },
+            "required": [
+              "timestamp",
+              "blockNumber",
+              "txHash",
+              "chain",
+              "kind"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+              },
+              "details": {
+                "type": "string"
+              },
+              "blockNumber": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "txHash": {
+                "type": "string"
+              },
+              "chain": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "const": "delivery_confirmed"
+              }
+            },
+            "required": [
+              "timestamp",
+              "blockNumber",
+              "txHash",
+              "chain",
+              "kind"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+              },
+              "details": {
+                "type": "string"
+              },
+              "blockNumber": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "txHash": {
+                "type": "string"
+              },
+              "chain": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "const": "execution_failed"
+              }
+            },
+            "required": [
+              "timestamp",
+              "blockNumber",
+              "txHash",
+              "chain",
+              "kind"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+              },
+              "details": {
+                "type": "string"
+              },
+              "blockNumber": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "txHash": {
+                "type": "string"
+              },
+              "chain": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "const": "retry_requested"
+              }
+            },
+            "required": [
+              "timestamp",
+              "blockNumber",
+              "txHash",
+              "chain",
+              "kind"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+              },
+              "details": {
+                "type": "string"
+              },
+              "blockNumber": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "txHash": {
+                "type": "string"
+              },
+              "chain": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "const": "retry_succeeded"
+              }
+            },
+            "required": [
+              "timestamp",
+              "blockNumber",
+              "txHash",
+              "chain",
+              "kind"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+              },
+              "details": {
+                "type": "string"
+              },
+              "blockNumber": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "txHash": {
+                "type": "string"
+              },
+              "chain": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "const": "fee_added"
+              }
+            },
+            "required": [
+              "timestamp",
+              "blockNumber",
+              "txHash",
+              "chain",
+              "kind"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+              },
+              "details": {
+                "type": "string"
+              },
+              "blockNumber": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "txHash": {
+                "type": "string"
+              },
+              "chain": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "const": "receipts_sent"
+              }
+            },
+            "required": [
+              "timestamp",
+              "blockNumber",
+              "txHash",
+              "chain",
+              "kind"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+              },
+              "details": {
+                "type": "string"
+              },
+              "blockNumber": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "txHash": {
+                "type": "string"
+              },
+              "chain": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "const": "replay_blocked"
+              }
+            },
+            "required": [
+              "timestamp",
+              "blockNumber",
+              "txHash",
+              "chain",
+              "kind"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "relayer": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string"
+        },
+        "txHash": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "address",
+        "txHash"
+      ],
+      "additionalProperties": false
+    },
+    "fee": {
+      "type": "object",
+      "properties": {
+        "feeTokenAddress": {
+          "type": "string"
+        },
+        "initialAmount": {
+          "type": "string"
+        },
+        "addedAmount": {
+          "type": "string"
+        },
+        "totalAmount": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "feeTokenAddress",
+        "initialAmount",
+        "addedAmount",
+        "totalAmount"
+      ],
+      "additionalProperties": false
+    },
+    "retry": {
+      "type": "object",
+      "properties": {
+        "originalGasLimit": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "retryGasLimit": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "retryTxHash": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "originalGasLimit",
+        "retryGasLimit",
+        "retryTxHash"
+      ],
+      "additionalProperties": false
+    },
+    "requiredGasLimit": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "feeTokenAddress": {
+      "type": "string"
+    },
+    "feeAmount": {
+      "type": "string"
+    },
+    "relayerAddress": {
+      "type": "string"
+    },
+    "receiptDelivered": {
+      "type": "boolean"
+    },
+    "retryCount": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "replayProtectionObserved": {
+      "type": "boolean"
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "trace",
+              "scenario_run",
+              "network_manifest",
+              "log",
+              "other"
+            ]
+          },
+          "path": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "path"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "rawRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "messageId",
+    "scenario",
+    "execution",
+    "source",
+    "destination",
+    "sender",
+    "recipient",
+    "sourceTxHash",
+    "timestamps",
+    "events"
+  ],
+  "additionalProperties": false
+}
