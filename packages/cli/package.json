@@ -1,8 +1,8 @@
 {
   "name": "@warplane/cli",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": true,
-  "description": "CLI tool for managing and monitoring Avalanche L1s",
+  "description": "CLI tool for the Interchain Control Plane — operate traces, scenarios, and chains from the terminal",
   "type": "module",
   "bin": {
     "warplane": "./dist/index.js"
@@ -12,6 +12,10 @@
     "clean": "rm -rf dist *.tsbuildinfo"
   },
   "dependencies": {
-    "@warplane/domain": "workspace:*"
+    "@warplane/domain": "workspace:*",
+    "commander": "^14.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0"
   }
 }

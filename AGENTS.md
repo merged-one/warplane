@@ -46,6 +46,40 @@ scripts/        Build, demo, and generation scripts
 | `pnpm ai:pack:docs` | Generate docs-only AI context bundle |
 | `pnpm mcp:docs` | Start docs MCP server (stdio) |
 
+## CLI (`warplane`)
+
+The `warplane` CLI provides terminal access to all MVP data. Build with `pnpm -F @warplane/cli build`.
+
+**Useful for agents:**
+
+```bash
+# Check environment readiness
+warplane doctor
+warplane --json doctor | jq '.ok'
+
+# Query traces (supports --json for machine parsing)
+warplane --json traces list
+warplane --json traces list --scenario basic_send_receive --status success
+warplane --json traces show <messageId>
+
+# Inspect failures
+warplane --json failures list
+
+# Query registry and scenarios
+warplane --json registry show
+warplane --json scenarios list
+
+# Import artifacts
+warplane --json import harness/tmpnet/artifacts
+
+# Use a different API instance
+warplane --api-url http://localhost:8080 traces list
+```
+
+Always use `--json` when parsing output programmatically. The CLI talks to the local API by default (`http://localhost:3100`); set `ICP_API_URL` to override.
+
+See `docs/runbooks/cli.md` for the full reference.
+
 ## Quality Rules
 
 Before any PR:
