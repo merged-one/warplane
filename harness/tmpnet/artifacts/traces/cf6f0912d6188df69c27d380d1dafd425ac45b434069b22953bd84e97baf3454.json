@@ -1,0 +1,87 @@
+{
+  "messageId": "cf6f0912d6188df69c27d380d1dafd425ac45b434069b22953bd84e97baf3454",
+  "scenario": "add_fee",
+  "source": {
+    "name": "source",
+    "blockchainId": "chain-src-001",
+    "subnetId": "subnet-src-001",
+    "evmChainId": 99999
+  },
+  "destination": {
+    "name": "destination",
+    "blockchainId": "chain-dst-001",
+    "subnetId": "subnet-dst-001",
+    "evmChainId": 99998
+  },
+  "sender": "0x53029e8c80c71073039b01779ae6e957b43e8537",
+  "recipient": "0x7cac19be9461f88faab31cace6d873f30eda9e9c",
+  "sourceTxHash": "0x9ed4dba0fc8d2447082452c7c75d3499e28106fb6f7ea43c9a40ed2c3dc84903",
+  "destinationTxHash": "0x1fcc485b58e646d24baebe0d546361d774610420004fb5d19f465f5b2c0d17a4",
+  "timestamps": {
+    "sendTime": "2026-04-01T00:01:00Z",
+    "receiveTime": "2026-04-01T00:01:20Z",
+    "blockSend": 110,
+    "blockRecv": 115
+  },
+  "events": [
+    {
+      "kind": "message_sent",
+      "timestamp": "2026-04-01T00:01:00Z",
+      "blockNumber": 110,
+      "txHash": "0x9ed4dba0fc8d2447082452c7c75d3499e28106fb6f7ea43c9a40ed2c3dc84903",
+      "chain": "source",
+      "details": "TeleporterMessenger.sendCrossChainMessage seq=1"
+    },
+    {
+      "kind": "warp_message_extracted",
+      "timestamp": "2026-04-01T00:01:05Z",
+      "chain": "source",
+      "details": "warp message extracted from receipt logs"
+    },
+    {
+      "kind": "fee_added",
+      "timestamp": "2026-04-01T00:01:08Z",
+      "blockNumber": 112,
+      "txHash": "0x0dc53b2ef52ea4734ebd9e69fd35db4ca3f54555fd02c10e692fcac4ca04d368",
+      "chain": "source",
+      "details": "AddFeeAmount: initial=0 added=1000000000000000000"
+    },
+    {
+      "kind": "signatures_aggregated",
+      "timestamp": "2026-04-01T00:01:10Z",
+      "details": "quorum signatures aggregated via signature-aggregator"
+    },
+    {
+      "kind": "relay_submitted",
+      "timestamp": "2026-04-01T00:01:15Z",
+      "blockNumber": 115,
+      "txHash": "0x1fcc485b58e646d24baebe0d546361d774610420004fb5d19f465f5b2c0d17a4",
+      "chain": "destination",
+      "details": "receiveCrossChainMessage submitted with warp predicate"
+    },
+    {
+      "kind": "delivery_confirmed",
+      "timestamp": "2026-04-01T00:01:20Z",
+      "blockNumber": 115,
+      "txHash": "0x1fcc485b58e646d24baebe0d546361d774610420004fb5d19f465f5b2c0d17a4",
+      "chain": "destination",
+      "details": "MessageReceived == true"
+    }
+  ],
+  "relayer": {
+    "address": "0xbb8b68a19cbbbade6e7c64305951bc80b2e5d032",
+    "txHash": "0x1fcc485b58e646d24baebe0d546361d774610420004fb5d19f465f5b2c0d17a4"
+  },
+  "fee": {
+    "feeTokenAddress": "0xc7e1e4220210d43e72e1ffd36230e56970e5475a",
+    "initialAmount": "0",
+    "addedAmount": "1000000000000000000",
+    "totalAmount": "1000000000000000000"
+  },
+  "execution": "success",
+  "rawRefs": [
+    "0x9ed4dba0fc8d2447082452c7c75d3499e28106fb6f7ea43c9a40ed2c3dc84903",
+    "0x0dc53b2ef52ea4734ebd9e69fd35db4ca3f54555fd02c10e692fcac4ca04d368",
+    "0x1fcc485b58e646d24baebe0d546361d774610420004fb5d19f465f5b2c0d17a4"
+  ]
+}

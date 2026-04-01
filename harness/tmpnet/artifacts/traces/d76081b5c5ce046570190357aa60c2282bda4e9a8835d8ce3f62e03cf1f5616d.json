@@ -1,0 +1,94 @@
+{
+  "messageId": "d76081b5c5ce046570190357aa60c2282bda4e9a8835d8ce3f62e03cf1f5616d",
+  "scenario": "retry_failed_execution",
+  "source": {
+    "name": "source",
+    "blockchainId": "chain-src-001",
+    "subnetId": "subnet-src-001",
+    "evmChainId": 99999
+  },
+  "destination": {
+    "name": "destination",
+    "blockchainId": "chain-dst-001",
+    "subnetId": "subnet-dst-001",
+    "evmChainId": 99998
+  },
+  "sender": "0x53029e8c80c71073039b01779ae6e957b43e8537",
+  "recipient": "0x7cac19be9461f88faab31cace6d873f30eda9e9c",
+  "sourceTxHash": "0xebca56fd3b320db5404eb6d8d7d794e604815f4e2e01b5444519b9652839bbb8",
+  "destinationTxHash": "0x1b5cb622751ea7c44832ab6eb8237906ed7639ac9742e4a58e99d60febdadf5f",
+  "timestamps": {
+    "sendTime": "2026-04-01T00:06:00Z",
+    "receiveTime": "2026-04-01T00:06:20Z",
+    "blockSend": 160,
+    "blockRecv": 165
+  },
+  "events": [
+    {
+      "kind": "message_sent",
+      "timestamp": "2026-04-01T00:06:00Z",
+      "blockNumber": 160,
+      "txHash": "0xebca56fd3b320db5404eb6d8d7d794e604815f4e2e01b5444519b9652839bbb8",
+      "chain": "source",
+      "details": "TeleporterMessenger.sendCrossChainMessage seq=6"
+    },
+    {
+      "kind": "warp_message_extracted",
+      "timestamp": "2026-04-01T00:06:05Z",
+      "chain": "source",
+      "details": "warp message extracted from receipt logs"
+    },
+    {
+      "kind": "signatures_aggregated",
+      "timestamp": "2026-04-01T00:06:10Z",
+      "details": "quorum signatures aggregated via signature-aggregator"
+    },
+    {
+      "kind": "relay_submitted",
+      "timestamp": "2026-04-01T00:06:15Z",
+      "blockNumber": 165,
+      "txHash": "0x1b5cb622751ea7c44832ab6eb8237906ed7639ac9742e4a58e99d60febdadf5f",
+      "chain": "destination",
+      "details": "receiveCrossChainMessage submitted"
+    },
+    {
+      "kind": "execution_failed",
+      "timestamp": "2026-04-01T00:06:20Z",
+      "blockNumber": 165,
+      "txHash": "0x1b5cb622751ea7c44832ab6eb8237906ed7639ac9742e4a58e99d60febdadf5f",
+      "chain": "destination",
+      "details": "execution failed: RequiredGasLimit=21000 insufficient"
+    },
+    {
+      "kind": "retry_requested",
+      "timestamp": "2026-04-01T00:06:30Z",
+      "blockNumber": 170,
+      "txHash": "0x665f17108eb892c59423edc5ea58ab909b5b2e967b837389b5c6eef5d5900db1",
+      "chain": "destination",
+      "details": "retryMessageExecution gasLimit=200000"
+    },
+    {
+      "kind": "retry_succeeded",
+      "timestamp": "2026-04-01T00:06:35Z",
+      "blockNumber": 170,
+      "txHash": "0x665f17108eb892c59423edc5ea58ab909b5b2e967b837389b5c6eef5d5900db1",
+      "chain": "destination",
+      "details": "execution succeeded on retry"
+    }
+  ],
+  "relayer": {
+    "address": "0xbb8b68a19cbbbade6e7c64305951bc80b2e5d032",
+    "txHash": "0x1b5cb622751ea7c44832ab6eb8237906ed7639ac9742e4a58e99d60febdadf5f"
+  },
+  "execution": "retry_success",
+  "retry": {
+    "originalGasLimit": 21000,
+    "retryGasLimit": 200000,
+    "retryTxHash": "0x665f17108eb892c59423edc5ea58ab909b5b2e967b837389b5c6eef5d5900db1"
+  },
+  "rawRefs": [
+    "0xebca56fd3b320db5404eb6d8d7d794e604815f4e2e01b5444519b9652839bbb8",
+    "0x1b5cb622751ea7c44832ab6eb8237906ed7639ac9742e4a58e99d60febdadf5f",
+    "0x665f17108eb892c59423edc5ea58ab909b5b2e967b837389b5c6eef5d5900db1"
+  ]
+}

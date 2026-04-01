@@ -1,0 +1,12 @@
+{
+  "scenario": "replay_or_duplicate_blocked",
+  "startedAt": "2026-04-01T00:00:00Z",
+  "completedAt": "2026-04-01T00:05:00Z",
+  "passed": true,
+  "messageIds": [
+    "3a076507c46f81ef9edfb61815dde398a6f198431d18b357b748c42f5e23895f"
+  ],
+  "traceFiles": [
+    "3a076507c46f81ef9edfb61815dde398a6f198431d18b357b748c42f5e23895f.json"
+  ]
+}

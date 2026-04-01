@@ -1,0 +1,16 @@
+{
+  "scenario": "specified_receipts",
+  "startedAt": "2026-04-01T00:00:00Z",
+  "completedAt": "2026-04-01T00:05:00Z",
+  "passed": true,
+  "messageIds": [
+    "aa352d01a933aaf14d4973c23e8a51abbac46864161a19913786f982140836f8",
+    "a9ebcb3a0528c1c68d76d35c06cb3edf1ae8644fb357594fc575c3d11ebcc075",
+    "1f20436fd3fca189864855477fe66e7882cfc328f2218a534cb635bb68f1c508"
+  ],
+  "traceFiles": [
+    "aa352d01a933aaf14d4973c23e8a51abbac46864161a19913786f982140836f8.json",
+    "a9ebcb3a0528c1c68d76d35c06cb3edf1ae8644fb357594fc575c3d11ebcc075.json",
+    "1f20436fd3fca189864855477fe66e7882cfc328f2218a534cb635bb68f1c508.json"
+  ]
+}

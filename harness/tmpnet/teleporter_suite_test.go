@@ -72,10 +72,18 @@ var _ = ginkgo.BeforeSuite(func() {
 		harness.NetworkArtifactPath())
 })
 
-// AfterSuite tears down the tmpnet network.
+// AfterSuite writes the consolidated trace index and tears down the tmpnet network.
 var _ = ginkgo.AfterSuite(func() {
 	if !e2eEnabled || networkInfo == nil {
 		return
+	}
+
+	// Write consolidated trace index from scenario context.
+	if scenarioCtx != nil && len(scenarioCtx.Traces) > 0 {
+		fmt.Fprintln(ginkgo.GinkgoWriter, "Writing consolidated trace index...")
+		err := scenarioCtx.WriteTraceIndexFromContext()
+		gomega.Expect(err).NotTo(gomega.HaveOccurred())
+		fmt.Fprintf(ginkgo.GinkgoWriter, "Trace index written with %d traces\n", len(scenarioCtx.Traces))
 	}
 
 	fmt.Fprintln(ginkgo.GinkgoWriter, "Tearing down tmpnet network...")

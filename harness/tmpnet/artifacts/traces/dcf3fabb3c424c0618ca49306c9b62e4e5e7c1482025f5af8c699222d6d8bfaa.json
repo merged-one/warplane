@@ -1,0 +1,47 @@
+{
+  "messageId": "dcf3fabb3c424c0618ca49306c9b62e4e5e7c1482025f5af8c699222d6d8bfaa",
+  "scenario": "specified_receipts/receipts",
+  "source": {
+    "name": "destination",
+    "blockchainId": "chain-dst-001",
+    "subnetId": "subnet-dst-001",
+    "evmChainId": 99998
+  },
+  "destination": {
+    "name": "source",
+    "blockchainId": "chain-src-001",
+    "subnetId": "subnet-src-001",
+    "evmChainId": 99999
+  },
+  "sender": "0x53029e8c80c71073039b01779ae6e957b43e8537",
+  "recipient": "0x7cac19be9461f88faab31cace6d873f30eda9e9c",
+  "sourceTxHash": "0x9138ccb166015e0d7480dfb01cdd582119015fd0d9ddd3e137d6371526d86c63",
+  "timestamps": {
+    "sendTime": "2026-04-01T00:05:00Z",
+    "receiveTime": "0001-01-01T00:00:00Z",
+    "blockSend": 150
+  },
+  "events": [
+    {
+      "kind": "message_sent",
+      "timestamp": "2026-04-01T00:05:00Z",
+      "blockNumber": 150,
+      "txHash": "0x9138ccb166015e0d7480dfb01cdd582119015fd0d9ddd3e137d6371526d86c63",
+      "chain": "source",
+      "details": "TeleporterMessenger.sendCrossChainMessage seq=5"
+    },
+    {
+      "kind": "receipts_sent",
+      "timestamp": "2026-04-01T00:05:25Z",
+      "blockNumber": 157,
+      "txHash": "0xf7c9c129d2b4b6d5d84dacb52fe36f2d1011ee54f832dbc3d9d93d3df96247ba",
+      "chain": "source",
+      "details": "sendSpecifiedReceipts count=3 ids=[aa352d01a933aaf1 a9ebcb3a0528c1c6 1f20436fd3fca189]"
+    }
+  ],
+  "execution": "success",
+  "rawRefs": [
+    "0x9138ccb166015e0d7480dfb01cdd582119015fd0d9ddd3e137d6371526d86c63",
+    "0xf7c9c129d2b4b6d5d84dacb52fe36f2d1011ee54f832dbc3d9d93d3df96247ba"
+  ]
+}

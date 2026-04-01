@@ -1,0 +1,58 @@
+{
+  "messageId": "3a076507c46f81ef9edfb61815dde398a6f198431d18b357b748c42f5e23895f",
+  "scenario": "replay_or_duplicate_blocked/duplicate",
+  "source": {
+    "name": "source",
+    "blockchainId": "chain-src-001",
+    "subnetId": "subnet-src-001",
+    "evmChainId": 99999
+  },
+  "destination": {
+    "name": "destination",
+    "blockchainId": "chain-dst-001",
+    "subnetId": "subnet-dst-001",
+    "evmChainId": 99998
+  },
+  "sender": "0x53029e8c80c71073039b01779ae6e957b43e8537",
+  "recipient": "0x7cac19be9461f88faab31cace6d873f30eda9e9c",
+  "sourceTxHash": "0x25110e60f810182ce467d1c205898ecd7a6cedbb3f5e6a5d000e86631ea21f69",
+  "timestamps": {
+    "sendTime": "2026-04-01T00:08:00Z",
+    "receiveTime": "0001-01-01T00:00:00Z",
+    "blockSend": 180
+  },
+  "events": [
+    {
+      "kind": "message_sent",
+      "timestamp": "2026-04-01T00:08:00Z",
+      "blockNumber": 180,
+      "txHash": "0x25110e60f810182ce467d1c205898ecd7a6cedbb3f5e6a5d000e86631ea21f69",
+      "chain": "source",
+      "details": "TeleporterMessenger.sendCrossChainMessage seq=8"
+    },
+    {
+      "kind": "warp_message_extracted",
+      "timestamp": "2026-04-01T00:08:05Z",
+      "chain": "source",
+      "details": "warp message extracted from receipt logs"
+    },
+    {
+      "kind": "signatures_aggregated",
+      "timestamp": "2026-04-01T00:08:10Z",
+      "details": "quorum signatures aggregated via signature-aggregator"
+    },
+    {
+      "kind": "replay_blocked",
+      "timestamp": "2026-04-01T00:08:20Z",
+      "blockNumber": 185,
+      "txHash": "0xd216478d92e6364269cf3ca69c14ef42474bb4397d21f4b753cf05edbb9812e0",
+      "chain": "destination",
+      "details": "message already delivered: duplicate messageId"
+    }
+  ],
+  "execution": "replay_blocked",
+  "rawRefs": [
+    "0x25110e60f810182ce467d1c205898ecd7a6cedbb3f5e6a5d000e86631ea21f69",
+    "0xd216478d92e6364269cf3ca69c14ef42474bb4397d21f4b753cf05edbb9812e0"
+  ]
+}

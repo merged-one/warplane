@@ -1,0 +1,59 @@
+{
+  "generatedAt": "2026-04-01T00:10:00Z",
+  "traces": [
+    {
+      "messageId": "4d8580870bf0d1c30bc561d4d6039eca0750a5f62aba0578dd0b65b0b572c67c",
+      "scenario": "basic_send_receive",
+      "file": "4d8580870bf0d1c30bc561d4d6039eca0750a5f62aba0578dd0b65b0b572c67c.json",
+      "execution": "success"
+    },
+    {
+      "messageId": "cf6f0912d6188df69c27d380d1dafd425ac45b434069b22953bd84e97baf3454",
+      "scenario": "add_fee",
+      "file": "cf6f0912d6188df69c27d380d1dafd425ac45b434069b22953bd84e97baf3454.json",
+      "execution": "success"
+    },
+    {
+      "messageId": "aa352d01a933aaf14d4973c23e8a51abbac46864161a19913786f982140836f8",
+      "scenario": "specified_receipts",
+      "file": "aa352d01a933aaf14d4973c23e8a51abbac46864161a19913786f982140836f8.json",
+      "execution": "success"
+    },
+    {
+      "messageId": "a9ebcb3a0528c1c68d76d35c06cb3edf1ae8644fb357594fc575c3d11ebcc075",
+      "scenario": "specified_receipts",
+      "file": "a9ebcb3a0528c1c68d76d35c06cb3edf1ae8644fb357594fc575c3d11ebcc075.json",
+      "execution": "success"
+    },
+    {
+      "messageId": "1f20436fd3fca189864855477fe66e7882cfc328f2218a534cb635bb68f1c508",
+      "scenario": "specified_receipts",
+      "file": "1f20436fd3fca189864855477fe66e7882cfc328f2218a534cb635bb68f1c508.json",
+      "execution": "success"
+    },
+    {
+      "messageId": "dcf3fabb3c424c0618ca49306c9b62e4e5e7c1482025f5af8c699222d6d8bfaa",
+      "scenario": "specified_receipts/receipts",
+      "file": "dcf3fabb3c424c0618ca49306c9b62e4e5e7c1482025f5af8c699222d6d8bfaa.json",
+      "execution": "success"
+    },
+    {
+      "messageId": "d76081b5c5ce046570190357aa60c2282bda4e9a8835d8ce3f62e03cf1f5616d",
+      "scenario": "retry_failed_execution",
+      "file": "d76081b5c5ce046570190357aa60c2282bda4e9a8835d8ce3f62e03cf1f5616d.json",
+      "execution": "retry_success"
+    },
+    {
+      "messageId": "3a076507c46f81ef9edfb61815dde398a6f198431d18b357b748c42f5e23895f",
+      "scenario": "replay_or_duplicate_blocked",
+      "file": "3a076507c46f81ef9edfb61815dde398a6f198431d18b357b748c42f5e23895f.json",
+      "execution": "success"
+    },
+    {
+      "messageId": "3a076507c46f81ef9edfb61815dde398a6f198431d18b357b748c42f5e23895f",
+      "scenario": "replay_or_duplicate_blocked/duplicate",
+      "file": "3a076507c46f81ef9edfb61815dde398a6f198431d18b357b748c42f5e23895f.json",
+      "execution": "replay_blocked"
+    }
+  ]
+}

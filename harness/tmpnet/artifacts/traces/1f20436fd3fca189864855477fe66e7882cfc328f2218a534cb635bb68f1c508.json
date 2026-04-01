@@ -1,0 +1,72 @@
+{
+  "messageId": "1f20436fd3fca189864855477fe66e7882cfc328f2218a534cb635bb68f1c508",
+  "scenario": "specified_receipts",
+  "source": {
+    "name": "source",
+    "blockchainId": "chain-src-001",
+    "subnetId": "subnet-src-001",
+    "evmChainId": 99999
+  },
+  "destination": {
+    "name": "destination",
+    "blockchainId": "chain-dst-001",
+    "subnetId": "subnet-dst-001",
+    "evmChainId": 99998
+  },
+  "sender": "0x53029e8c80c71073039b01779ae6e957b43e8537",
+  "recipient": "0x7cac19be9461f88faab31cace6d873f30eda9e9c",
+  "sourceTxHash": "0x1767a4216d1b5f734e8287ce21504dd2837f71fb8cdac0017fdd5846fa736dad",
+  "destinationTxHash": "0x5ee3a5acb116ce00c646f9848315799b8ae143f0734b8176e6636249e0963212",
+  "timestamps": {
+    "sendTime": "2026-04-01T00:04:00Z",
+    "receiveTime": "2026-04-01T00:04:20Z",
+    "blockSend": 140,
+    "blockRecv": 145
+  },
+  "events": [
+    {
+      "kind": "message_sent",
+      "timestamp": "2026-04-01T00:04:00Z",
+      "blockNumber": 140,
+      "txHash": "0x1767a4216d1b5f734e8287ce21504dd2837f71fb8cdac0017fdd5846fa736dad",
+      "chain": "source",
+      "details": "TeleporterMessenger.sendCrossChainMessage seq=4"
+    },
+    {
+      "kind": "warp_message_extracted",
+      "timestamp": "2026-04-01T00:04:05Z",
+      "chain": "source",
+      "details": "warp message extracted from receipt logs"
+    },
+    {
+      "kind": "signatures_aggregated",
+      "timestamp": "2026-04-01T00:04:10Z",
+      "details": "quorum signatures aggregated via signature-aggregator"
+    },
+    {
+      "kind": "relay_submitted",
+      "timestamp": "2026-04-01T00:04:15Z",
+      "blockNumber": 145,
+      "txHash": "0x5ee3a5acb116ce00c646f9848315799b8ae143f0734b8176e6636249e0963212",
+      "chain": "destination",
+      "details": "receiveCrossChainMessage submitted with warp predicate"
+    },
+    {
+      "kind": "delivery_confirmed",
+      "timestamp": "2026-04-01T00:04:20Z",
+      "blockNumber": 145,
+      "txHash": "0x5ee3a5acb116ce00c646f9848315799b8ae143f0734b8176e6636249e0963212",
+      "chain": "destination",
+      "details": "MessageReceived == true"
+    }
+  ],
+  "relayer": {
+    "address": "0xbb8b68a19cbbbade6e7c64305951bc80b2e5d032",
+    "txHash": "0x5ee3a5acb116ce00c646f9848315799b8ae143f0734b8176e6636249e0963212"
+  },
+  "execution": "success",
+  "rawRefs": [
+    "0x1767a4216d1b5f734e8287ce21504dd2837f71fb8cdac0017fdd5846fa736dad",
+    "0x5ee3a5acb116ce00c646f9848315799b8ae143f0734b8176e6636249e0963212"
+  ]
+}

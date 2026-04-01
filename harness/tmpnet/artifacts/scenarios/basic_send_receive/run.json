@@ -1,0 +1,12 @@
+{
+  "scenario": "basic_send_receive",
+  "startedAt": "2026-04-01T00:00:00Z",
+  "completedAt": "2026-04-01T00:05:00Z",
+  "passed": true,
+  "messageIds": [
+    "4d8580870bf0d1c30bc561d4d6039eca0750a5f62aba0578dd0b65b0b572c67c"
+  ],
+  "traceFiles": [
+    "4d8580870bf0d1c30bc561d4d6039eca0750a5f62aba0578dd0b65b0b572c67c.json"
+  ]
+}

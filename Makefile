@@ -1,4 +1,4 @@
-.PHONY: bootstrap build test check demo-day1 e2e e2e-compile clean
+.PHONY: bootstrap build test check demo-day1 e2e e2e-compile golden golden-verify clean
 
 bootstrap:
 	pnpm install
@@ -26,10 +26,20 @@ e2e-compile:
 e2e:
 	cd harness/tmpnet && RUN_E2E=1 go test -v -timeout 10m ./...
 
+# Generate deterministic golden trace fixtures (no binaries needed).
+golden:
+	cd harness/tmpnet && go run ./cmd/generate-golden --output-dir artifacts
+
+# Verify golden fixtures match regenerated output.
+golden-verify:
+	cd harness/tmpnet && go run ./cmd/generate-golden --output-dir /tmp/warplane-golden-verify
+	diff -r --exclude='.gitkeep' harness/tmpnet/artifacts /tmp/warplane-golden-verify
+	@echo "golden-verify: fixtures match"
+
 demo-day1:
 	bash scripts/demo-day1.sh
 
 clean:
 	pnpm -r run clean
 	rm -rf node_modules
-	rm -rf harness/tmpnet/artifacts
+	rm -rf harness/tmpnet/artifacts/scenarios harness/tmpnet/artifacts/traces
