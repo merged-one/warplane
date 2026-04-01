@@ -1,16 +1,21 @@
 {
   "name": "@warplane/api",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": true,
   "description": "Fastify API server for the warplane control plane",
   "type": "module",
   "scripts": {
     "build": "tsc -b",
-    "dev": "node --watch dist/index.js",
+    "dev": "node --import tsx src/index.ts",
+    "start": "node dist/index.js",
     "clean": "rm -rf dist *.tsbuildinfo"
   },
   "dependencies": {
+    "@fastify/swagger": "^9.6.0",
+    "@fastify/swagger-ui": "^5.2.2",
     "@warplane/domain": "workspace:*",
+    "@warplane/ingest": "workspace:*",
+    "@warplane/storage": "workspace:*",
     "fastify": "^5.3.3"
   }
 }
