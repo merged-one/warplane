@@ -1,12 +1,9 @@
-import type { ChainId, ChainStatus, HealthStatus } from "@warplane/domain";
+/**
+ * @warplane/ingest — Artifact ingestion pipeline.
+ *
+ * Imports harness artifacts (traces, network manifests, scenario runs)
+ * into the @warplane/storage SQLite database with full domain validation.
+ */
 
-/** Polls an Avalanche node for chain health. */
-export async function pollChainHealth(chain: ChainId): Promise<ChainStatus> {
-  const health: HealthStatus = "unknown";
-  return {
-    chain,
-    health,
-    blockHeight: 0n,
-    timestamp: new Date(),
-  };
-}
+export { importArtifacts, type ImportResult, type ImportOptions } from "./importer.js";
+export { startWatcher, type WatchOptions } from "./watcher.js";

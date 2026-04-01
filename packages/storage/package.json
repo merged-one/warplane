@@ -1,8 +1,8 @@
 {
   "name": "@warplane/storage",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": true,
-  "description": "Persistence layer for chain state, metrics, and configuration",
+  "description": "Local SQLite persistence layer for traces, networks, chains, scenarios, and artifacts",
   "type": "module",
   "exports": {
     ".": {
@@ -12,9 +12,14 @@
   },
   "scripts": {
     "build": "tsc -b",
-    "clean": "rm -rf dist *.tsbuildinfo"
+    "clean": "rm -rf dist *.tsbuildinfo",
+    "db:migrate": "node --import tsx src/cli-migrate.ts"
   },
   "dependencies": {
-    "@warplane/domain": "workspace:*"
+    "@warplane/domain": "workspace:*",
+    "better-sqlite3": "^12.8.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13"
   }
 }

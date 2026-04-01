@@ -21,6 +21,11 @@ Thumbs.db
 coverage/
 *.log
 
+# Database
+*.db
+*.db-wal
+*.db-shm
+
 # Go
 harness/tmpnet/tmpnet
 harness/tmpnet/artifacts/network/

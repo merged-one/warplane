@@ -1,14 +1,56 @@
-import type { ChainId, ChainStatus } from "@warplane/domain";
+/**
+ * @warplane/storage — Local SQLite persistence layer.
+ *
+ * Provides typed repository functions for networks, chains, scenarios,
+ * traces, events, artifacts, and import history backed by better-sqlite3.
+ */
 
-/** Read-side interface for chain status storage. */
-export interface ChainStatusReader {
-  get(chain: ChainId): Promise<ChainStatus | undefined>;
-}
+// Database lifecycle
+export { openDb, closeDb, type DbOptions, type Database } from "./db.js";
 
-/** Write-side interface for chain status storage. */
-export interface ChainStatusWriter {
-  put(status: ChainStatus): Promise<void>;
-}
+// Migrations
+export { runMigrations } from "./migrate.js";
 
-/** Combined storage interface. */
-export type ChainStatusStore = ChainStatusReader & ChainStatusWriter;
+// Repositories
+export {
+  upsertNetwork,
+  getNetwork,
+  listNetworks,
+} from "./repos/networks.js";
+
+export {
+  upsertChain,
+  getChain,
+  listChains,
+} from "./repos/chains.js";
+
+export {
+  upsertScenarioRun,
+  getScenarioRun,
+  listScenarioRuns,
+} from "./repos/scenarios.js";
+
+export {
+  upsertTrace,
+  getTrace,
+  listTraces,
+  getTraceEvents,
+  getTimeline,
+  countTraces,
+  type TraceFilter,
+} from "./repos/traces.js";
+
+export {
+  upsertArtifact,
+  listArtifacts,
+  type Artifact,
+} from "./repos/artifacts.js";
+
+export {
+  startImport,
+  completeImport,
+  failImport,
+  getImport,
+  listImports,
+  type ImportRecord,
+} from "./repos/imports.js";

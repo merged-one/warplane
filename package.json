@@ -10,7 +10,8 @@
   "packageManager": "pnpm@10.32.1",
   "pnpm": {
     "onlyBuiltDependencies": [
-      "esbuild"
+      "esbuild",
+      "better-sqlite3"
     ]
   },
   "scripts": {
@@ -28,13 +29,18 @@
     "docs:llms": "node scripts/generate-llms.mjs",
     "ai:pack": "bash scripts/ai-pack.sh",
     "ai:pack:docs": "bash scripts/ai-pack.sh docs",
-    "mcp:docs": "pnpm --filter @warplane/docs-mcp run start"
+    "mcp:docs": "pnpm --filter @warplane/docs-mcp run start",
+    "db:migrate": "node --import tsx packages/storage/src/cli-migrate.ts",
+    "db:seed:day1": "node --import tsx packages/ingest/src/cli.ts import harness/tmpnet/artifacts",
+    "ingest:fixtures": "node --import tsx packages/ingest/src/cli.ts import harness/tmpnet/artifacts",
+    "ingest:watch": "node --import tsx packages/ingest/src/cli.ts watch harness/tmpnet/artifacts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^25.5.0",
     "eslint": "^10.1.0",
     "prettier": "^3.8.1",
+    "tsx": "^4.21.0",
     "typescript": "^6.0.2",
     "typescript-eslint": "^8.58.0",
     "vitest": "^4.1.2"
