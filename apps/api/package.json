@@ -1,0 +1,16 @@
+{
+  "name": "@warplane/api",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Fastify API server for the warplane control plane",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -b",
+    "dev": "node --watch dist/index.js",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@warplane/domain": "workspace:*",
+    "fastify": "^5.3.3"
+  }
+}

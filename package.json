@@ -1,0 +1,39 @@
+{
+  "name": "warplane",
+  "private": true,
+  "description": "Interchain Control Plane for Avalanche L1s",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=10"
+  },
+  "packageManager": "pnpm@10.32.1",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  },
+  "scripts": {
+    "build": "pnpm -r run build",
+    "test": "vitest run",
+    "check": "pnpm run lint && pnpm run typecheck",
+    "lint": "eslint .",
+    "typecheck": "tsc -b",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "dev": "pnpm --filter @warplane/api run dev",
+    "demo:day1": "bash scripts/demo-day1.sh",
+    "docs:llms": "bash scripts/docs-llms.sh",
+    "ai:pack": "bash scripts/ai-pack.sh",
+    "mcp:docs": "pnpm --filter @warplane/docs-mcp run start"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^25.5.0",
+    "eslint": "^10.1.0",
+    "prettier": "^3.8.1",
+    "typescript": "^6.0.2",
+    "typescript-eslint": "^8.58.0",
+    "vitest": "^4.1.2"
+  }
+}

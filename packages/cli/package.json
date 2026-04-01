@@ -1,0 +1,17 @@
+{
+  "name": "@warplane/cli",
+  "version": "0.0.1",
+  "private": true,
+  "description": "CLI tool for managing and monitoring Avalanche L1s",
+  "type": "module",
+  "bin": {
+    "warplane": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@warplane/domain": "workspace:*"
+  }
+}

@@ -1,0 +1,29 @@
+node_modules/
+dist/
+*.tsbuildinfo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build artifacts
+coverage/
+*.log
+
+# Go
+harness/tmpnet/tmpnet
+
+# VitePress
+apps/docs/.vitepress/dist/
+apps/docs/.vitepress/cache/

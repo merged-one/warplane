@@ -1,0 +1,20 @@
+{
+  "name": "@warplane/storage",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Persistence layer for chain state, metrics, and configuration",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@warplane/domain": "workspace:*"
+  }
+}
