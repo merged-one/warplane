@@ -1,0 +1,278 @@
+# Warplane -- Work Items (machine-readable)
+# Schema: id, title, status, priority, owner, dependencies, milestone, acceptance_criteria, files_expected
+
+work_items:
+  - id: WP-001
+    title: Core domain types
+    status: done
+    priority: p0
+    owner: unassigned
+    dependencies: []
+    milestone: m1
+    acceptance_criteria:
+      - ChainId, Subnet, HealthStatus, ChainStatus types exported
+      - chainId() factory function with validation
+      - Unit tests pass
+    files_expected:
+      - packages/domain/src/index.ts
+      - packages/domain/src/index.test.ts
+
+  - id: WP-002
+    title: Storage interfaces
+    status: done
+    priority: p0
+    owner: unassigned
+    dependencies: [WP-001]
+    milestone: m1
+    acceptance_criteria:
+      - Persistence interfaces defined for chain state
+      - Package builds cleanly
+    files_expected:
+      - packages/storage/src/index.ts
+
+  - id: WP-003
+    title: Ingest pipeline stub
+    status: done
+    priority: p1
+    owner: unassigned
+    dependencies: [WP-001]
+    milestone: m1
+    acceptance_criteria:
+      - Ingest module exports stub data
+      - Package builds cleanly
+    files_expected:
+      - packages/ingest/src/index.ts
+
+  - id: WP-004
+    title: Fastify API server
+    status: done
+    priority: p0
+    owner: unassigned
+    dependencies: [WP-001, WP-002]
+    milestone: m1
+    acceptance_criteria:
+      - /healthz returns 200
+      - /api/v1/chains returns JSON array
+      - Server starts in dev mode
+    files_expected:
+      - apps/api/src/index.ts
+
+  - id: WP-005
+    title: React dashboard shell
+    status: done
+    priority: p1
+    owner: unassigned
+    dependencies: []
+    milestone: m1
+    acceptance_criteria:
+      - Vite app builds and serves
+      - Basic App component renders
+    files_expected:
+      - apps/web/src/App.tsx
+      - apps/web/src/main.tsx
+
+  - id: WP-006
+    title: VitePress docs site
+    status: done
+    priority: p1
+    owner: unassigned
+    dependencies: []
+    milestone: m1
+    acceptance_criteria:
+      - VitePress site builds
+      - Intro page present
+    files_expected:
+      - apps/docs/.vitepress/config.ts
+      - apps/docs/index.md
+
+  - id: WP-007
+    title: Go tmpnet test harness
+    status: done
+    priority: p1
+    owner: unassigned
+    dependencies: []
+    milestone: m1
+    acceptance_criteria:
+      - Go module compiles
+      - Smoke test passes
+    files_expected:
+      - harness/tmpnet/main.go
+      - harness/tmpnet/main_test.go
+      - harness/tmpnet/go.mod
+
+  - id: WP-008
+    title: CLI with ping command
+    status: done
+    priority: p2
+    owner: unassigned
+    dependencies: [WP-001]
+    milestone: m1
+    acceptance_criteria:
+      - CLI package builds
+      - Exports entry point
+    files_expected:
+      - packages/cli/src/index.ts
+
+  - id: WP-009
+    title: Build, test, lint pipelines
+    status: done
+    priority: p0
+    owner: unassigned
+    dependencies: []
+    milestone: m1
+    acceptance_criteria:
+      - pnpm build succeeds
+      - pnpm test passes
+      - pnpm run check passes
+      - Makefile targets work
+    files_expected:
+      - Makefile
+      - vitest.config.ts
+      - eslint.config.js
+      - tsconfig.base.json
+
+  - id: WP-010
+    title: Planning and tracking system
+    status: done
+    priority: p1
+    owner: unassigned
+    dependencies: []
+    milestone: m1
+    acceptance_criteria:
+      - roadmap.md exists with milestone breakdown
+      - work-items.yaml is machine-readable with all M1 items
+      - status.md reflects current state
+      - risk-register.md captures known risks
+      - decision-index.md links to ADRs
+      - one-pager.md describes the product
+    files_expected:
+      - docs/planning/roadmap.md
+      - docs/planning/work-items.yaml
+      - docs/planning/status.md
+      - docs/planning/risk-register.md
+      - docs/planning/decision-index.md
+      - docs/product/one-pager.md
+
+  - id: WP-011
+    title: GitHub contribution flow
+    status: done
+    priority: p1
+    owner: unassigned
+    dependencies: []
+    milestone: m1
+    acceptance_criteria:
+      - Feature, bug, and task issue templates exist as valid YAML forms
+      - PR template with checklist exists
+      - labels.json defines project labels
+    files_expected:
+      - .github/ISSUE_TEMPLATE/feature.yml
+      - .github/ISSUE_TEMPLATE/bug.yml
+      - .github/ISSUE_TEMPLATE/task.yml
+      - .github/ISSUE_TEMPLATE/config.yml
+      - .github/PULL_REQUEST_TEMPLATE.md
+      - .github/labels.json
+      - scripts/sync-labels.mjs
+
+  - id: WP-012
+    title: ADR system with initial decisions
+    status: done
+    priority: p1
+    owner: unassigned
+    dependencies: []
+    milestone: m1
+    acceptance_criteria:
+      - Structured MADR template exists
+      - At least 3 ADRs written
+      - new-adr.mjs script scaffolds new ADRs
+      - ADR validation workflow runs in CI
+    files_expected:
+      - docs/decisions/README.md
+      - docs/decisions/templates/structured-madr.md
+      - docs/decisions/0001-use-structured-madr.md
+      - docs/decisions/0002-use-monorepo-with-ts-and-go.md
+      - docs/decisions/0003-fixture-first-day1-mvp.md
+      - scripts/new-adr.mjs
+      - .github/workflows/adr-validation.yml
+
+  - id: WP-013
+    title: Repo governance files
+    status: done
+    priority: p2
+    owner: unassigned
+    dependencies: []
+    milestone: m1
+    acceptance_criteria:
+      - CODEOWNERS assigns ownership for key paths
+      - SECURITY.md has disclosure process
+      - RELEASE.md has versioning and release steps
+      - working-agreement.md has coding and review rules
+    files_expected:
+      - CODEOWNERS
+      - SECURITY.md
+      - RELEASE.md
+      - docs/planning/working-agreement.md
+
+  # --- Milestone 2 items (backlog) ---
+
+  - id: WP-100
+    title: GitHub Actions CI pipeline
+    status: backlog
+    priority: p0
+    owner: unassigned
+    dependencies: [WP-009]
+    milestone: m2
+    acceptance_criteria:
+      - CI runs lint, test, build for Node and Go
+      - Status badges in README
+    files_expected:
+      - .github/workflows/ci.yml
+
+  - id: WP-101
+    title: Real Avalanche RPC polling
+    status: backlog
+    priority: p0
+    owner: unassigned
+    dependencies: [WP-003]
+    milestone: m2
+    acceptance_criteria:
+      - Ingest polls real Avalanche node RPCs
+      - Health status derived from RPC responses
+    files_expected:
+      - packages/ingest/src/rpc-client.ts
+
+  - id: WP-102
+    title: Storage implementation (SQLite/Postgres)
+    status: backlog
+    priority: p1
+    owner: unassigned
+    dependencies: [WP-002]
+    milestone: m2
+    acceptance_criteria:
+      - At least one concrete storage adapter
+      - Integration tests pass
+    files_expected:
+      - packages/storage/src/sqlite.ts
+
+  - id: WP-103
+    title: Docker Compose local dev environment
+    status: backlog
+    priority: p2
+    owner: unassigned
+    dependencies: [WP-004]
+    milestone: m2
+    acceptance_criteria:
+      - docker compose up starts API + web + db
+    files_expected:
+      - docker-compose.yml
+
+  - id: WP-104
+    title: e2e test wiring with tmpnet
+    status: backlog
+    priority: p1
+    owner: unassigned
+    dependencies: [WP-007]
+    milestone: m2
+    acceptance_criteria:
+      - make e2e runs real tmpnet-based tests
+    files_expected:
+      - harness/tmpnet/e2e_test.go

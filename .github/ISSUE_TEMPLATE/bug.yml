@@ -1,0 +1,115 @@
+name: Bug Report
+description: Report a bug or unexpected behavior
+title: "[Bug]: "
+labels: ["type: bug", "status: triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please provide as much detail as possible.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What happened? What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro-steps
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps to reproduce the issue.
+      placeholder: |
+        1. Run `make build`
+        2. Start the API with `pnpm dev`
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+      description: What should have happened instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: user-value
+    attributes:
+      label: User impact
+      description: How does this bug affect users?
+    validations:
+      required: false
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: Is this isolated or does it affect multiple areas?
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance criteria
+      description: How do we verify the fix?
+      placeholder: |
+        - [ ] Bug no longer reproduces
+        - [ ] Regression test added
+    validations:
+      required: true
+
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks
+      description: Could the fix introduce regressions or side effects?
+    validations:
+      required: false
+
+  - type: dropdown
+    id: packages
+    attributes:
+      label: Affected packages
+      description: Which packages are affected?
+      multiple: true
+      options:
+        - packages/domain
+        - packages/storage
+        - packages/ingest
+        - packages/cli
+        - packages/docs-mcp
+        - apps/api
+        - apps/web
+        - apps/docs
+        - harness/tmpnet
+        - scripts
+        - root config
+    validations:
+      required: true
+
+  - type: dropdown
+    id: adr-impact
+    attributes:
+      label: ADR / docs impact
+      description: Does fixing this require ADR or docs changes?
+      options:
+        - No impact
+        - Docs update needed
+        - New ADR required
+        - Existing ADR update needed
+    validations:
+      required: false
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: "Node version, OS, pnpm version, etc."
+      placeholder: "Node 20.x, macOS 15, pnpm 10.x"
+    validations:
+      required: false

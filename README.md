@@ -20,8 +20,11 @@ packages/
 harness/
   tmpnet/       Go harness for spinning up temporary Avalanche networks (e2e)
 docs/
-  planning/     Milestone checklists, backlog, and status tracking
+  planning/     Roadmap, work items, status, risk register
+  product/      Product one-pager
+  decisions/    Architecture Decision Records (MADR)
 scripts/        Build, demo, and AI helper scripts
+.github/        Issue templates, PR template, CI workflows
 ```
 
 ## Milestone 1 goal
@@ -53,6 +56,21 @@ make check        # lint + typecheck
 | `pnpm docs:llms` | Bundle docs for LLM consumption |
 | `pnpm ai:pack` | Generate AI context pack |
 | `pnpm mcp:docs` | Start the docs MCP server |
+
+## Planning and governance
+
+| Document | Purpose |
+|----------|---------|
+| [Product one-pager](docs/product/one-pager.md) | What Warplane is and why |
+| [Roadmap](docs/planning/roadmap.md) | Milestone breakdown and timeline |
+| [Work items](docs/planning/work-items.yaml) | Machine-readable task tracking |
+| [Status](docs/planning/status.md) | Current milestone progress |
+| [Risk register](docs/planning/risk-register.md) | Known risks and mitigations |
+| [Decision log](docs/decisions/README.md) | Architecture Decision Records |
+| [Working agreement](docs/planning/working-agreement.md) | Coding and review rules |
+| [Contributing](CONTRIBUTING.md) | How to contribute |
+| [Security](SECURITY.md) | Vulnerability disclosure process |
+| [Release process](RELEASE.md) | Versioning and release steps |
 
 ## License
 

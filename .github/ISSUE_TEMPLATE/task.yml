@@ -1,0 +1,87 @@
+name: Task
+description: Track a unit of work (chore, refactor, infrastructure, etc.)
+title: "[Task]: "
+labels: ["type: task", "status: triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for chores, refactors, infra work, or other tasks that are
+        not user-facing features or bugs.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+      description: Why is this task needed? What does it unblock?
+    validations:
+      required: true
+
+  - type: textarea
+    id: user-value
+    attributes:
+      label: User / developer value
+      description: Who benefits and how?
+    validations:
+      required: false
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: What is included and excluded from this task?
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance criteria
+      description: How do we know this is done?
+      placeholder: |
+        - [ ] Criterion 1
+        - [ ] Criterion 2
+    validations:
+      required: true
+
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks
+      description: What could go wrong or what are the open questions?
+    validations:
+      required: false
+
+  - type: dropdown
+    id: packages
+    attributes:
+      label: Affected packages
+      description: Which packages does this touch?
+      multiple: true
+      options:
+        - packages/domain
+        - packages/storage
+        - packages/ingest
+        - packages/cli
+        - packages/docs-mcp
+        - apps/api
+        - apps/web
+        - apps/docs
+        - harness/tmpnet
+        - scripts
+        - root config
+    validations:
+      required: true
+
+  - type: dropdown
+    id: adr-impact
+    attributes:
+      label: ADR / docs impact
+      description: Does this require ADR or documentation changes?
+      options:
+        - No impact
+        - Docs update needed
+        - New ADR required
+        - Existing ADR update needed
+    validations:
+      required: false

@@ -1,0 +1,28 @@
+# Warplane -- Code Owners
+#
+# These owners are automatically requested for review on PRs that touch
+# their paths. Update as the team grows.
+#
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default -- catch-all
+*                           @warplane/maintainers
+
+# Domain model and core types
+packages/domain/            @warplane/maintainers
+
+# API server
+apps/api/                   @warplane/maintainers
+
+# Web dashboard
+apps/web/                   @warplane/maintainers
+
+# Go test harness
+harness/tmpnet/             @warplane/maintainers
+
+# Architecture decisions
+docs/decisions/             @warplane/maintainers
+
+# CI and build config
+.github/                    @warplane/maintainers
+Makefile                    @warplane/maintainers
