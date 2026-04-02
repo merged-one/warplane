@@ -5,19 +5,25 @@
   "description": "React dashboard for the warplane control plane",
   "type": "module",
   "scripts": {
-    "build": "vite build",
+    "build": "vite build && cp dist/index.html dist/404.html",
     "dev": "vite",
     "preview": "vite preview",
+    "test": "vitest run",
     "clean": "rm -rf dist"
   },
   "dependencies": {
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.13.2"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "@vitejs/plugin-react": "^4.5.2",
-    "vite": "^6.3.5"
+    "jsdom": "^29.0.1",
+    "vite": "^6.3.5",
+    "vitest": "^4.1.2"
   }
 }
