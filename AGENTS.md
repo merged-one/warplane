@@ -38,7 +38,7 @@ scripts/        Build, demo, and generation scripts
 | `make test`         | Run all tests (vitest + Go)                        |
 | `make check`        | Lint + typecheck                                   |
 | `pnpm dev`          | Start API server in dev mode                       |
-| `pnpm demo:day1`    | Run Milestone 1 demo                               |
+| `pnpm demo:seed`    | Run seeded demo (golden fixtures)                  |
 | `pnpm docs:dev`     | Start docs site dev server                         |
 | `pnpm docs:build`   | Build docs site                                    |
 | `pnpm docs:llms`    | Generate llms.txt, llms-full.txt, context-map.json |
@@ -76,7 +76,7 @@ warplane --json import harness/tmpnet/artifacts
 warplane --api-url http://localhost:8080 traces list
 ```
 
-Always use `--json` when parsing output programmatically. The CLI talks to the local API by default (`http://localhost:3100`); set `ICP_API_URL` to override.
+Always use `--json` when parsing output programmatically. The CLI talks to the local API by default (`http://localhost:3100`); set `WARPLANE_API_URL` to override.
 
 See `docs/runbooks/cli.md` for the full reference.
 
@@ -154,7 +154,7 @@ See `packages/docs-mcp/README.md` for resources, prompts, and tools.
 
 ## Current State
 
-- **Milestone 1** is complete (monorepo skeleton, domain types, API, web shell, docs, Go harness)
-- Data is fixture-based (no real Avalanche RPC calls yet)
-- No CI pipeline yet (M2 priority)
+- **Milestone 1** is complete (monorepo skeleton, domain types, API, web dashboard, CLI, docs, Go harness, CI)
+- Data is fixture-based (no real Avalanche RPC calls yet — seeded golden traces)
+- CI pipeline runs on push to main and PRs
 - See `docs/planning/status.md` for full details

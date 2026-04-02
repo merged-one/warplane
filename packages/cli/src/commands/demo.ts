@@ -1,6 +1,6 @@
 /**
- * `icp demo seed` — seed the local API with golden fixtures.
- * `icp demo start` — start the API in demo mode.
+ * `warplane demo seed` — seed the local API with golden fixtures.
+ * `warplane demo start` — start the API in demo mode.
  */
 
 import { Command } from "commander";
@@ -9,7 +9,7 @@ import { ApiClient } from "../api-client.js";
 import { isJsonMode, printJson, heading, detail, hint } from "../output.js";
 
 export function demoCommand(): Command {
-  const demo = new Command("demo").description("Demo-mode helpers for Milestone 1");
+  const demo = new Command("demo").description("Seeded demo helpers");
 
   demo
     .command("seed")
@@ -55,7 +55,7 @@ export function demoCommand(): Command {
         if (result.errors.length > 0) {
           detail("Errors", result.errors.join(", "));
         }
-        hint("Try: icp traces list");
+        hint("Try: warplane traces list");
       } catch (err) {
         if (isJsonMode()) {
           printJson({ error: String(err) });

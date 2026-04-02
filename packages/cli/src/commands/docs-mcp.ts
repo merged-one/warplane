@@ -1,5 +1,5 @@
 /**
- * `icp docs mcp` — start or check the docs MCP server.
+ * `warplane docs mcp` — start or check the docs MCP server.
  */
 
 import { Command } from "commander";

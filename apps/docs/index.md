@@ -3,19 +3,19 @@ layout: home
 hero:
   name: Warplane
   text: Interchain Control Plane
-  tagline: Observe, manage, and orchestrate Avalanche L1 subnets from a single pane of glass.
+  tagline: Trace, visualize, and validate Teleporter cross-chain messages across Avalanche L1 subnets.
   actions:
     - theme: brand
-      text: Product Overview
-      link: /product/overview
+      text: 5-Minute Quickstart
+      link: /product/seeded-demo
     - theme: alt
-      text: Quick Start
-      link: /runbooks/local-dev
+      text: Architecture Overview
+      link: /architecture/overview
 features:
-  - title: Unified Observability
-    details: Monitor chain health, block heights, and subnet status across all your Avalanche L1s from one dashboard.
-  - title: Lifecycle Management
-    details: Deploy, configure, and manage subnet lifecycles through API, CLI, or web interface.
-  - title: Cross-Chain Orchestration
-    details: Coordinate operations across multiple chains with typed domain models and a robust ingestion pipeline.
+  - title: Cross-Chain Trace Model
+    details: Canonical 11-event lifecycle model for Teleporter messages covering send, relay, delivery, retry, fees, and replay protection.
+  - title: Deterministic Test Scenarios
+    details: Five reproducible scenarios validating critical Teleporter code paths — no live network required.
+  - title: API, Dashboard, and CLI
+    details: Query traces via REST API with OpenAPI docs, explore visually in the web dashboard, or script with the CLI.
 ---

@@ -1,5 +1,5 @@
 /**
- * `icp import <artifactDir>` — import artifacts via the API.
+ * `warplane import <artifactDir>` — import artifacts via the API.
  */
 
 import { Command } from "commander";

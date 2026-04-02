@@ -15,7 +15,7 @@ export class ApiClient {
   readonly baseUrl: string;
 
   constructor(opts: ApiClientOptions = {}) {
-    this.baseUrl = (opts.baseUrl ?? process.env["ICP_API_URL"] ?? DEFAULT_BASE_URL).replace(
+    this.baseUrl = (opts.baseUrl ?? process.env["WARPLANE_API_URL"] ?? DEFAULT_BASE_URL).replace(
       /\/$/,
       "",
     );
@@ -80,7 +80,7 @@ export class ApiUnreachableError extends Error {
         `  Start it with:\n\n` +
         `    pnpm dev          # dev mode with auto-reload\n` +
         `    pnpm -F api start # production build\n\n` +
-        `  Or set ICP_API_URL to point to a running instance.`,
+        `  Or set WARPLANE_API_URL to point to a running instance.`,
     );
     this.name = "ApiUnreachableError";
   }

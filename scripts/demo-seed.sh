@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# ── Warplane Day-1 Demo ──────────────────────────────────────────────
+# ── Warplane Seeded Demo ─────────────────────────────────────────────
 #
 # Starts the API (with seeded golden fixtures) and the web dashboard
 # so a new contributor can see the full Milestone 1 MVP immediately.
@@ -9,8 +9,8 @@ set -euo pipefail
 # No AvalancheGo binaries required — uses deterministic golden fixtures.
 #
 # Usage:
-#   pnpm demo:day1          # or: make demo-day1
-#   SKIP_BUILD=1 pnpm demo:day1   # skip build if already built
+#   pnpm demo:seed          # or: make demo-seed
+#   SKIP_BUILD=1 pnpm demo:seed   # skip build if already built
 
 BOLD='\033[1m'
 DIM='\033[2m'
@@ -31,7 +31,7 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 echo -e "${BOLD}╔══════════════════════════════════════════════╗${RESET}"
-echo -e "${BOLD}║   Warplane — Day-1 Demo (seeded fixtures)   ║${RESET}"
+echo -e "${BOLD}║   Warplane — Seeded Demo (golden fixtures)  ║${RESET}"
 echo -e "${BOLD}╚══════════════════════════════════════════════╝${RESET}"
 echo ""
 

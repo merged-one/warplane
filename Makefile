@@ -1,4 +1,4 @@
-.PHONY: bootstrap build test check repo-check demo-day1 e2e e2e-compile golden golden-verify clean
+.PHONY: bootstrap build test check repo-check demo-seed e2e e2e-compile golden golden-verify clean
 
 bootstrap:
 	pnpm install
@@ -40,9 +40,9 @@ golden-verify:
 	diff -r --exclude='.gitkeep' harness/tmpnet/artifacts /tmp/warplane-golden-verify
 	@echo "golden-verify: fixtures match"
 
-# Day-1 demo: API + web with seeded golden fixtures. No AvalancheGo required.
-demo-day1:
-	bash scripts/demo-day1.sh
+# Seeded demo: API + web with seeded golden fixtures. No AvalancheGo required.
+demo-seed:
+	bash scripts/demo-seed.sh
 
 clean:
 	pnpm -r run clean

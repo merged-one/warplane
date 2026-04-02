@@ -27,7 +27,7 @@ async function run(
   try {
     const { stdout, stderr } = await execAsync(`node ${CLI} ${args}`, {
       timeout: 15_000,
-      env: { ...process.env, ICP_API_URL: apiUrl, ...env },
+      env: { ...process.env, WARPLANE_API_URL: apiUrl, ...env },
       cwd: REPO_ROOT,
     });
     return { stdout, stderr, exitCode: 0 };
@@ -92,8 +92,8 @@ describe("warplane --api-url flag", () => {
   it("overrides default API URL", async () => {
     const { stdout, stderr, exitCode } = await run(
       "--api-url http://localhost:19999 traces list",
-      // Clear ICP_API_URL so --api-url takes effect
-      { ICP_API_URL: "" },
+      // Clear WARPLANE_API_URL so --api-url takes effect
+      { WARPLANE_API_URL: "" },
     );
     expect(exitCode).toBe(1);
     const combined = stdout + stderr;
@@ -103,7 +103,7 @@ describe("warplane --api-url flag", () => {
 
   it("connects to custom URL when valid", async () => {
     const { stdout, exitCode } = await run(`--api-url ${apiUrl} --json traces list`, {
-      ICP_API_URL: "",
+      WARPLANE_API_URL: "",
     });
     expect(exitCode).toBe(0);
     const data = JSON.parse(stdout);
@@ -529,7 +529,7 @@ describe("warplane demo seed", () => {
 
   it("shows error when API is not reachable", async () => {
     const { stdout, stderr, exitCode } = await run("demo seed", {
-      ICP_API_URL: "http://localhost:19999",
+      WARPLANE_API_URL: "http://localhost:19999",
     });
     expect(exitCode).toBe(1);
     const combined = stdout + stderr;
@@ -538,7 +538,7 @@ describe("warplane demo seed", () => {
 
   it("shows JSON error when API is not reachable in JSON mode", async () => {
     const { stdout, exitCode } = await run("--json demo seed", {
-      ICP_API_URL: "http://localhost:19999",
+      WARPLANE_API_URL: "http://localhost:19999",
     });
     expect(exitCode).toBe(1);
     const data = JSON.parse(stdout);
@@ -609,7 +609,7 @@ describe("warplane docs mcp --check", () => {
 describe("API unreachable", () => {
   it("shows helpful message when API is down (TTY)", async () => {
     const { stdout, stderr, exitCode } = await run("traces list", {
-      ICP_API_URL: "http://localhost:19999",
+      WARPLANE_API_URL: "http://localhost:19999",
     });
     expect(exitCode).toBe(1);
     const combined = stdout + stderr;
@@ -619,7 +619,7 @@ describe("API unreachable", () => {
 
   it("shows helpful message when API is down (JSON mode)", async () => {
     const { stdout, stderr, exitCode } = await run("--json traces list", {
-      ICP_API_URL: "http://localhost:19999",
+      WARPLANE_API_URL: "http://localhost:19999",
     });
     expect(exitCode).toBe(1);
     const combined = stdout + stderr;
@@ -628,7 +628,7 @@ describe("API unreachable", () => {
 
   it("shows error for failures list when API is down", async () => {
     const { stdout, stderr, exitCode } = await run("failures list", {
-      ICP_API_URL: "http://localhost:19999",
+      WARPLANE_API_URL: "http://localhost:19999",
     });
     expect(exitCode).toBe(1);
     const combined = stdout + stderr;
@@ -637,7 +637,7 @@ describe("API unreachable", () => {
 
   it("shows error for scenarios list when API is down", async () => {
     const { stdout, stderr, exitCode } = await run("scenarios list", {
-      ICP_API_URL: "http://localhost:19999",
+      WARPLANE_API_URL: "http://localhost:19999",
     });
     expect(exitCode).toBe(1);
     const combined = stdout + stderr;
@@ -646,7 +646,7 @@ describe("API unreachable", () => {
 
   it("shows error for registry show when API is down", async () => {
     const { stdout, stderr, exitCode } = await run("registry show", {
-      ICP_API_URL: "http://localhost:19999",
+      WARPLANE_API_URL: "http://localhost:19999",
     });
     expect(exitCode).toBe(1);
     const combined = stdout + stderr;

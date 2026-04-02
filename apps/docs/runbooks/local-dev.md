@@ -27,7 +27,7 @@ pnpm dev          # start the API server in watch mode
 | Command          | What it does                        |
 | ---------------- | ----------------------------------- |
 | `pnpm dev`       | Start Fastify API in dev mode       |
-| `pnpm demo:day1` | Run the M1 demo end-to-end          |
+| `pnpm demo:seed` | Run the seeded demo end-to-end      |
 | `pnpm docs:dev`  | Start VitePress docs in dev mode    |
 | `pnpm docs:llms` | Generate llms.txt and llms-full.txt |
 | `pnpm ai:pack`   | Generate AI context bundle          |

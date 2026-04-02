@@ -9,7 +9,8 @@ using [Structured MADR](https://adr.github.io/madr/) format.
 | ------------------------------------------- | ---------------------------------------------- | -------- |
 | [0001](0001-use-structured-madr.md)         | Use Structured MADR for architecture decisions | Accepted |
 | [0002](0002-use-monorepo-with-ts-and-go.md) | Use monorepo with TypeScript and Go            | Accepted |
-| [0003](0003-fixture-first-day1-mvp.md)      | Fixture-first approach for Day-1 MVP           | Accepted |
+| [0003](0003-fixture-first-day1-mvp.md)      | Fixture-first approach for MVP                 | Accepted |
+| [0004](0004-zod-single-schema-approach.md)  | Zod as single schema source for domain model   | Accepted |
 
 ## Creating a new ADR
 

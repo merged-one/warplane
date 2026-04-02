@@ -26,7 +26,7 @@
     "dev:web": "pnpm --filter @warplane/web run dev",
     "docs:dev": "pnpm --filter @warplane/docs-site run dev",
     "docs:build": "pnpm --filter @warplane/docs-site run build",
-    "demo:day1": "bash scripts/demo-day1.sh",
+    "demo:seed": "bash scripts/demo-seed.sh",
     "repo:check": "bash scripts/check.sh",
     "docs:llms": "node scripts/generate-llms.mjs",
     "prepare": "[ -d .git ] && cp scripts/pre-commit.sh .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit || true",
@@ -34,7 +34,7 @@
     "ai:pack:docs": "bash scripts/ai-pack.sh docs",
     "mcp:docs": "pnpm --filter @warplane/docs-mcp run start",
     "db:migrate": "node --import tsx packages/storage/src/cli-migrate.ts",
-    "db:seed:day1": "node --import tsx packages/ingest/src/cli.ts import harness/tmpnet/artifacts",
+    "db:seed": "node --import tsx packages/ingest/src/cli.ts import harness/tmpnet/artifacts",
     "ingest:fixtures": "node --import tsx packages/ingest/src/cli.ts import harness/tmpnet/artifacts",
     "ingest:watch": "node --import tsx packages/ingest/src/cli.ts watch harness/tmpnet/artifacts"
   },

@@ -7,8 +7,8 @@ export function DocsPage() {
         <h2>Getting Started</h2>
         <ol>
           <li>
-            <strong>Seed data:</strong> <code>pnpm db:seed:day1</code> — ingests golden fixtures
-            from <code>harness/tmpnet/artifacts</code>
+            <strong>Seed data:</strong> <code>pnpm db:seed</code> — ingests golden fixtures from{" "}
+            <code>harness/tmpnet/artifacts</code>
           </li>
           <li>
             <strong>Start API:</strong> <code>pnpm dev</code> — launches the Fastify API at{" "}

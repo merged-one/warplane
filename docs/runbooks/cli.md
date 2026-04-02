@@ -45,7 +45,7 @@ For global-like access, add `node_modules/.bin` to your PATH or use `npx`.
 | `-V, --version`   | Show CLI version                                             |
 | `-h, --help`      | Show help                                                    |
 
-The API URL can also be set via the `ICP_API_URL` environment variable.
+The API URL can also be set via the `WARPLANE_API_URL` environment variable.
 
 ## Commands
 
@@ -203,7 +203,7 @@ Cannot reach the API at http://localhost:3100
     pnpm dev          # dev mode with auto-reload
     pnpm -F api start # production build
 
-  Or set ICP_API_URL to point to a running instance.
+  Or set WARPLANE_API_URL to point to a running instance.
 ```
 
 ## Architecture

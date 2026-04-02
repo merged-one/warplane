@@ -1,5 +1,5 @@
 /**
- * `icp scenarios list` — list scenario runs.
+ * `warplane scenarios list` — list scenario runs.
  */
 
 import { Command } from "commander";

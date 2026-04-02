@@ -1,55 +1,50 @@
 # Product Overview
 
-Warplane is an interchain control plane for Avalanche L1s. It provides unified observability, lifecycle management, and cross-chain orchestration for subnet operators.
+Warplane is an interchain control plane for Avalanche L1s. It provides cross-chain message tracing, deterministic test scenarios, and unified observability for Teleporter-based communication across subnet operators.
 
 ## Problem
 
-Avalanche L1 operators manage multiple subnets and chains across fragmented tooling. There is no unified control plane to observe health, trigger lifecycle operations, or orchestrate cross-chain workflows.
+Avalanche L1 operators using Teleporter for cross-chain messaging lack visibility into message lifecycles. When a message fails to deliver, triggers a retry, or encounters replay protection, there is no unified tool to trace what happened across chains.
 
 ## Target Users
 
-| Persona              | Need                                                            |
-| -------------------- | --------------------------------------------------------------- |
-| **L1 Operator**      | Real-time health monitoring, alerting, lifecycle automation     |
-| **Subnet Developer** | Fast local dev loops, fixture-based testing, deployment tooling |
-| **Platform Team**    | Multi-chain visibility, governance, compliance dashboards       |
+| Persona                | Need                                                               |
+| ---------------------- | ------------------------------------------------------------------ |
+| **Subnet operators**   | Trace message failures across chains without manual log parsing    |
+| **Relayer operators**  | Verify relay delivery and fee handling                             |
+| **dApp developers**    | Test cross-chain message flows against deterministic scenarios     |
+| **Protocol engineers** | Validate Teleporter behavior changes against a known-good baseline |
+| **Tooling builders**   | Build on typed schemas and OpenAPI specs                           |
 
 ## Key Capabilities
 
-1. **Domain model** — Typed representation of chains, subnets, and health states
-2. **Ingest pipeline** — Poll Avalanche nodes for chain status
-3. **REST API** — Programmatic access to chain data
-4. **Web dashboard** — Visual chain status overview
-5. **CLI** — Command-line management and monitoring
-6. **Docs MCP server** — LLM-friendly documentation access
+1. **Trace model** — Canonical 11-event lifecycle model for Teleporter messages
+2. **Test scenarios** — 5 deterministic scenarios covering success, failure, retry, fees, and replay
+3. **REST API** — Full query layer with OpenAPI 3.1 documentation
+4. **Web dashboard** — Trace explorer with timeline visualization and failure views
+5. **CLI** — Terminal-based querying with JSON output for scripting
+6. **Schema system** — Zod-based types generating TypeScript, JSON Schema, and OpenAPI specs
+7. **Docs MCP server** — LLM-friendly documentation access
 
 ## Architecture
 
 ```
-┌─────────┐  ┌─────────┐  ┌─────────┐
-│  Web UI │  │   CLI   │  │ Docs MCP│
-└────┬────┘  └────┬────┘  └────┬────┘
-     │            │            │
-     └──────┬─────┘            │
-            ▼                  │
-       ┌─────────┐             │
-       │   API   │◄────────────┘
-       └────┬────┘
-            │
-     ┌──────┴──────┐
-     ▼             ▼
-┌─────────┐  ┌─────────┐
-│ Domain  │  │ Storage │
-└────┬────┘  └─────────┘
-     │
-     ▼
-┌─────────┐
-│ Ingest  │──► Avalanche Nodes
-└─────────┘
+Golden Fixtures ──► Ingest ──► SQLite Storage
+(or live tmpnet)              ┌──────┴──────┐
+                              ▼             ▼
+                         ┌─────────┐  ┌──────────┐
+                         │   API   │  │ Dashboard │
+                         └────┬────┘  └──────────┘
+                              │
+                         ┌────┴────┐
+                         │   CLI   │
+                         └─────────┘
 ```
 
 ## Links
 
-- [Roadmap](/planning/roadmap)
+- [Community Value](/product/community-value)
+- [Seeded Demo](/product/seeded-demo)
 - [Architecture](/architecture/overview)
+- [Roadmap](/planning/roadmap)
 - [ADRs](/decisions/)

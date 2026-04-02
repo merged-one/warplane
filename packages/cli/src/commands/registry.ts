@@ -1,5 +1,5 @@
 /**
- * `icp registry show` — show the chain and network registry.
+ * `warplane registry show` — show the chain and network registry.
  */
 
 import { Command } from "commander";

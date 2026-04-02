@@ -41,34 +41,34 @@ beforeEach(() => {
 
 describe("ApiClient constructor", () => {
   it("uses default URL when no options given", () => {
-    const saved = process.env["ICP_API_URL"];
-    delete process.env["ICP_API_URL"];
+    const saved = process.env["WARPLANE_API_URL"];
+    delete process.env["WARPLANE_API_URL"];
     const client = new ApiClient();
     expect(client.baseUrl).toBe("http://localhost:3100");
-    if (saved) process.env["ICP_API_URL"] = saved;
+    if (saved) process.env["WARPLANE_API_URL"] = saved;
   });
 
-  it("uses ICP_API_URL env var", () => {
-    const saved = process.env["ICP_API_URL"];
-    process.env["ICP_API_URL"] = "http://custom:9999";
+  it("uses WARPLANE_API_URL env var", () => {
+    const saved = process.env["WARPLANE_API_URL"];
+    process.env["WARPLANE_API_URL"] = "http://custom:9999";
     const client = new ApiClient();
     expect(client.baseUrl).toBe("http://custom:9999");
     if (saved) {
-      process.env["ICP_API_URL"] = saved;
+      process.env["WARPLANE_API_URL"] = saved;
     } else {
-      delete process.env["ICP_API_URL"];
+      delete process.env["WARPLANE_API_URL"];
     }
   });
 
   it("uses explicit baseUrl over env var", () => {
-    const saved = process.env["ICP_API_URL"];
-    process.env["ICP_API_URL"] = "http://env:1111";
+    const saved = process.env["WARPLANE_API_URL"];
+    process.env["WARPLANE_API_URL"] = "http://env:1111";
     const client = new ApiClient({ baseUrl: "http://explicit:2222" });
     expect(client.baseUrl).toBe("http://explicit:2222");
     if (saved) {
-      process.env["ICP_API_URL"] = saved;
+      process.env["WARPLANE_API_URL"] = saved;
     } else {
-      delete process.env["ICP_API_URL"];
+      delete process.env["WARPLANE_API_URL"];
     }
   });
 

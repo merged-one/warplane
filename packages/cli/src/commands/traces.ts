@@ -1,5 +1,5 @@
 /**
- * `icp traces list` — list message traces.
+ * `warplane traces list` — list message traces.
  * `warplane traces show <messageId>` — show trace detail with timeline.
  */
 

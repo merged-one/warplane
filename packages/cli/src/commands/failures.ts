@@ -1,5 +1,5 @@
 /**
- * `icp failures list` — list traces with non-success execution status.
+ * `warplane failures list` — list traces with non-success execution status.
  */
 
 import { Command } from "commander";

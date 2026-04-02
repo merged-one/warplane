@@ -3,6 +3,10 @@
   "startedAt": "2026-04-01T00:00:00Z",
   "completedAt": "2026-04-01T00:05:00Z",
   "passed": true,
-  "messageIds": ["d76081b5c5ce046570190357aa60c2282bda4e9a8835d8ce3f62e03cf1f5616d"],
-  "traceFiles": ["d76081b5c5ce046570190357aa60c2282bda4e9a8835d8ce3f62e03cf1f5616d.json"]
+  "messageIds": [
+    "d76081b5c5ce046570190357aa60c2282bda4e9a8835d8ce3f62e03cf1f5616d"
+  ],
+  "traceFiles": [
+    "d76081b5c5ce046570190357aa60c2282bda4e9a8835d8ce3f62e03cf1f5616d.json"
+  ]
 }

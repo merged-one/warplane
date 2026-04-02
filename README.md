@@ -2,81 +2,94 @@
 
 **Interchain Control Plane for Avalanche L1s**
 
-Observe, manage, and orchestrate Avalanche L1 subnets from a single pane of glass.
+Warplane provides unified observability and cross-chain message tracing for Avalanche L1 subnet operators. It captures the full lifecycle of Teleporter messages — from send through relay, delivery, retry, and replay protection — and surfaces them through a REST API, web dashboard, and CLI.
 
-## Quick start — Day-1 Demo
+## What Warplane Does
 
-Get a fully working MVP with seeded data in one command. No AvalancheGo binaries required.
+- **Trace Teleporter messages** across L1 chains with a canonical 11-event lifecycle model
+- **Visualize cross-chain activity** through an interactive web dashboard
+- **Query traces programmatically** via REST API with OpenAPI 3.1 documentation
+- **Run deterministic test scenarios** covering success, failure, retry, fee addition, and replay protection
+- **Validate message flows** against typed Zod schemas with generated JSON Schema and OpenAPI specs
+
+## 5-Minute Quickstart
+
+Prerequisites: Node >= 20, pnpm >= 10.
 
 ```bash
-# Prerequisites: Node >= 20, pnpm >= 10
 git clone <repo-url> && cd warplane
 pnpm install
-pnpm demo:day1
+pnpm demo:seed
 ```
 
-This will build everything, start the API (with golden fixtures auto-seeded), and launch the web dashboard. You'll see:
+This builds all packages, seeds the database with 8 golden Teleporter traces across 5 scenarios, and starts both the API and web dashboard:
 
-- **Dashboard**: http://localhost:5173
-- **API**: http://localhost:3100
-- **Swagger UI**: http://localhost:3100/docs
-- **Health**: http://localhost:3100/healthz
+| Service      | URL                                |
+| ------------ | ---------------------------------- |
+| Dashboard    | http://localhost:5173              |
+| API          | http://localhost:3100              |
+| Swagger UI   | http://localhost:3100/docs         |
+| OpenAPI spec | http://localhost:3100/openapi.json |
+| Health check | http://localhost:3100/healthz      |
 
-The demo uses 8 deterministic Teleporter traces and 5 scenarios generated from golden fixtures — no external services needed.
+Try the CLI (in a separate terminal):
 
-### Seeded mode vs. full tmpnet mode
+```bash
+pnpm -F @warplane/cli build
+npx warplane doctor
+npx warplane traces list
+npx warplane --json scenarios list
+```
 
-|                 | Seeded (default)                               | Full tmpnet                                                |
+## Seeded Mode vs. Full E2E Mode
+
+|                 | Seeded (default)                               | Full E2E                                                   |
 | --------------- | ---------------------------------------------- | ---------------------------------------------------------- |
-| **Setup**       | `pnpm demo:day1`                               | See [docs/runbooks/full-e2e.md](docs/runbooks/full-e2e.md) |
+| **Setup**       | `pnpm demo:seed`                               | See [docs/runbooks/full-e2e.md](docs/runbooks/full-e2e.md) |
 | **Requires**    | Node + pnpm                                    | Node + pnpm + Go + AvalancheGo + subnet-evm                |
 | **Data source** | Golden fixtures in `harness/tmpnet/artifacts/` | Live Avalanche temporary network                           |
 | **Use case**    | Development, demos, CI                         | Integration testing, pre-release validation                |
 
-To switch from seeded to full tmpnet mode:
+## Teleporter Scenarios
 
-1. Install Go >= 1.22, AvalancheGo, and subnet-evm binaries
-2. Run `make e2e` to execute the full E2E suite
-3. Start the API with `DEMO_MODE=false pnpm dev` and ingest live artifacts with `pnpm ingest:watch`
+The golden fixture dataset covers five deterministic Teleporter scenarios:
 
-## Repo health
+| Scenario                      | What It Tests                                      | Status         |
+| ----------------------------- | -------------------------------------------------- | -------------- |
+| `basic_send_receive`          | Full happy-path message lifecycle                  | success        |
+| `add_fee`                     | Fee addition via `AddFeeAmount`                    | success        |
+| `specified_receipts`          | Batch receipt delivery via `SendSpecifiedReceipts` | success        |
+| `retry_failed_execution`      | Execution failure with successful retry            | retry_success  |
+| `replay_or_duplicate_blocked` | Duplicate message rejection                        | replay_blocked |
 
-Run the full CI check suite locally:
-
-```bash
-pnpm run repo:check    # or: make repo-check
-```
-
-This validates: build, lint, typecheck, format, tests, Go harness, docs build, llms generation, ADR structure, and doc links.
-
-## Repo layout
+## Repo Layout
 
 ```
 apps/
-  api/          Fastify API server — chain status, lifecycle operations
-  web/          React + Vite dashboard
-  docs/         VitePress documentation site
+  api/          Fastify REST API server (@warplane/api)
+  web/          React + Vite dashboard (@warplane/web)
+  docs/         VitePress documentation site (@warplane/docs-site)
 packages/
-  domain/       Core types and domain logic (ChainId, Subnet, HealthStatus)
-  storage/      Persistence interfaces for chain state and metrics
-  ingest/       Data ingestion pipeline — polls Avalanche nodes
-  cli/          CLI tool for managing and monitoring L1s
-  docs-mcp/     MCP server exposing docs for LLM consumption
+  domain/       Core types and Zod schemas (@warplane/domain)
+  storage/      SQLite persistence layer (@warplane/storage)
+  ingest/       Artifact ingestion pipeline (@warplane/ingest)
+  cli/          CLI tool (@warplane/cli)
+  docs-mcp/     MCP server for docs (@warplane/docs-mcp)
 harness/
-  tmpnet/       Go harness for spinning up temporary Avalanche networks (e2e)
+  tmpnet/       Go test harness for Avalanche tmpnet E2E
 docs/
   planning/     Roadmap, work items, status, risk register
-  product/      Product one-pager
   decisions/    Architecture Decision Records (MADR)
-scripts/        Build, demo, and AI helper scripts
-.github/        Issue templates, PR template, CI workflows
+  product/      Product overview
+  runbooks/     Operational guides
+  ai/           AI-facing docs, context map, prompting guide
 ```
 
 ## Scripts
 
 | Command               | Description                                         |
 | --------------------- | --------------------------------------------------- |
-| `pnpm demo:day1`      | Start API + web with seeded golden fixtures         |
+| `pnpm demo:seed`      | Start API + web with seeded golden fixtures         |
 | `pnpm run repo:check` | Full CI check suite (build, lint, test, docs, ADRs) |
 | `pnpm dev`            | Start the API server in dev mode                    |
 | `pnpm dev:web`        | Start the web dashboard in dev mode                 |
@@ -86,9 +99,7 @@ scripts/        Build, demo, and AI helper scripts
 | `pnpm docs:dev`       | Start docs site locally                             |
 | `pnpm docs:build`     | Build static docs site                              |
 | `pnpm docs:llms`      | Generate llms.txt and LLM context files             |
-| `pnpm ai:pack`        | Generate AI context bundle                          |
 | `pnpm mcp:docs`       | Start the docs MCP server                           |
-| `make repo-check`     | Same as `pnpm run repo:check`                       |
 | `make e2e`            | Full E2E with real tmpnet (requires AvalancheGo)    |
 
 ## CI
@@ -96,24 +107,21 @@ scripts/        Build, demo, and AI helper scripts
 CI runs automatically on push to `main` and on pull requests:
 
 - **[CI](.github/workflows/ci.yml)**: Build, lint, typecheck, format, unit tests, API integration smoke test, CLI smoke test, docs build, llms generation check, ADR validation
-- **[Go Harness](.github/workflows/ci.yml)**: Go build, vet, and unit tests (parallel with main CI)
-- **[E2E Tmpnet](.github/workflows/e2e-tmpnet.yml)**: Full tmpnet E2E (manual dispatch only — requires AvalancheGo binaries)
+- **[Go Harness](.github/workflows/ci.yml)**: Go build, vet, and unit tests (parallel)
+- **[E2E Tmpnet](.github/workflows/e2e-tmpnet.yml)**: Full tmpnet E2E (manual dispatch — requires AvalancheGo binaries)
 - **[ADR Validation](.github/workflows/adr-validation.yml)**: Validates ADR structure on changes to `docs/decisions/`
 
-## Planning and governance
+## Documentation
 
-| Document                                                | Purpose                          |
-| ------------------------------------------------------- | -------------------------------- |
-| [Product one-pager](docs/product/one-pager.md)          | What Warplane is and why         |
-| [Roadmap](docs/planning/roadmap.md)                     | Milestone breakdown and timeline |
-| [Work items](docs/planning/work-items.yaml)             | Machine-readable task tracking   |
-| [Status](docs/planning/status.md)                       | Current milestone progress       |
-| [Risk register](docs/planning/risk-register.md)         | Known risks and mitigations      |
-| [Decision log](docs/decisions/README.md)                | Architecture Decision Records    |
-| [Working agreement](docs/planning/working-agreement.md) | Coding and review rules          |
-| [Contributing](CONTRIBUTING.md)                         | How to contribute                |
-| [Security](SECURITY.md)                                 | Vulnerability disclosure process |
-| [Release process](RELEASE.md)                           | Versioning and release steps     |
+| Resource                                           | Description                 |
+| -------------------------------------------------- | --------------------------- |
+| [Product overview](docs/product/one-pager.md)      | What Warplane is and why    |
+| [Roadmap](docs/planning/roadmap.md)                | Milestone breakdown         |
+| [Architecture decisions](docs/decisions/README.md) | ADR log                     |
+| [Trace model](docs/runbooks/trace-model.md)        | Teleporter event lifecycle  |
+| [Full E2E guide](docs/runbooks/full-e2e.md)        | Running with live Avalanche |
+| [Storage runbook](docs/runbooks/storage.md)        | Database and ingestion      |
+| [Contributing](CONTRIBUTING.md)                    | How to contribute           |
 
 ## License
 

@@ -285,7 +285,7 @@ work_items:
       - docs/runbooks/trace-model.md
       - docs/decisions/0004-zod-single-schema-approach.md
 
-  # --- Milestone 2 items (backlog) ---
+  # --- Additional M1 items ---
 
   - id: WP-100
     title: GitHub Actions CI pipeline
@@ -306,8 +306,10 @@ work_items:
       - .github/workflows/ci.yml
       - .github/workflows/e2e-tmpnet.yml
       - scripts/check.sh
-      - scripts/demo-day1.sh
+      - scripts/demo-seed.sh
       - scripts/pre-commit.sh
+
+  # --- Milestone 2 items (backlog) ---
 
   - id: WP-101
     title: Real Avalanche RPC polling

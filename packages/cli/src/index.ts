@@ -4,7 +4,7 @@
  * warplane CLI — Interchain Control Plane for Avalanche L1s.
  *
  * Talks to the local API by default (http://localhost:3100).
- * Set ICP_API_URL to override.
+ * Set WARPLANE_API_URL to override.
  */
 
 import { Command } from "commander";
@@ -30,7 +30,7 @@ program
   .hook("preAction", (_thisCmd, _actionCmd) => {
     const opts = program.opts();
     if (opts.json) setJsonMode(true);
-    if (opts.apiUrl) process.env["ICP_API_URL"] = opts.apiUrl;
+    if (opts.apiUrl) process.env["WARPLANE_API_URL"] = opts.apiUrl;
   });
 
 program.addCommand(doctorCommand());

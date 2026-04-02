@@ -1,4 +1,4 @@
-# Day 1 Demo — Warplane Dashboard
+# Seeded Demo — Warplane Dashboard
 
 Quick walkthrough for demoing the local Teleporter trace dashboard with seeded data.
 
@@ -11,7 +11,7 @@ Quick walkthrough for demoing the local Teleporter trace dashboard with seeded d
 
 ```bash
 # 1. Seed the database with golden fixtures
-pnpm db:seed:day1
+pnpm db:seed
 
 # 2. Start the API server (port 3000)
 pnpm dev
@@ -79,7 +79,7 @@ Open **http://localhost:5180** in a browser.
 6. **Visit Scenarios** — show 5/5 scenarios with coverage
 7. **Show Docs page** — reference for API endpoints and quickstart
 
-## Expected Data (Day 1 Fixtures)
+## Expected Data (Golden Fixtures)
 
 | Scenario                    | Status         | Traces |
 | --------------------------- | -------------- | ------ |

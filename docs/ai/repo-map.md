@@ -101,7 +101,7 @@ Machine-friendly map of the Warplane repository structure.
 
 | Script                      | Purpose                           |
 | --------------------------- | --------------------------------- |
-| `scripts/demo-day1.sh`      | M1 demo runner                    |
+| `scripts/demo-seed.sh`      | Seeded demo runner                |
 | `scripts/generate-llms.mjs` | Generate llms.txt artifacts       |
 | `scripts/docs-llms.sh`      | Shell wrapper for llms generation |
 | `scripts/ai-pack.sh`        | AI context bundle generator       |

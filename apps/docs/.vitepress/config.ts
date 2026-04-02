@@ -20,7 +20,8 @@ export default defineConfig({
           text: "Product",
           items: [
             { text: "Overview", link: "/product/overview" },
-            { text: "Day-1 Demo", link: "/product/day1-demo" },
+            { text: "Community Value", link: "/product/community-value" },
+            { text: "Seeded Demo", link: "/product/seeded-demo" },
           ],
         },
       ],
@@ -30,6 +31,7 @@ export default defineConfig({
           items: [
             { text: "Overview", link: "/architecture/overview" },
             { text: "Trace Model", link: "/architecture/trace-model" },
+            { text: "Trace Glossary", link: "/architecture/trace-glossary" },
             { text: "Domain Types", link: "/architecture/domain-types" },
           ],
         },
@@ -60,6 +62,10 @@ export default defineConfig({
               text: "ADR-0003: Fixture-First MVP",
               link: "/decisions/0003-fixture-first-day1-mvp",
             },
+            {
+              text: "ADR-0004: Zod Schema Source",
+              link: "/decisions/0004-zod-single-schema-approach",
+            },
           ],
         },
       ],
@@ -86,6 +92,7 @@ export default defineConfig({
           text: "Runbooks",
           items: [
             { text: "Local Development", link: "/runbooks/local-dev" },
+            { text: "Troubleshooting", link: "/runbooks/troubleshooting" },
             { text: "Adding a Package", link: "/runbooks/add-package" },
           ],
         },

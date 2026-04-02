@@ -50,10 +50,10 @@ pnpm db:migrate              # Uses default warplane.db
 pnpm db:migrate -- custom.db # Specify a different path
 ```
 
-### Seed with golden fixtures (day-1 dataset)
+### Seed with golden fixtures
 
 ```bash
-pnpm db:seed:day1
+pnpm db:seed
 # Equivalent to:
 pnpm ingest:fixtures
 ```
