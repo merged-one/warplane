@@ -7,3 +7,6 @@
 
 export { importArtifacts, type ImportResult, type ImportOptions } from "./importer.js";
 export { startWatcher, type WatchOptions } from "./watcher.js";
+
+// RPC ingestion engine
+export * from "./rpc/index.js";

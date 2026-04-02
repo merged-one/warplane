@@ -38,3 +38,11 @@ export {
   listImports,
   type ImportRecord,
 } from "./repos/imports.js";
+
+export {
+  upsertCheckpoint,
+  getCheckpoint,
+  deleteCheckpoint,
+  listCheckpoints,
+  type Checkpoint,
+} from "./repos/checkpoints.js";

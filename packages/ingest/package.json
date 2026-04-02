@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@warplane/domain": "workspace:*",
-    "@warplane/storage": "workspace:*"
+    "@warplane/storage": "workspace:*",
+    "viem": "^2.47.6"
   }
 }
