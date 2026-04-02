@@ -1,0 +1,33 @@
+{
+  "networkDir": "/tmp/warplane-tmpnet",
+  "networkId": 88888,
+  "source": {
+    "name": "source",
+    "subnetId": "subnet-src-001",
+    "blockchainId": "chain-src-001",
+    "evmChainId": 99999,
+    "nodeUris": [
+      "http://127.0.0.1:9650"
+    ],
+    "teleporterAddress": "0x253b2784c75e510dD0fF1da844684a1aC0aa5fcf",
+    "teleporterRegistryAddress": "0x17aB05351fC94a1a67Bf3f56DdbB941aE6c63E25",
+    "fundedKey": "56289e99c94b6912bfc12adc093c9b51124f0dc54ac7a766b2bc5ccf558d8027"
+  },
+  "destination": {
+    "name": "destination",
+    "subnetId": "subnet-dst-001",
+    "blockchainId": "chain-dst-001",
+    "evmChainId": 99998,
+    "nodeUris": [
+      "http://127.0.0.1:9652"
+    ],
+    "teleporterAddress": "0x253b2784c75e510dD0fF1da844684a1aC0aa5fcf",
+    "teleporterRegistryAddress": "0x17aB05351fC94a1a67Bf3f56DdbB941aE6c63E25",
+    "fundedKey": "2e8db68a2e4dab8e4009f6b879f48f5b1d4e4bdb8f7e9f2e1c7d3a5b6e8f9012"
+  },
+  "pChainNodeUris": [
+    "http://127.0.0.1:9650",
+    "http://127.0.0.1:9651"
+  ],
+  "teleporterVersion": "v1.0.0"
+}
