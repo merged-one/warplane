@@ -309,58 +309,421 @@ work_items:
       - scripts/demo-seed.sh
       - scripts/pre-commit.sh
 
-  # --- Milestone 2 items (backlog) ---
+  # --- Milestone 2: Fuji Alpha for Observability and Eventing ---
+  # See ADR-0005 (ingestion strategy), ADR-0006 (event model), ADR-0007 (milestone structure)
 
   - id: WP-101
-    title: Real Avalanche RPC polling
+    title: RPC polling ingestion for TeleporterMessenger events
     status: backlog
     priority: p0
     owner: unassigned
-    dependencies: [WP-003]
+    dependencies: [WP-003, WP-015]
     milestone: m2
     acceptance_criteria:
-      - Ingest polls real Avalanche node RPCs
-      - Health status derived from RPC responses
+      - Polls eth_getLogs for all 8 TeleporterMessenger events on configured L1s
+      - WebSocket subscription for real-time block header notifications
+      - Correlates SendCrossChainMessage (source) with ReceiveCrossChainMessage (destination)
+      - Handles RPC node unavailability with backoff and retry
+      - Handles chain reorgs (revert and re-ingest affected blocks)
+      - Sub-60-second message-state freshness on Fuji
     files_expected:
       - packages/ingest/src/rpc-client.ts
+      - packages/ingest/src/rpc-poller.ts
+      - packages/ingest/src/event-decoder.ts
 
   - id: WP-102
-    title: Storage implementation (SQLite/Postgres)
+    title: Relayer Prometheus metrics integration
     status: backlog
     priority: p1
     owner: unassigned
-    dependencies: [WP-002]
+    dependencies: [WP-101]
     milestone: m2
     acceptance_criteria:
-      - At least one concrete storage adapter
-      - Integration tests pass
+      - Scrapes ICM Relayer metrics from port 9090
+      - Ingests successful_relay_message_count, failed_relay_message_count (with failure_reason),
+        create_signed_message_latency_ms
+      - Populates off-chain events (warp_message_extracted, relay_submitted) in traces
+      - Graceful degradation when relayer metrics unavailable
     files_expected:
-      - packages/storage/src/sqlite.ts
+      - packages/ingest/src/prometheus-client.ts
+      - packages/ingest/src/relayer-metrics.ts
 
   - id: WP-103
-    title: Docker Compose local dev environment
-    status: backlog
-    priority: p2
-    owner: unassigned
-    dependencies: [WP-004]
-    milestone: m2
-    acceptance_criteria:
-      - docker compose up starts API + web + db
-    files_expected:
-      - docker-compose.yml
-
-  - id: WP-104
-    title: e2e test wiring with tmpnet
+    title: Signature aggregator metrics integration
     status: backlog
     priority: p1
     owner: unassigned
-    dependencies: [WP-007]
+    dependencies: [WP-101]
+    milestone: m2
+    acceptance_criteria:
+      - Scrapes Signature Aggregator metrics from port 8081
+      - Ingests agg_sigs_latency_ms, validator_timeouts, connected_stake_weight_percentage
+      - Populates signatures_aggregated event in traces
+      - Graceful degradation when sig-agg metrics unavailable
+    files_expected:
+      - packages/ingest/src/sigagg-metrics.ts
+
+  - id: WP-104
+    title: Event normalization pipeline
+    status: backlog
+    priority: p0
+    owner: unassigned
+    dependencies: [WP-101, WP-102, WP-103]
+    milestone: m2
+    acceptance_criteria:
+      - Converts raw RPC logs + Prometheus metrics into normalized MessageEvent objects
+      - At least 8 event types produced (all 11-event model kinds except those requiring
+        relayer/sig-agg access)
+      - Events validated against Zod schemas before storage
+      - Produces unified traces by correlating events across source and destination chains
+    files_expected:
+      - packages/ingest/src/normalizer.ts
+      - packages/ingest/src/correlator.ts
+
+  - id: WP-105
+    title: Per-message tracing UI with lifecycle timeline
+    status: backlog
+    priority: p0
+    owner: unassigned
+    dependencies: [WP-104]
+    milestone: m2
+    acceptance_criteria:
+      - Dashboard shows per-message lifecycle with all observed events
+      - Visual timeline indicating source tx, relay state, destination delivery, execution result
+      - Real-time updates via polling or WebSocket
+      - Search/filter by message ID, scenario, chain, status
+    files_expected:
+      - apps/web/src/pages/TraceTimelinePage.tsx
+      - apps/web/src/components/EventTimeline.tsx
+
+  - id: WP-106
+    title: Relayer operations panel
+    status: backlog
+    priority: p1
+    owner: unassigned
+    dependencies: [WP-102]
+    milestone: m2
+    acceptance_criteria:
+      - Dashboard panel showing configured relayers and their health
+      - Delivery failure classification from failed_relay_message_count failure_reason labels
+      - Lag/backlog indicators from checkpoint metrics
+      - Signature aggregation latency visibility
+    files_expected:
+      - apps/web/src/pages/RelayerOpsPage.tsx
+
+  - id: WP-107
+    title: Webhook alerting for failed or delayed flows
+    status: backlog
+    priority: p1
+    owner: unassigned
+    dependencies: [WP-104]
+    milestone: m2
+    acceptance_criteria:
+      - Configurable webhook destinations for alert delivery
+      - Alerts on message_execution_failed events
+      - Alerts on messages exceeding configurable delivery timeout
+      - Alert payload includes message ID, chains, failure details
+    files_expected:
+      - apps/api/src/routes/webhooks.ts
+      - packages/ingest/src/alerter.ts
+
+  - id: WP-108
+    title: Docker Compose for self-hosted deployment
+    status: backlog
+    priority: p1
+    owner: unassigned
+    dependencies: [WP-101]
+    milestone: m2
+    acceptance_criteria:
+      - docker compose up starts API + web + ingest worker
+      - Supports both SQLite and Postgres via environment variable
+      - Includes health checks for all services
+      - Documented in deployment guide
+    files_expected:
+      - docker-compose.yml
+      - Dockerfile
+
+  - id: WP-109
+    title: Fuji deployment guide and configuration
+    status: backlog
+    priority: p1
+    owner: unassigned
+    dependencies: [WP-108]
+    milestone: m2
+    acceptance_criteria:
+      - Step-by-step guide for deploying on Fuji testnet
+      - Example configuration for monitoring C-Chain and at least one L1
+      - Troubleshooting section for common RPC issues
+    files_expected:
+      - docs/runbooks/fuji-deployment.md
+
+  - id: WP-110
+    title: E2E test wiring with real tmpnet
+    status: backlog
+    priority: p1
+    owner: unassigned
+    dependencies: [WP-007, WP-101]
     milestone: m2
     acceptance_criteria:
       - make e2e runs real tmpnet-based tests
       - CreateNetworkWithTeleporter uses real tmpnet API
       - Teleporter contracts deployed on both L1s
       - Cross-chain send/receive scenario passes
+      - Ingestion pipeline consumes live tmpnet events
     files_expected:
       - harness/tmpnet/teleporter_suite_test.go
       - harness/tmpnet/pkg/harness/network.go
+
+  - id: WP-111
+    title: Postgres storage adapter
+    status: backlog
+    priority: p2
+    owner: unassigned
+    dependencies: [WP-002]
+    milestone: m2
+    acceptance_criteria:
+      - Postgres adapter implements same repository interfaces as SQLite
+      - All existing storage tests pass against Postgres
+      - Migration system supports Postgres
+    files_expected:
+      - packages/storage/src/postgres.ts
+      - packages/storage/src/migrations/postgres/
+
+  # --- Milestone 3: Policy Engine and Remediation Workflows ---
+
+  - id: WP-201
+    title: "Policy engine: allowed relayer enforcement"
+    status: backlog
+    priority: p0
+    owner: unassigned
+    dependencies: [WP-104]
+    milestone: m3
+    acceptance_criteria:
+      - Declarative policy configuration for allowed relayers per route
+      - Alerts when messages relayed by non-allowed relayers
+      - Policy violations surfaced in dashboard and API
+    files_expected:
+      - packages/domain/src/policies.ts
+      - apps/api/src/routes/policies.ts
+
+  - id: WP-202
+    title: "Policy engine: fee floor and underfunded detection"
+    status: backlog
+    priority: p0
+    owner: unassigned
+    dependencies: [WP-104]
+    milestone: m3
+    acceptance_criteria:
+      - Configurable fee floor per route
+      - Detects underfunded messages (fee below floor)
+      - Alerts on underfunded messages
+    files_expected:
+      - packages/domain/src/policies.ts
+
+  - id: WP-203
+    title: "Policy engine: retry windows and route allowlists"
+    status: backlog
+    priority: p1
+    owner: unassigned
+    dependencies: [WP-201]
+    milestone: m3
+    acceptance_criteria:
+      - Configurable retry windows (max time before alert)
+      - Route allowlists (which source/destination pairs are permitted)
+      - At least 6 total enforceable policies across WP-201 through WP-203
+    files_expected:
+      - packages/domain/src/policies.ts
+
+  - id: WP-204
+    title: "Policy engine: circuit-breaker conditions"
+    status: backlog
+    priority: p1
+    owner: unassigned
+    dependencies: [WP-201]
+    milestone: m3
+    acceptance_criteria:
+      - Configurable circuit-breaker triggers (failure rate threshold, consecutive failures)
+      - Circuit breaker pauses alerting and flags affected routes
+      - Manual or automatic reset
+    files_expected:
+      - packages/domain/src/policies.ts
+      - apps/api/src/routes/circuit-breakers.ts
+
+  - id: WP-205
+    title: "Remediation: replay-safe retry initiation"
+    status: backlog
+    priority: p0
+    owner: unassigned
+    dependencies: [WP-104]
+    milestone: m3
+    acceptance_criteria:
+      - CLI and API endpoint to trigger retryMessageExecution on destination chain
+      - Pre-flight check that message exists and execution failed
+      - Replay protection verification before retry
+      - Audit log entry for retry action
+    files_expected:
+      - packages/cli/src/commands/retry.ts
+      - apps/api/src/routes/remediation.ts
+
+  - id: WP-206
+    title: "Remediation: fee top-up workflow"
+    status: backlog
+    priority: p1
+    owner: unassigned
+    dependencies: [WP-202]
+    milestone: m3
+    acceptance_criteria:
+      - CLI and API endpoint to call AddFeeAmount on source chain
+      - Shows current fee and recommended top-up amount
+      - Audit log entry for fee action
+    files_expected:
+      - packages/cli/src/commands/fee.ts
+
+  - id: WP-207
+    title: "Remediation: channel pause/unpause and relayer failover"
+    status: backlog
+    priority: p1
+    owner: unassigned
+    dependencies: [WP-204]
+    milestone: m3
+    acceptance_criteria:
+      - CLI commands to pause/unpause monitoring of specific routes
+      - Relayer failover recommendation when primary relayer is unhealthy
+      - At least 4 total one-click remediation flows across WP-205 through WP-207
+    files_expected:
+      - packages/cli/src/commands/channel.ts
+
+  - id: WP-208
+    title: Environment promotion (local to Fuji to mainnet)
+    status: backlog
+    priority: p1
+    owner: unassigned
+    dependencies: [WP-109]
+    milestone: m3
+    acceptance_criteria:
+      - CLI command to export/import configuration across environments
+      - Validates contract addresses and chain IDs for target environment
+      - Diff view showing configuration changes between environments
+    files_expected:
+      - packages/cli/src/commands/promote.ts
+
+  - id: WP-209
+    title: Audit log for operator actions
+    status: backlog
+    priority: p1
+    owner: unassigned
+    dependencies: [WP-205]
+    milestone: m3
+    acceptance_criteria:
+      - All remediation and policy actions logged with timestamp, actor, action, target
+      - Audit log queryable via API
+      - Audit log visible in dashboard
+    files_expected:
+      - packages/storage/src/repos/audit.ts
+      - packages/storage/src/migrations/002_audit.sql
+
+  - id: WP-210
+    title: Team roles and permissions
+    status: backlog
+    priority: p2
+    owner: unassigned
+    dependencies: [WP-209]
+    milestone: m3
+    acceptance_criteria:
+      - At least 2 roles (admin, viewer)
+      - API key authentication for programmatic access
+      - Role-based access to remediation actions
+    files_expected:
+      - apps/api/src/middleware/auth.ts
+
+  # --- Milestone 4: Public Beta and Ecosystem Launch ---
+
+  - id: WP-301
+    title: Security hardening and review
+    status: backlog
+    priority: p0
+    owner: unassigned
+    dependencies: [WP-210]
+    milestone: m4
+    acceptance_criteria:
+      - Input validation on all API endpoints
+      - Rate limiting on public-facing endpoints
+      - Dependency audit with no critical vulnerabilities
+      - Security review of remediation action flows
+    files_expected:
+      - apps/api/src/middleware/rate-limit.ts
+
+  - id: WP-302
+    title: Public documentation and API reference
+    status: backlog
+    priority: p0
+    owner: unassigned
+    dependencies: [WP-109]
+    milestone: m4
+    acceptance_criteria:
+      - Complete API reference generated from OpenAPI spec
+      - Quickstart guides for 3 deployment scenarios (local, Fuji, mainnet)
+      - Architecture documentation with data flow diagrams
+      - Troubleshooting guide updated for all M2-M3 features
+    files_expected:
+      - apps/docs/api/reference.md
+      - apps/docs/quickstart/
+
+  - id: WP-303
+    title: "Reference integration: VRF cross-L1 service adapter"
+    status: backlog
+    priority: p0
+    owner: unassigned
+    dependencies: [WP-205, WP-206]
+    milestone: m4
+    acceptance_criteria:
+      - Working example of cross-L1 VRF access via Teleporter
+      - Control plane traces the full VRF request/response lifecycle
+      - Demonstrates policy enforcement and remediation on a real use case
+      - Documented as a step-by-step tutorial
+    files_expected:
+      - examples/vrf-cross-l1/
+      - apps/docs/tutorials/vrf-service-adapter.md
+
+  - id: WP-304
+    title: Starter templates and example apps
+    status: backlog
+    priority: p1
+    owner: unassigned
+    dependencies: [WP-302]
+    milestone: m4
+    acceptance_criteria:
+      - At least 3 example apps demonstrating different use cases
+      - Each example has its own README and runs independently
+      - At least 3 teams can complete onboarding using public docs
+    files_expected:
+      - examples/basic-monitoring/
+      - examples/alerting-setup/
+      - examples/policy-enforcement/
+
+  - id: WP-305
+    title: Partner pilot and case study
+    status: backlog
+    priority: p1
+    owner: unassigned
+    dependencies: [WP-301]
+    milestone: m4
+    acceptance_criteria:
+      - At least 1 public pilot or 2 private pilots completed
+      - Case study or pilot writeup published
+      - 99.5% service uptime over 30-day beta window
+    files_expected:
+      - apps/docs/case-studies/
+
+  - id: WP-306
+    title: Dashboard search and SPA routing
+    status: backlog
+    priority: p2
+    owner: unassigned
+    dependencies: [WP-105]
+    milestone: m4
+    acceptance_criteria:
+      - Search API exposed in dashboard navigation
+      - SPA routing fallback for production builds (deep links work)
+    files_expected:
+      - apps/web/src/components/SearchBar.tsx
