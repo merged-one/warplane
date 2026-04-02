@@ -20,7 +20,7 @@ PORT=4000 DB_PATH=./my.db DEMO_MODE=false pnpm dev
 ## Environment Variables
 
 | Variable    | Default            | Description                              |
-|-------------|--------------------|------------------------------------------|
+| ----------- | ------------------ | ---------------------------------------- |
 | `PORT`      | `3100`             | HTTP listen port                         |
 | `HOST`      | `0.0.0.0`          | Bind address                             |
 | `DB_PATH`   | `data/warplane.db` | SQLite database file path                |

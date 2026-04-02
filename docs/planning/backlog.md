@@ -4,7 +4,6 @@ Items listed here are recognized as needed but explicitly deferred from Mileston
 
 ## Infrastructure
 
-- **CI pipeline** (GitHub Actions): lint, test, build matrix for Node + Go
 - **Docker Compose**: local dev environment with API + web + database
 - **e2e test wiring**: `make e2e` currently prints a stub; needs tmpnet integration
 
@@ -18,7 +17,5 @@ Items listed here are recognized as needed but explicitly deferred from Mileston
 
 ## Quality
 
-- **ESLint CI enforcement**: config is present but not yet run in CI
-- **Prettier format check in CI**
 - **Test coverage thresholds**
 - **Go linter (golangci-lint) integration**

@@ -74,20 +74,20 @@ warplane://docs/product/one-pager — Product vision
 
 ## Available Prompts
 
-| Prompt | Description | Args |
-|--------|-------------|------|
-| `summarize-adr` | Summarize an ADR | `slug`: ADR filename slug |
-| `explain-trace` | Explain the trace/domain model | (none) |
-| `generate-task-plan` | Plan tasks for a goal | `goal`: what to plan |
-| `review-runbook` | Review runbook quality | `content`: runbook text |
+| Prompt               | Description                    | Args                      |
+| -------------------- | ------------------------------ | ------------------------- |
+| `summarize-adr`      | Summarize an ADR               | `slug`: ADR filename slug |
+| `explain-trace`      | Explain the trace/domain model | (none)                    |
+| `generate-task-plan` | Plan tasks for a goal          | `goal`: what to plan      |
+| `review-runbook`     | Review runbook quality         | `content`: runbook text   |
 
 ## Available Tools
 
-| Tool | Description | Args |
-|------|-------------|------|
-| `search_docs` | Search all docs for a query | `query`: search text |
-| `list_adrs` | List all ADRs with status | (none) |
-| `get_trace_schema` | Get domain + storage types | (none) |
+| Tool               | Description                 | Args                 |
+| ------------------ | --------------------------- | -------------------- |
+| `search_docs`      | Search all docs for a query | `query`: search text |
+| `list_adrs`        | List all ADRs with status   | (none)               |
+| `get_trace_schema` | Get domain + storage types  | (none)               |
 
 ## Example Session
 

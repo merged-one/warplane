@@ -4,11 +4,11 @@ Warplane generates `llms.txt` and `llms-full.txt` files following the [llms.txt 
 
 ## Files Generated
 
-| File | Purpose | Size |
-|------|---------|------|
-| `llms.txt` | Discovery file with section headings and links | ~2 KB |
-| `llms-full.txt` | Complete content of all key documentation | ~30 KB |
-| `docs/ai/context-map.json` | Machine-readable file index with priorities | ~3 KB |
+| File                       | Purpose                                        | Size   |
+| -------------------------- | ---------------------------------------------- | ------ |
+| `llms.txt`                 | Discovery file with section headings and links | ~2 KB  |
+| `llms-full.txt`            | Complete content of all key documentation      | ~30 KB |
+| `docs/ai/context-map.json` | Machine-readable file index with priorities    | ~3 KB  |
 
 ## Generation
 

@@ -2,7 +2,7 @@
  * Unit tests for output helpers.
  */
 
-import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
+import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import {
   setJsonMode,
   isJsonMode,
@@ -141,10 +141,13 @@ describe("detail", () => {
 
 describe("table", () => {
   it("renders headers, separator, and rows", () => {
-    table(["NAME", "AGE"], [
-      ["Alice", "30"],
-      ["Bob", "25"],
-    ]);
+    table(
+      ["NAME", "AGE"],
+      [
+        ["Alice", "30"],
+        ["Bob", "25"],
+      ],
+    );
     expect(logged).toHaveLength(4); // header + separator + 2 rows
     expect(logged[0]).toContain("NAME");
     expect(logged[0]).toContain("AGE");

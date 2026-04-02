@@ -38,12 +38,12 @@ For global-like access, add `node_modules/.bin` to your PATH or use `npx`.
 
 ## Global Options
 
-| Option | Description |
-|--------|-------------|
-| `--json` | Output JSON instead of tables (for scripting) |
+| Option            | Description                                                  |
+| ----------------- | ------------------------------------------------------------ |
+| `--json`          | Output JSON instead of tables (for scripting)                |
 | `--api-url <url>` | Override the API base URL (default: `http://localhost:3100`) |
-| `-V, --version` | Show CLI version |
-| `-h, --help` | Show help |
+| `-V, --version`   | Show CLI version                                             |
+| `-h, --help`      | Show help                                                    |
 
 The API URL can also be set via the `ICP_API_URL` environment variable.
 
@@ -218,10 +218,10 @@ The only exception is `warplane doctor`, which checks for the database file and 
 
 ## Troubleshooting
 
-| Problem | Solution |
-|---------|----------|
-| `Cannot reach the API` | Start the API: `pnpm dev` |
-| `No trace found matching "…"` | Check the message ID prefix — use `warplane traces list` to see available IDs |
-| `Directory not found` (import) | Provide an absolute path or a path relative to the repo root |
-| `MCP server not built` | Build it: `pnpm -F docs-mcp build` |
-| Doctor shows go/tmpnet warnings | These are optional — only needed for E2E harness development |
+| Problem                         | Solution                                                                      |
+| ------------------------------- | ----------------------------------------------------------------------------- |
+| `Cannot reach the API`          | Start the API: `pnpm dev`                                                     |
+| `No trace found matching "…"`   | Check the message ID prefix — use `warplane traces list` to see available IDs |
+| `Directory not found` (import)  | Provide an absolute path or a path relative to the repo root                  |
+| `MCP server not built`          | Build it: `pnpm -F docs-mcp build`                                            |
+| Doctor shows go/tmpnet warnings | These are optional — only needed for E2E harness development                  |

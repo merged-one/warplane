@@ -18,12 +18,12 @@ pnpm --filter @warplane/cli run start
 
 ## Available Commands
 
-| Command | Description | Status |
-|---------|-------------|--------|
-| `ping` | Basic connectivity check | Available |
+| Command  | Description                | Status       |
+| -------- | -------------------------- | ------------ |
+| `ping`   | Basic connectivity check   | Available    |
 | `status` | Show chain health overview | Planned (M2) |
-| `deploy` | Trigger subnet deployment | Planned (M3) |
-| `logs` | Stream chain logs | Planned (M3) |
-| `config` | Manage CLI configuration | Planned (M3) |
+| `deploy` | Trigger subnet deployment  | Planned (M3) |
+| `logs`   | Stream chain logs          | Planned (M3) |
+| `config` | Manage CLI configuration   | Planned (M3) |
 
 See [Commands](/cli/commands) for details.

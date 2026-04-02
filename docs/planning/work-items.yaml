@@ -289,16 +289,25 @@ work_items:
 
   - id: WP-100
     title: GitHub Actions CI pipeline
-    status: backlog
+    status: done
     priority: p0
     owner: unassigned
     dependencies: [WP-009]
-    milestone: m2
+    milestone: m1
     acceptance_criteria:
-      - CI runs lint, test, build for Node and Go
-      - Status badges in README
+      - CI runs build, lint, typecheck, format, tests for Node
+      - CI runs API integration and CLI smoke tests
+      - CI runs docs build, llms generation, ADR validation
+      - Go harness job runs build, vet, test in parallel
+      - E2E tmpnet workflow available via manual dispatch
+      - repo:check runs same checks locally
+      - Pre-commit hook for typecheck + lint + format
     files_expected:
       - .github/workflows/ci.yml
+      - .github/workflows/e2e-tmpnet.yml
+      - scripts/check.sh
+      - scripts/demo-day1.sh
+      - scripts/pre-commit.sh
 
   - id: WP-101
     title: Real Avalanche RPC polling

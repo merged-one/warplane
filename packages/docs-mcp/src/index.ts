@@ -45,10 +45,7 @@ function searchDocs(query: string): Array<{ path: string; matches: string[] }> {
   const rootFiles = ["README.md", "CONTRIBUTING.md", "AGENTS.md", "SECURITY.md", "RELEASE.md"];
   const queryLower = query.toLowerCase();
 
-  const allFiles = [
-    ...rootFiles,
-    ...dirs.flatMap((d) => listMarkdownFiles(d)),
-  ];
+  const allFiles = [...rootFiles, ...dirs.flatMap((d) => listMarkdownFiles(d))];
 
   for (const filePath of allFiles) {
     const content = readRepoFile(filePath);
@@ -121,7 +118,11 @@ server.registerResource(
 server.registerResource(
   "domain-types",
   "warplane://schemas/domain",
-  { title: "Domain types", description: "Core domain types from @warplane/domain", mimeType: "text/typescript" },
+  {
+    title: "Domain types",
+    description: "Core domain types from @warplane/domain",
+    mimeType: "text/typescript",
+  },
   async (uri) => {
     const content = readRepoFile("packages/domain/src/index.ts") ?? "File not found";
     return { contents: [{ uri: uri.href, text: content }] };
@@ -132,7 +133,11 @@ server.registerResource(
 server.registerResource(
   "storage-interfaces",
   "warplane://schemas/storage",
-  { title: "Storage interfaces", description: "Persistence interfaces from @warplane/storage", mimeType: "text/typescript" },
+  {
+    title: "Storage interfaces",
+    description: "Persistence interfaces from @warplane/storage",
+    mimeType: "text/typescript",
+  },
   async (uri) => {
     const content = readRepoFile("packages/storage/src/index.ts") ?? "File not found";
     return { contents: [{ uri: uri.href, text: content }] };
@@ -143,7 +148,11 @@ server.registerResource(
 server.registerResource(
   "product-one-pager",
   "warplane://docs/product/one-pager",
-  { title: "Product one-pager", description: "Product vision and key capabilities", mimeType: "text/markdown" },
+  {
+    title: "Product one-pager",
+    description: "Product vision and key capabilities",
+    mimeType: "text/markdown",
+  },
   async (uri) => {
     const content = readRepoFile("docs/product/one-pager.md") ?? "File not found";
     return { contents: [{ uri: uri.href, text: content }] };
@@ -154,7 +163,11 @@ server.registerResource(
 server.registerResource(
   "api-source",
   "warplane://source/api",
-  { title: "API server source", description: "Fastify API server entry point", mimeType: "text/typescript" },
+  {
+    title: "API server source",
+    description: "Fastify API server entry point",
+    mimeType: "text/typescript",
+  },
   async (uri) => {
     const content = readRepoFile("apps/api/src/index.ts") ?? "File not found";
     return { contents: [{ uri: uri.href, text: content }] };

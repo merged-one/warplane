@@ -1,4 +1,4 @@
-.PHONY: bootstrap build test check demo-day1 e2e e2e-compile golden golden-verify clean
+.PHONY: bootstrap build test check repo-check demo-day1 e2e e2e-compile golden golden-verify clean
 
 bootstrap:
 	pnpm install
@@ -14,6 +14,10 @@ test:
 
 check:
 	pnpm run check
+
+# Full repo health check — same as CI, run locally.
+repo-check:
+	bash scripts/check.sh
 
 # Compile-only check for the Go E2E harness (no binaries required).
 e2e-compile:
@@ -36,6 +40,7 @@ golden-verify:
 	diff -r --exclude='.gitkeep' harness/tmpnet/artifacts /tmp/warplane-golden-verify
 	@echo "golden-verify: fixtures match"
 
+# Day-1 demo: API + web with seeded golden fixtures. No AvalancheGo required.
 demo-day1:
 	bash scripts/demo-day1.sh
 

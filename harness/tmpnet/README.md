@@ -55,22 +55,22 @@ make e2e
 
 ## Scenarios
 
-| Scenario | Events | Outcome |
-|----------|--------|---------|
-| `basic_send_receive` | send → extract → aggregate → relay → confirm | success |
-| `add_fee` | send → add fee → extract → aggregate → relay → confirm | success |
-| `specified_receipts` | send ×3 → relay ×3 → send receipts B→A | success |
-| `retry_failed_execution` | send → fail (low gas) → retry → success | retry_success |
-| `replay_or_duplicate_blocked` | send → deliver → duplicate → blocked | replay_blocked |
+| Scenario                      | Events                                                 | Outcome        |
+| ----------------------------- | ------------------------------------------------------ | -------------- |
+| `basic_send_receive`          | send → extract → aggregate → relay → confirm           | success        |
+| `add_fee`                     | send → add fee → extract → aggregate → relay → confirm | success        |
+| `specified_receipts`          | send ×3 → relay ×3 → send receipts B→A                 | success        |
+| `retry_failed_execution`      | send → fail (low gas) → retry → success                | retry_success  |
+| `replay_or_duplicate_blocked` | send → deliver → duplicate → blocked                   | replay_blocked |
 
 ## Environment Variables
 
-| Variable | Required | Description |
-|---|---|---|
-| `RUN_E2E` | For E2E | Set to any non-empty value to enable the Ginkgo suite |
-| `AVALANCHEGO_PATH` | For E2E | Path to `avalanchego` binary |
-| `AVALANCHEGO_PLUGIN_DIR` | For E2E | Path to plugin directory containing `subnet-evm` |
-| `WARPLANE_ARTIFACTS_DIR` | Optional | Override default `artifacts/` directory |
+| Variable                 | Required | Description                                           |
+| ------------------------ | -------- | ----------------------------------------------------- |
+| `RUN_E2E`                | For E2E  | Set to any non-empty value to enable the Ginkgo suite |
+| `AVALANCHEGO_PATH`       | For E2E  | Path to `avalanchego` binary                          |
+| `AVALANCHEGO_PLUGIN_DIR` | For E2E  | Path to plugin directory containing `subnet-evm`      |
+| `WARPLANE_ARTIFACTS_DIR` | Optional | Override default `artifacts/` directory               |
 
 ## Design
 

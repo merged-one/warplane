@@ -52,12 +52,7 @@
           "format": "uri"
         }
       },
-      "required": [
-        "name",
-        "blockchainId",
-        "subnetId",
-        "evmChainId"
-      ],
+      "required": ["name", "blockchainId", "subnetId", "evmChainId"],
       "additionalProperties": false
     },
     "destination": {
@@ -99,12 +94,7 @@
           "format": "uri"
         }
       },
-      "required": [
-        "name",
-        "blockchainId",
-        "subnetId",
-        "evmChainId"
-      ],
+      "required": ["name", "blockchainId", "subnetId", "evmChainId"],
       "additionalProperties": false
     },
     "pChainNodeUris": {
@@ -157,12 +147,7 @@
             "format": "uri"
           }
         },
-        "required": [
-          "name",
-          "blockchainId",
-          "subnetId",
-          "evmChainId"
-        ],
+        "required": ["name", "blockchainId", "subnetId", "evmChainId"],
         "additionalProperties": false
       }
     },
@@ -195,27 +180,16 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "blockchainId",
-                "contractAddress"
-              ],
+              "required": ["blockchainId", "contractAddress"],
               "additionalProperties": false
             }
           }
         },
-        "required": [
-          "name",
-          "chains"
-        ],
+        "required": ["name", "chains"],
         "additionalProperties": false
       }
     }
   },
-  "required": [
-    "schemaVersion",
-    "networkId",
-    "source",
-    "destination"
-  ],
+  "required": ["schemaVersion", "networkId", "source", "destination"],
   "additionalProperties": false
 }

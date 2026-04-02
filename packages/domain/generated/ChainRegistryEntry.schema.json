@@ -37,11 +37,6 @@
       "format": "uri"
     }
   },
-  "required": [
-    "name",
-    "blockchainId",
-    "subnetId",
-    "evmChainId"
-  ],
+  "required": ["name", "blockchainId", "subnetId", "evmChainId"],
   "additionalProperties": false
 }

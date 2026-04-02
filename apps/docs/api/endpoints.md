@@ -11,6 +11,7 @@ Health check endpoint.
 ```
 
 **Status codes:**
+
 - `200` — Server is healthy
 
 ## GET /api/v1/chains
@@ -42,6 +43,7 @@ Returns the list of registered chains and their status.
 ```
 
 **Status codes:**
+
 - `200` — Success
 
 ## Future Endpoints (M2+)

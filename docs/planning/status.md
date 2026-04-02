@@ -56,10 +56,15 @@ system. All code deliverables are complete. Planning and governance artifacts ar
 
 ## CI / Scripts
 
-- [x] `demo:day1` script
+- [x] `demo:day1` script (interactive: API + web with seeded fixtures)
 - [x] `docs:llms` script
 - [x] `ai:pack` script
-- [x] Makefile with bootstrap, build, test, check, e2e-compile, e2e targets
+- [x] Makefile with bootstrap, build, test, check, e2e-compile, e2e, repo-check targets
+- [x] GitHub Actions CI workflow (build, lint, typecheck, format, tests, API integration, CLI smoke, docs, llms, ADR validation)
+- [x] GitHub Actions Go harness job (build, vet, test — parallel)
+- [x] GitHub Actions E2E tmpnet workflow (manual dispatch — requires AvalancheGo)
+- [x] `repo:check` / `make repo-check` — full local CI check suite
+- [x] Pre-commit hook (typecheck + lint + format)
 
 ## Planning and tracking
 
@@ -111,7 +116,6 @@ system. All code deliverables are complete. Planning and governance artifacts ar
 
 See [`backlog.md`](backlog.md) and [`work-items.yaml`](work-items.yaml) for full details.
 
-- CI pipeline (GitHub Actions)
 - Real Avalanche RPC polling
 - Storage implementations
 - Docker Compose

@@ -16,7 +16,13 @@ export interface Artifact {
 
 export function upsertArtifact(
   db: Database,
-  artifact: { type: string; path: string; description?: string; traceId?: number; importId?: number },
+  artifact: {
+    type: string;
+    path: string;
+    description?: string;
+    traceId?: number;
+    importId?: number;
+  },
 ): number {
   const stmt = db.prepare(`
     INSERT INTO artifacts (type, path, description, trace_id, import_id)
@@ -57,7 +63,11 @@ export function listArtifacts(
   const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
   return (
-    db.prepare(`SELECT id, type, path, description, trace_id, import_id, created_at FROM artifacts ${where} ORDER BY created_at DESC`).all(...params) as Array<Record<string, unknown>>
+    db
+      .prepare(
+        `SELECT id, type, path, description, trace_id, import_id, created_at FROM artifacts ${where} ORDER BY created_at DESC`,
+      )
+      .all(...params) as Array<Record<string, unknown>>
   ).map((r) => ({
     id: r.id as number,
     type: r.type as string,

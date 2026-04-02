@@ -23,10 +23,26 @@ const mockTrace = {
   sender: "0xSender",
   recipient: "0xRecipient",
   sourceTxHash: "0xSourceTx",
-  timestamps: { sendTime: "2026-04-01T00:01:00Z", receiveTime: "2026-04-01T00:01:30Z", blockSend: 100 },
+  timestamps: {
+    sendTime: "2026-04-01T00:01:00Z",
+    receiveTime: "2026-04-01T00:01:30Z",
+    blockSend: 100,
+  },
   events: [
-    { kind: "message_sent", timestamp: "2026-04-01T00:01:00Z", chain: "source", blockNumber: 100, txHash: "0xSourceTx" },
-    { kind: "delivery_confirmed", timestamp: "2026-04-01T00:01:30Z", chain: "destination", blockNumber: 200, txHash: "0xDestTx" },
+    {
+      kind: "message_sent",
+      timestamp: "2026-04-01T00:01:00Z",
+      chain: "source",
+      blockNumber: 100,
+      txHash: "0xSourceTx",
+    },
+    {
+      kind: "delivery_confirmed",
+      timestamp: "2026-04-01T00:01:30Z",
+      chain: "destination",
+      blockNumber: 200,
+      txHash: "0xDestTx",
+    },
   ],
 };
 
@@ -37,7 +53,12 @@ const mockFailedTrace = {
   execution: "failed" as const,
   events: [
     { kind: "message_sent", timestamp: "2026-04-01T00:01:00Z", chain: "source" },
-    { kind: "execution_failed", timestamp: "2026-04-01T00:01:20Z", chain: "destination", details: "Out of gas" },
+    {
+      kind: "execution_failed",
+      timestamp: "2026-04-01T00:01:20Z",
+      chain: "destination",
+      details: "Out of gas",
+    },
   ],
 };
 
@@ -50,12 +71,28 @@ function mockFetch(url: string) {
     return json({ chains: [mockTrace.source, mockTrace.destination] });
   }
   if (u.includes("/network")) {
-    return json({ networks: [{ schemaVersion: "1.0.0", networkId: "test", source: mockTrace.source, destination: mockTrace.destination }] });
+    return json({
+      networks: [
+        {
+          schemaVersion: "1.0.0",
+          networkId: "test",
+          source: mockTrace.source,
+          destination: mockTrace.destination,
+        },
+      ],
+    });
   }
   if (u.includes("/scenarios")) {
     return json({
       scenarios: [
-        { scenario: "basic_send_receive", startedAt: "2026-04-01T00:00:00Z", completedAt: "2026-04-01T00:02:00Z", passed: true, messageIds: [mockTrace.messageId], traceFiles: [] },
+        {
+          scenario: "basic_send_receive",
+          startedAt: "2026-04-01T00:00:00Z",
+          completedAt: "2026-04-01T00:02:00Z",
+          passed: true,
+          messageIds: [mockTrace.messageId],
+          traceFiles: [],
+        },
       ],
     });
   }
@@ -78,10 +115,12 @@ function mockFetch(url: string) {
 }
 
 function json(data: unknown, status = 200) {
-  return Promise.resolve(new Response(JSON.stringify(data), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  }));
+  return Promise.resolve(
+    new Response(JSON.stringify(data), {
+      status,
+      headers: { "Content-Type": "application/json" },
+    }),
+  );
 }
 
 beforeEach(() => {

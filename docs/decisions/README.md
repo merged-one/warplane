@@ -5,11 +5,11 @@ using [Structured MADR](https://adr.github.io/madr/) format.
 
 ## Decisions
 
-| ADR | Title | Status |
-|-----|-------|--------|
-| [0001](0001-use-structured-madr.md) | Use Structured MADR for architecture decisions | Accepted |
-| [0002](0002-use-monorepo-with-ts-and-go.md) | Use monorepo with TypeScript and Go | Accepted |
-| [0003](0003-fixture-first-day1-mvp.md) | Fixture-first approach for Day-1 MVP | Accepted |
+| ADR                                         | Title                                          | Status   |
+| ------------------------------------------- | ---------------------------------------------- | -------- |
+| [0001](0001-use-structured-madr.md)         | Use Structured MADR for architecture decisions | Accepted |
+| [0002](0002-use-monorepo-with-ts-and-go.md) | Use monorepo with TypeScript and Go            | Accepted |
+| [0003](0003-fixture-first-day1-mvp.md)      | Fixture-first approach for Day-1 MVP           | Accepted |
 
 ## Creating a new ADR
 
@@ -28,11 +28,11 @@ After writing the ADR:
 
 ## ADR lifecycle
 
-| Status | Meaning |
-|--------|---------|
-| Proposed | Under discussion, not yet decided |
-| Accepted | Decision made, in effect |
-| Deprecated | Superseded by a later ADR |
+| Status     | Meaning                                     |
+| ---------- | ------------------------------------------- |
+| Proposed   | Under discussion, not yet decided           |
+| Accepted   | Decision made, in effect                    |
+| Deprecated | Superseded by a later ADR                   |
 | Superseded | Replaced by another ADR (link to successor) |
 
 ## Validation

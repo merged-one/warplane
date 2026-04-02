@@ -22,13 +22,7 @@
           },
           "execution": {
             "type": "string",
-            "enum": [
-              "success",
-              "retry_success",
-              "replay_blocked",
-              "failed",
-              "pending"
-            ]
+            "enum": ["success", "retry_success", "replay_blocked", "failed", "pending"]
           },
           "source": {
             "type": "object",
@@ -48,12 +42,7 @@
                 "maximum": 9007199254740991
               }
             },
-            "required": [
-              "name",
-              "blockchainId",
-              "subnetId",
-              "evmChainId"
-            ],
+            "required": ["name", "blockchainId", "subnetId", "evmChainId"],
             "additionalProperties": false
           },
           "destination": {
@@ -74,12 +63,7 @@
                 "maximum": 9007199254740991
               }
             },
-            "required": [
-              "name",
-              "blockchainId",
-              "subnetId",
-              "evmChainId"
-            ],
+            "required": ["name", "blockchainId", "subnetId", "evmChainId"],
             "additionalProperties": false
           },
           "sender": {
@@ -121,11 +105,7 @@
                 "maximum": 9007199254740991
               }
             },
-            "required": [
-              "sendTime",
-              "receiveTime",
-              "blockSend"
-            ],
+            "required": ["sendTime", "receiveTime", "blockSend"],
             "additionalProperties": false
           },
           "events": {
@@ -156,18 +136,10 @@
                     },
                     "kind": {
                       "type": "string",
-                      "enum": [
-                        "message_sent"
-                      ]
+                      "enum": ["message_sent"]
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "blockNumber",
-                    "txHash",
-                    "chain",
-                    "kind"
-                  ],
+                  "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
                   "additionalProperties": false
                 },
                 {
@@ -183,19 +155,13 @@
                     },
                     "kind": {
                       "type": "string",
-                      "enum": [
-                        "warp_message_extracted"
-                      ]
+                      "enum": ["warp_message_extracted"]
                     },
                     "chain": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "kind",
-                    "chain"
-                  ],
+                  "required": ["timestamp", "kind", "chain"],
                   "additionalProperties": false
                 },
                 {
@@ -211,15 +177,10 @@
                     },
                     "kind": {
                       "type": "string",
-                      "enum": [
-                        "signatures_aggregated"
-                      ]
+                      "enum": ["signatures_aggregated"]
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "kind"
-                  ],
+                  "required": ["timestamp", "kind"],
                   "additionalProperties": false
                 },
                 {
@@ -246,18 +207,10 @@
                     },
                     "kind": {
                       "type": "string",
-                      "enum": [
-                        "relay_submitted"
-                      ]
+                      "enum": ["relay_submitted"]
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "blockNumber",
-                    "txHash",
-                    "chain",
-                    "kind"
-                  ],
+                  "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
                   "additionalProperties": false
                 },
                 {
@@ -284,18 +237,10 @@
                     },
                     "kind": {
                       "type": "string",
-                      "enum": [
-                        "delivery_confirmed"
-                      ]
+                      "enum": ["delivery_confirmed"]
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "blockNumber",
-                    "txHash",
-                    "chain",
-                    "kind"
-                  ],
+                  "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
                   "additionalProperties": false
                 },
                 {
@@ -322,18 +267,10 @@
                     },
                     "kind": {
                       "type": "string",
-                      "enum": [
-                        "execution_failed"
-                      ]
+                      "enum": ["execution_failed"]
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "blockNumber",
-                    "txHash",
-                    "chain",
-                    "kind"
-                  ],
+                  "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
                   "additionalProperties": false
                 },
                 {
@@ -360,18 +297,10 @@
                     },
                     "kind": {
                       "type": "string",
-                      "enum": [
-                        "retry_requested"
-                      ]
+                      "enum": ["retry_requested"]
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "blockNumber",
-                    "txHash",
-                    "chain",
-                    "kind"
-                  ],
+                  "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
                   "additionalProperties": false
                 },
                 {
@@ -398,18 +327,10 @@
                     },
                     "kind": {
                       "type": "string",
-                      "enum": [
-                        "retry_succeeded"
-                      ]
+                      "enum": ["retry_succeeded"]
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "blockNumber",
-                    "txHash",
-                    "chain",
-                    "kind"
-                  ],
+                  "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
                   "additionalProperties": false
                 },
                 {
@@ -436,18 +357,10 @@
                     },
                     "kind": {
                       "type": "string",
-                      "enum": [
-                        "fee_added"
-                      ]
+                      "enum": ["fee_added"]
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "blockNumber",
-                    "txHash",
-                    "chain",
-                    "kind"
-                  ],
+                  "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
                   "additionalProperties": false
                 },
                 {
@@ -474,18 +387,10 @@
                     },
                     "kind": {
                       "type": "string",
-                      "enum": [
-                        "receipts_sent"
-                      ]
+                      "enum": ["receipts_sent"]
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "blockNumber",
-                    "txHash",
-                    "chain",
-                    "kind"
-                  ],
+                  "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
                   "additionalProperties": false
                 },
                 {
@@ -512,18 +417,10 @@
                     },
                     "kind": {
                       "type": "string",
-                      "enum": [
-                        "replay_blocked"
-                      ]
+                      "enum": ["replay_blocked"]
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "blockNumber",
-                    "txHash",
-                    "chain",
-                    "kind"
-                  ],
+                  "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
                   "additionalProperties": false
                 }
               ]
@@ -539,10 +436,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "address",
-              "txHash"
-            ],
+            "required": ["address", "txHash"],
             "additionalProperties": false
           },
           "fee": {
@@ -561,12 +455,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "feeTokenAddress",
-              "initialAmount",
-              "addedAmount",
-              "totalAmount"
-            ],
+            "required": ["feeTokenAddress", "initialAmount", "addedAmount", "totalAmount"],
             "additionalProperties": false
           },
           "retry": {
@@ -586,11 +475,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "originalGasLimit",
-              "retryGasLimit",
-              "retryTxHash"
-            ],
+            "required": ["originalGasLimit", "retryGasLimit", "retryTxHash"],
             "additionalProperties": false
           },
           "requiredGasLimit": {
@@ -625,13 +510,7 @@
               "properties": {
                 "type": {
                   "type": "string",
-                  "enum": [
-                    "trace",
-                    "scenario_run",
-                    "network_manifest",
-                    "log",
-                    "other"
-                  ]
+                  "enum": ["trace", "scenario_run", "network_manifest", "log", "other"]
                 },
                 "path": {
                   "type": "string"
@@ -640,10 +519,7 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "type",
-                "path"
-              ],
+              "required": ["type", "path"],
               "additionalProperties": false
             }
           },
@@ -693,29 +569,15 @@
                 },
                 "execution": {
                   "type": "string",
-                  "enum": [
-                    "success",
-                    "retry_success",
-                    "replay_blocked",
-                    "failed",
-                    "pending"
-                  ]
+                  "enum": ["success", "retry_success", "replay_blocked", "failed", "pending"]
                 }
               },
-              "required": [
-                "messageId",
-                "scenario",
-                "file",
-                "execution"
-              ],
+              "required": ["messageId", "scenario", "file", "execution"],
               "additionalProperties": false
             }
           }
         },
-        "required": [
-          "generatedAt",
-          "traces"
-        ],
+        "required": ["generatedAt", "traces"],
         "additionalProperties": false
       },
       "TraceIndexEntry": {
@@ -732,21 +594,10 @@
           },
           "execution": {
             "type": "string",
-            "enum": [
-              "success",
-              "retry_success",
-              "replay_blocked",
-              "failed",
-              "pending"
-            ]
+            "enum": ["success", "retry_success", "replay_blocked", "failed", "pending"]
           }
         },
-        "required": [
-          "messageId",
-          "scenario",
-          "file",
-          "execution"
-        ],
+        "required": ["messageId", "scenario", "file", "execution"],
         "additionalProperties": false
       },
       "MessageEvent": {
@@ -775,18 +626,10 @@
               },
               "kind": {
                 "type": "string",
-                "enum": [
-                  "message_sent"
-                ]
+                "enum": ["message_sent"]
               }
             },
-            "required": [
-              "timestamp",
-              "blockNumber",
-              "txHash",
-              "chain",
-              "kind"
-            ],
+            "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
             "additionalProperties": false
           },
           {
@@ -802,19 +645,13 @@
               },
               "kind": {
                 "type": "string",
-                "enum": [
-                  "warp_message_extracted"
-                ]
+                "enum": ["warp_message_extracted"]
               },
               "chain": {
                 "type": "string"
               }
             },
-            "required": [
-              "timestamp",
-              "kind",
-              "chain"
-            ],
+            "required": ["timestamp", "kind", "chain"],
             "additionalProperties": false
           },
           {
@@ -830,15 +667,10 @@
               },
               "kind": {
                 "type": "string",
-                "enum": [
-                  "signatures_aggregated"
-                ]
+                "enum": ["signatures_aggregated"]
               }
             },
-            "required": [
-              "timestamp",
-              "kind"
-            ],
+            "required": ["timestamp", "kind"],
             "additionalProperties": false
           },
           {
@@ -865,18 +697,10 @@
               },
               "kind": {
                 "type": "string",
-                "enum": [
-                  "relay_submitted"
-                ]
+                "enum": ["relay_submitted"]
               }
             },
-            "required": [
-              "timestamp",
-              "blockNumber",
-              "txHash",
-              "chain",
-              "kind"
-            ],
+            "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
             "additionalProperties": false
           },
           {
@@ -903,18 +727,10 @@
               },
               "kind": {
                 "type": "string",
-                "enum": [
-                  "delivery_confirmed"
-                ]
+                "enum": ["delivery_confirmed"]
               }
             },
-            "required": [
-              "timestamp",
-              "blockNumber",
-              "txHash",
-              "chain",
-              "kind"
-            ],
+            "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
             "additionalProperties": false
           },
           {
@@ -941,18 +757,10 @@
               },
               "kind": {
                 "type": "string",
-                "enum": [
-                  "execution_failed"
-                ]
+                "enum": ["execution_failed"]
               }
             },
-            "required": [
-              "timestamp",
-              "blockNumber",
-              "txHash",
-              "chain",
-              "kind"
-            ],
+            "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
             "additionalProperties": false
           },
           {
@@ -979,18 +787,10 @@
               },
               "kind": {
                 "type": "string",
-                "enum": [
-                  "retry_requested"
-                ]
+                "enum": ["retry_requested"]
               }
             },
-            "required": [
-              "timestamp",
-              "blockNumber",
-              "txHash",
-              "chain",
-              "kind"
-            ],
+            "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
             "additionalProperties": false
           },
           {
@@ -1017,18 +817,10 @@
               },
               "kind": {
                 "type": "string",
-                "enum": [
-                  "retry_succeeded"
-                ]
+                "enum": ["retry_succeeded"]
               }
             },
-            "required": [
-              "timestamp",
-              "blockNumber",
-              "txHash",
-              "chain",
-              "kind"
-            ],
+            "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
             "additionalProperties": false
           },
           {
@@ -1055,18 +847,10 @@
               },
               "kind": {
                 "type": "string",
-                "enum": [
-                  "fee_added"
-                ]
+                "enum": ["fee_added"]
               }
             },
-            "required": [
-              "timestamp",
-              "blockNumber",
-              "txHash",
-              "chain",
-              "kind"
-            ],
+            "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
             "additionalProperties": false
           },
           {
@@ -1093,18 +877,10 @@
               },
               "kind": {
                 "type": "string",
-                "enum": [
-                  "receipts_sent"
-                ]
+                "enum": ["receipts_sent"]
               }
             },
-            "required": [
-              "timestamp",
-              "blockNumber",
-              "txHash",
-              "chain",
-              "kind"
-            ],
+            "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
             "additionalProperties": false
           },
           {
@@ -1131,18 +907,10 @@
               },
               "kind": {
                 "type": "string",
-                "enum": [
-                  "replay_blocked"
-                ]
+                "enum": ["replay_blocked"]
               }
             },
-            "required": [
-              "timestamp",
-              "blockNumber",
-              "txHash",
-              "chain",
-              "kind"
-            ],
+            "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
             "additionalProperties": false
           }
         ]
@@ -1217,12 +985,7 @@
                 "format": "uri"
               }
             },
-            "required": [
-              "name",
-              "blockchainId",
-              "subnetId",
-              "evmChainId"
-            ],
+            "required": ["name", "blockchainId", "subnetId", "evmChainId"],
             "additionalProperties": false
           },
           "destination": {
@@ -1264,12 +1027,7 @@
                 "format": "uri"
               }
             },
-            "required": [
-              "name",
-              "blockchainId",
-              "subnetId",
-              "evmChainId"
-            ],
+            "required": ["name", "blockchainId", "subnetId", "evmChainId"],
             "additionalProperties": false
           },
           "pChainNodeUris": {
@@ -1322,12 +1080,7 @@
                   "format": "uri"
                 }
               },
-              "required": [
-                "name",
-                "blockchainId",
-                "subnetId",
-                "evmChainId"
-              ],
+              "required": ["name", "blockchainId", "subnetId", "evmChainId"],
               "additionalProperties": false
             }
           },
@@ -1360,28 +1113,17 @@
                         "type": "string"
                       }
                     },
-                    "required": [
-                      "blockchainId",
-                      "contractAddress"
-                    ],
+                    "required": ["blockchainId", "contractAddress"],
                     "additionalProperties": false
                   }
                 }
               },
-              "required": [
-                "name",
-                "chains"
-              ],
+              "required": ["name", "chains"],
               "additionalProperties": false
             }
           }
         },
-        "required": [
-          "schemaVersion",
-          "networkId",
-          "source",
-          "destination"
-        ],
+        "required": ["schemaVersion", "networkId", "source", "destination"],
         "additionalProperties": false
       },
       "ChainRegistryEntry": {
@@ -1423,12 +1165,7 @@
             "format": "uri"
           }
         },
-        "required": [
-          "name",
-          "blockchainId",
-          "subnetId",
-          "evmChainId"
-        ],
+        "required": ["name", "blockchainId", "subnetId", "evmChainId"],
         "additionalProperties": false
       },
       "AppRegistryEntry": {
@@ -1458,18 +1195,12 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "blockchainId",
-                "contractAddress"
-              ],
+              "required": ["blockchainId", "contractAddress"],
               "additionalProperties": false
             }
           }
         },
-        "required": [
-          "name",
-          "chains"
-        ],
+        "required": ["name", "chains"],
         "additionalProperties": false
       },
       "ScenarioRun": {
@@ -1513,14 +1244,7 @@
             }
           }
         },
-        "required": [
-          "scenario",
-          "startedAt",
-          "completedAt",
-          "passed",
-          "messageIds",
-          "traceFiles"
-        ],
+        "required": ["scenario", "startedAt", "completedAt", "passed", "messageIds", "traceFiles"],
         "additionalProperties": false
       },
       "def-0": {
@@ -1538,13 +1262,7 @@
           },
           "execution": {
             "type": "string",
-            "enum": [
-              "success",
-              "retry_success",
-              "replay_blocked",
-              "failed",
-              "pending"
-            ]
+            "enum": ["success", "retry_success", "replay_blocked", "failed", "pending"]
           },
           "source": {
             "type": "object",
@@ -1564,12 +1282,7 @@
                 "maximum": 9007199254740991
               }
             },
-            "required": [
-              "name",
-              "blockchainId",
-              "subnetId",
-              "evmChainId"
-            ],
+            "required": ["name", "blockchainId", "subnetId", "evmChainId"],
             "additionalProperties": false
           },
           "destination": {
@@ -1590,12 +1303,7 @@
                 "maximum": 9007199254740991
               }
             },
-            "required": [
-              "name",
-              "blockchainId",
-              "subnetId",
-              "evmChainId"
-            ],
+            "required": ["name", "blockchainId", "subnetId", "evmChainId"],
             "additionalProperties": false
           },
           "sender": {
@@ -1637,11 +1345,7 @@
                 "maximum": 9007199254740991
               }
             },
-            "required": [
-              "sendTime",
-              "receiveTime",
-              "blockSend"
-            ],
+            "required": ["sendTime", "receiveTime", "blockSend"],
             "additionalProperties": false
           },
           "events": {
@@ -1672,18 +1376,10 @@
                     },
                     "kind": {
                       "type": "string",
-                      "enum": [
-                        "message_sent"
-                      ]
+                      "enum": ["message_sent"]
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "blockNumber",
-                    "txHash",
-                    "chain",
-                    "kind"
-                  ],
+                  "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
                   "additionalProperties": false
                 },
                 {
@@ -1699,19 +1395,13 @@
                     },
                     "kind": {
                       "type": "string",
-                      "enum": [
-                        "warp_message_extracted"
-                      ]
+                      "enum": ["warp_message_extracted"]
                     },
                     "chain": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "kind",
-                    "chain"
-                  ],
+                  "required": ["timestamp", "kind", "chain"],
                   "additionalProperties": false
                 },
                 {
@@ -1727,15 +1417,10 @@
                     },
                     "kind": {
                       "type": "string",
-                      "enum": [
-                        "signatures_aggregated"
-                      ]
+                      "enum": ["signatures_aggregated"]
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "kind"
-                  ],
+                  "required": ["timestamp", "kind"],
                   "additionalProperties": false
                 },
                 {
@@ -1762,18 +1447,10 @@
                     },
                     "kind": {
                       "type": "string",
-                      "enum": [
-                        "relay_submitted"
-                      ]
+                      "enum": ["relay_submitted"]
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "blockNumber",
-                    "txHash",
-                    "chain",
-                    "kind"
-                  ],
+                  "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
                   "additionalProperties": false
                 },
                 {
@@ -1800,18 +1477,10 @@
                     },
                     "kind": {
                       "type": "string",
-                      "enum": [
-                        "delivery_confirmed"
-                      ]
+                      "enum": ["delivery_confirmed"]
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "blockNumber",
-                    "txHash",
-                    "chain",
-                    "kind"
-                  ],
+                  "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
                   "additionalProperties": false
                 },
                 {
@@ -1838,18 +1507,10 @@
                     },
                     "kind": {
                       "type": "string",
-                      "enum": [
-                        "execution_failed"
-                      ]
+                      "enum": ["execution_failed"]
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "blockNumber",
-                    "txHash",
-                    "chain",
-                    "kind"
-                  ],
+                  "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
                   "additionalProperties": false
                 },
                 {
@@ -1876,18 +1537,10 @@
                     },
                     "kind": {
                       "type": "string",
-                      "enum": [
-                        "retry_requested"
-                      ]
+                      "enum": ["retry_requested"]
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "blockNumber",
-                    "txHash",
-                    "chain",
-                    "kind"
-                  ],
+                  "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
                   "additionalProperties": false
                 },
                 {
@@ -1914,18 +1567,10 @@
                     },
                     "kind": {
                       "type": "string",
-                      "enum": [
-                        "retry_succeeded"
-                      ]
+                      "enum": ["retry_succeeded"]
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "blockNumber",
-                    "txHash",
-                    "chain",
-                    "kind"
-                  ],
+                  "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
                   "additionalProperties": false
                 },
                 {
@@ -1952,18 +1597,10 @@
                     },
                     "kind": {
                       "type": "string",
-                      "enum": [
-                        "fee_added"
-                      ]
+                      "enum": ["fee_added"]
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "blockNumber",
-                    "txHash",
-                    "chain",
-                    "kind"
-                  ],
+                  "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
                   "additionalProperties": false
                 },
                 {
@@ -1990,18 +1627,10 @@
                     },
                     "kind": {
                       "type": "string",
-                      "enum": [
-                        "receipts_sent"
-                      ]
+                      "enum": ["receipts_sent"]
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "blockNumber",
-                    "txHash",
-                    "chain",
-                    "kind"
-                  ],
+                  "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
                   "additionalProperties": false
                 },
                 {
@@ -2028,18 +1657,10 @@
                     },
                     "kind": {
                       "type": "string",
-                      "enum": [
-                        "replay_blocked"
-                      ]
+                      "enum": ["replay_blocked"]
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "blockNumber",
-                    "txHash",
-                    "chain",
-                    "kind"
-                  ],
+                  "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
                   "additionalProperties": false
                 }
               ]
@@ -2055,10 +1676,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "address",
-              "txHash"
-            ],
+            "required": ["address", "txHash"],
             "additionalProperties": false
           },
           "fee": {
@@ -2077,12 +1695,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "feeTokenAddress",
-              "initialAmount",
-              "addedAmount",
-              "totalAmount"
-            ],
+            "required": ["feeTokenAddress", "initialAmount", "addedAmount", "totalAmount"],
             "additionalProperties": false
           },
           "retry": {
@@ -2102,11 +1715,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "originalGasLimit",
-              "retryGasLimit",
-              "retryTxHash"
-            ],
+            "required": ["originalGasLimit", "retryGasLimit", "retryTxHash"],
             "additionalProperties": false
           },
           "requiredGasLimit": {
@@ -2141,13 +1750,7 @@
               "properties": {
                 "type": {
                   "type": "string",
-                  "enum": [
-                    "trace",
-                    "scenario_run",
-                    "network_manifest",
-                    "log",
-                    "other"
-                  ]
+                  "enum": ["trace", "scenario_run", "network_manifest", "log", "other"]
                 },
                 "path": {
                   "type": "string"
@@ -2156,10 +1759,7 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "type",
-                "path"
-              ],
+              "required": ["type", "path"],
               "additionalProperties": false
             }
           },
@@ -2210,29 +1810,15 @@
                 },
                 "execution": {
                   "type": "string",
-                  "enum": [
-                    "success",
-                    "retry_success",
-                    "replay_blocked",
-                    "failed",
-                    "pending"
-                  ]
+                  "enum": ["success", "retry_success", "replay_blocked", "failed", "pending"]
                 }
               },
-              "required": [
-                "messageId",
-                "scenario",
-                "file",
-                "execution"
-              ],
+              "required": ["messageId", "scenario", "file", "execution"],
               "additionalProperties": false
             }
           }
         },
-        "required": [
-          "generatedAt",
-          "traces"
-        ],
+        "required": ["generatedAt", "traces"],
         "additionalProperties": false,
         "title": "TraceIndex"
       },
@@ -2250,21 +1836,10 @@
           },
           "execution": {
             "type": "string",
-            "enum": [
-              "success",
-              "retry_success",
-              "replay_blocked",
-              "failed",
-              "pending"
-            ]
+            "enum": ["success", "retry_success", "replay_blocked", "failed", "pending"]
           }
         },
-        "required": [
-          "messageId",
-          "scenario",
-          "file",
-          "execution"
-        ],
+        "required": ["messageId", "scenario", "file", "execution"],
         "additionalProperties": false,
         "title": "TraceIndexEntry"
       },
@@ -2294,18 +1869,10 @@
               },
               "kind": {
                 "type": "string",
-                "enum": [
-                  "message_sent"
-                ]
+                "enum": ["message_sent"]
               }
             },
-            "required": [
-              "timestamp",
-              "blockNumber",
-              "txHash",
-              "chain",
-              "kind"
-            ],
+            "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
             "additionalProperties": false
           },
           {
@@ -2321,19 +1888,13 @@
               },
               "kind": {
                 "type": "string",
-                "enum": [
-                  "warp_message_extracted"
-                ]
+                "enum": ["warp_message_extracted"]
               },
               "chain": {
                 "type": "string"
               }
             },
-            "required": [
-              "timestamp",
-              "kind",
-              "chain"
-            ],
+            "required": ["timestamp", "kind", "chain"],
             "additionalProperties": false
           },
           {
@@ -2349,15 +1910,10 @@
               },
               "kind": {
                 "type": "string",
-                "enum": [
-                  "signatures_aggregated"
-                ]
+                "enum": ["signatures_aggregated"]
               }
             },
-            "required": [
-              "timestamp",
-              "kind"
-            ],
+            "required": ["timestamp", "kind"],
             "additionalProperties": false
           },
           {
@@ -2384,18 +1940,10 @@
               },
               "kind": {
                 "type": "string",
-                "enum": [
-                  "relay_submitted"
-                ]
+                "enum": ["relay_submitted"]
               }
             },
-            "required": [
-              "timestamp",
-              "blockNumber",
-              "txHash",
-              "chain",
-              "kind"
-            ],
+            "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
             "additionalProperties": false
           },
           {
@@ -2422,18 +1970,10 @@
               },
               "kind": {
                 "type": "string",
-                "enum": [
-                  "delivery_confirmed"
-                ]
+                "enum": ["delivery_confirmed"]
               }
             },
-            "required": [
-              "timestamp",
-              "blockNumber",
-              "txHash",
-              "chain",
-              "kind"
-            ],
+            "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
             "additionalProperties": false
           },
           {
@@ -2460,18 +2000,10 @@
               },
               "kind": {
                 "type": "string",
-                "enum": [
-                  "execution_failed"
-                ]
+                "enum": ["execution_failed"]
               }
             },
-            "required": [
-              "timestamp",
-              "blockNumber",
-              "txHash",
-              "chain",
-              "kind"
-            ],
+            "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
             "additionalProperties": false
           },
           {
@@ -2498,18 +2030,10 @@
               },
               "kind": {
                 "type": "string",
-                "enum": [
-                  "retry_requested"
-                ]
+                "enum": ["retry_requested"]
               }
             },
-            "required": [
-              "timestamp",
-              "blockNumber",
-              "txHash",
-              "chain",
-              "kind"
-            ],
+            "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
             "additionalProperties": false
           },
           {
@@ -2536,18 +2060,10 @@
               },
               "kind": {
                 "type": "string",
-                "enum": [
-                  "retry_succeeded"
-                ]
+                "enum": ["retry_succeeded"]
               }
             },
-            "required": [
-              "timestamp",
-              "blockNumber",
-              "txHash",
-              "chain",
-              "kind"
-            ],
+            "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
             "additionalProperties": false
           },
           {
@@ -2574,18 +2090,10 @@
               },
               "kind": {
                 "type": "string",
-                "enum": [
-                  "fee_added"
-                ]
+                "enum": ["fee_added"]
               }
             },
-            "required": [
-              "timestamp",
-              "blockNumber",
-              "txHash",
-              "chain",
-              "kind"
-            ],
+            "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
             "additionalProperties": false
           },
           {
@@ -2612,18 +2120,10 @@
               },
               "kind": {
                 "type": "string",
-                "enum": [
-                  "receipts_sent"
-                ]
+                "enum": ["receipts_sent"]
               }
             },
-            "required": [
-              "timestamp",
-              "blockNumber",
-              "txHash",
-              "chain",
-              "kind"
-            ],
+            "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
             "additionalProperties": false
           },
           {
@@ -2650,18 +2150,10 @@
               },
               "kind": {
                 "type": "string",
-                "enum": [
-                  "replay_blocked"
-                ]
+                "enum": ["replay_blocked"]
               }
             },
-            "required": [
-              "timestamp",
-              "blockNumber",
-              "txHash",
-              "chain",
-              "kind"
-            ],
+            "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
             "additionalProperties": false
           }
         ],
@@ -2738,12 +2230,7 @@
                 "format": "uri"
               }
             },
-            "required": [
-              "name",
-              "blockchainId",
-              "subnetId",
-              "evmChainId"
-            ],
+            "required": ["name", "blockchainId", "subnetId", "evmChainId"],
             "additionalProperties": false
           },
           "destination": {
@@ -2785,12 +2272,7 @@
                 "format": "uri"
               }
             },
-            "required": [
-              "name",
-              "blockchainId",
-              "subnetId",
-              "evmChainId"
-            ],
+            "required": ["name", "blockchainId", "subnetId", "evmChainId"],
             "additionalProperties": false
           },
           "pChainNodeUris": {
@@ -2843,12 +2325,7 @@
                   "format": "uri"
                 }
               },
-              "required": [
-                "name",
-                "blockchainId",
-                "subnetId",
-                "evmChainId"
-              ],
+              "required": ["name", "blockchainId", "subnetId", "evmChainId"],
               "additionalProperties": false
             }
           },
@@ -2881,28 +2358,17 @@
                         "type": "string"
                       }
                     },
-                    "required": [
-                      "blockchainId",
-                      "contractAddress"
-                    ],
+                    "required": ["blockchainId", "contractAddress"],
                     "additionalProperties": false
                   }
                 }
               },
-              "required": [
-                "name",
-                "chains"
-              ],
+              "required": ["name", "chains"],
               "additionalProperties": false
             }
           }
         },
-        "required": [
-          "schemaVersion",
-          "networkId",
-          "source",
-          "destination"
-        ],
+        "required": ["schemaVersion", "networkId", "source", "destination"],
         "additionalProperties": false,
         "title": "NetworkManifest"
       },
@@ -2945,12 +2411,7 @@
             "format": "uri"
           }
         },
-        "required": [
-          "name",
-          "blockchainId",
-          "subnetId",
-          "evmChainId"
-        ],
+        "required": ["name", "blockchainId", "subnetId", "evmChainId"],
         "additionalProperties": false,
         "title": "ChainRegistryEntry"
       },
@@ -2981,18 +2442,12 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "blockchainId",
-                "contractAddress"
-              ],
+              "required": ["blockchainId", "contractAddress"],
               "additionalProperties": false
             }
           }
         },
-        "required": [
-          "name",
-          "chains"
-        ],
+        "required": ["name", "chains"],
         "additionalProperties": false,
         "title": "AppRegistryEntry"
       },
@@ -3037,14 +2492,7 @@
             }
           }
         },
-        "required": [
-          "scenario",
-          "startedAt",
-          "completedAt",
-          "passed",
-          "messageIds",
-          "traceFiles"
-        ],
+        "required": ["scenario", "startedAt", "completedAt", "passed", "messageIds", "traceFiles"],
         "additionalProperties": false,
         "title": "ScenarioRun"
       }
@@ -3053,9 +2501,7 @@
   "paths": {
     "/health": {
       "get": {
-        "tags": [
-          "system"
-        ],
+        "tags": ["system"],
         "description": "Health check",
         "responses": {
           "200": {
@@ -3084,9 +2530,7 @@
     },
     "/api/v1/network": {
       "get": {
-        "tags": [
-          "registry"
-        ],
+        "tags": ["registry"],
         "description": "Get all registered networks",
         "responses": {
           "200": {
@@ -3112,9 +2556,7 @@
     },
     "/api/v1/chains": {
       "get": {
-        "tags": [
-          "registry"
-        ],
+        "tags": ["registry"],
         "description": "List all registered chains",
         "responses": {
           "200": {
@@ -3140,9 +2582,7 @@
     },
     "/api/v1/scenarios": {
       "get": {
-        "tags": [
-          "scenarios"
-        ],
+        "tags": ["scenarios"],
         "description": "List all scenario runs",
         "responses": {
           "200": {
@@ -3168,9 +2608,7 @@
     },
     "/api/v1/import": {
       "post": {
-        "tags": [
-          "ingest"
-        ],
+        "tags": ["ingest"],
         "description": "Import artifacts from a local directory",
         "requestBody": {
           "required": true,
@@ -3178,9 +2616,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": [
-                  "artifactsDir"
-                ],
+                "required": ["artifactsDir"],
                 "properties": {
                   "artifactsDir": {
                     "type": "string",
@@ -3252,9 +2688,7 @@
     },
     "/api/v1/imports": {
       "get": {
-        "tags": [
-          "ingest"
-        ],
+        "tags": ["ingest"],
         "description": "List import history",
         "responses": {
           "200": {
@@ -3277,9 +2711,7 @@
     },
     "/api/v1/traces": {
       "get": {
-        "tags": [
-          "traces"
-        ],
+        "tags": ["traces"],
         "description": "List message traces with optional filters",
         "parameters": [
           {
@@ -3388,9 +2820,7 @@
     },
     "/api/v1/traces/{messageId}": {
       "get": {
-        "tags": [
-          "traces"
-        ],
+        "tags": ["traces"],
         "description": "Get a single trace by message ID",
         "parameters": [
           {
@@ -3441,9 +2871,7 @@
     },
     "/api/v1/traces/{messageId}/timeline": {
       "get": {
-        "tags": [
-          "traces"
-        ],
+        "tags": ["traces"],
         "description": "Get ordered event timeline for a trace",
         "parameters": [
           {
@@ -3497,9 +2925,7 @@
     },
     "/api/v1/traces/{messageId}/raw": {
       "get": {
-        "tags": [
-          "traces"
-        ],
+        "tags": ["traces"],
         "description": "Get the raw stored trace JSON (including all metadata)",
         "parameters": [
           {
@@ -3532,9 +2958,7 @@
     },
     "/api/v1/failures": {
       "get": {
-        "tags": [
-          "traces"
-        ],
+        "tags": ["traces"],
         "description": "List traces with non-success execution status",
         "parameters": [
           {
@@ -3591,9 +3015,7 @@
     },
     "/api/v1/search": {
       "get": {
-        "tags": [
-          "search"
-        ],
+        "tags": ["search"],
         "description": "Search traces, chains, and scenarios by keyword",
         "parameters": [
           {

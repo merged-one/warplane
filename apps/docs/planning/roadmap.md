@@ -10,18 +10,18 @@ outline: deep
 
 **Status:** Complete — see [Status](/planning/status)
 
-| # | Deliverable | Package | Status |
-|---|-------------|---------|--------|
-| 1 | Core domain types | `packages/domain` | Done |
-| 2 | Storage interfaces | `packages/storage` | Done |
-| 3 | Ingest pipeline stub | `packages/ingest` | Done |
-| 4 | Fastify API | `apps/api` | Done |
-| 5 | React dashboard shell | `apps/web` | Done |
-| 6 | VitePress docs site | `apps/docs` | Done |
-| 7 | Go tmpnet harness | `harness/tmpnet` | Done |
-| 8 | CLI with `ping` | `packages/cli` | Done |
-| 9 | Build pipelines | root config | Done |
-| 10 | Planning & governance | `docs/`, `.github/` | Done |
+| #   | Deliverable           | Package             | Status |
+| --- | --------------------- | ------------------- | ------ |
+| 1   | Core domain types     | `packages/domain`   | Done   |
+| 2   | Storage interfaces    | `packages/storage`  | Done   |
+| 3   | Ingest pipeline stub  | `packages/ingest`   | Done   |
+| 4   | Fastify API           | `apps/api`          | Done   |
+| 5   | React dashboard shell | `apps/web`          | Done   |
+| 6   | VitePress docs site   | `apps/docs`         | Done   |
+| 7   | Go tmpnet harness     | `harness/tmpnet`    | Done   |
+| 8   | CLI with `ping`       | `packages/cli`      | Done   |
+| 9   | Build pipelines       | root config         | Done   |
+| 10  | Planning & governance | `docs/`, `.github/` | Done   |
 
 ## Milestone 2 — Real Data & CI (planned)
 

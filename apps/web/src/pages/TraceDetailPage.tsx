@@ -9,10 +9,7 @@ import { ErrorBox } from "../components/ErrorBox.js";
 
 export function TraceDetailPage() {
   const { messageId } = useParams<{ messageId: string }>();
-  const { data: trace, loading, error } = useFetch(
-    () => getTrace(messageId!),
-    [messageId],
-  );
+  const { data: trace, loading, error } = useFetch(() => getTrace(messageId!), [messageId]);
   const [showRaw, setShowRaw] = useState(false);
   const rawFetch = useFetch(() => getTraceRaw(messageId!), [messageId]);
   const fmt = useFormatTime();
@@ -24,7 +21,8 @@ export function TraceDetailPage() {
   return (
     <div>
       <nav className="breadcrumb">
-        <Link to="/traces">Traces</Link> / <span className="mono">{messageId?.slice(0, 16)}...</span>
+        <Link to="/traces">Traces</Link> /{" "}
+        <span className="mono">{messageId?.slice(0, 16)}...</span>
       </nav>
 
       <h1>
@@ -127,24 +125,16 @@ export function TraceDetailPage() {
               <div className="timeline-content">
                 <div className="timeline-header">
                   <EventBadge kind={ev.kind} />
-                  <span className="muted timeline-time">
-                    {fmt(ev.timestamp, "time")}
-                  </span>
+                  <span className="muted timeline-time">{fmt(ev.timestamp, "time")}</span>
                 </div>
-                {ev.chain && (
-                  <div className="timeline-meta">Chain: {ev.chain}</div>
-                )}
+                {ev.chain && <div className="timeline-meta">Chain: {ev.chain}</div>}
                 {ev.txHash && (
-                  <div className="timeline-meta mono">
-                    tx: {ev.txHash.slice(0, 20)}...
-                  </div>
+                  <div className="timeline-meta mono">tx: {ev.txHash.slice(0, 20)}...</div>
                 )}
                 {ev.blockNumber != null && (
                   <div className="timeline-meta">Block: {ev.blockNumber}</div>
                 )}
-                {ev.details && (
-                  <div className="timeline-meta">{ev.details}</div>
-                )}
+                {ev.details && <div className="timeline-meta">{ev.details}</div>}
               </div>
             </div>
           ))}
@@ -154,17 +144,12 @@ export function TraceDetailPage() {
       <section className="section">
         <h2>
           Raw JSON{" "}
-          <button
-            onClick={() => setShowRaw(!showRaw)}
-            className="btn btn-sm"
-          >
+          <button onClick={() => setShowRaw(!showRaw)} className="btn btn-sm">
             {showRaw ? "Hide" : "Show"}
           </button>
         </h2>
         {showRaw && rawFetch.data && (
-          <pre className="raw-json">
-            {JSON.stringify(rawFetch.data, null, 2)}
-          </pre>
+          <pre className="raw-json">{JSON.stringify(rawFetch.data, null, 2)}</pre>
         )}
         {showRaw && rawFetch.loading && <Loading label="Loading raw JSON..." />}
         {showRaw && rawFetch.error && <ErrorBox message={rawFetch.error} />}

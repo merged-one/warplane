@@ -8,11 +8,11 @@ Avalanche L1 operators manage multiple subnets and chains across fragmented tool
 
 ## Target Users
 
-| Persona | Need |
-|---------|------|
-| **L1 Operator** | Real-time health monitoring, alerting, lifecycle automation |
+| Persona              | Need                                                            |
+| -------------------- | --------------------------------------------------------------- |
+| **L1 Operator**      | Real-time health monitoring, alerting, lifecycle automation     |
 | **Subnet Developer** | Fast local dev loops, fixture-based testing, deployment tooling |
-| **Platform Team** | Multi-chain visibility, governance, compliance dashboards |
+| **Platform Team**    | Multi-chain visibility, governance, compliance dashboards       |
 
 ## Key Capabilities
 

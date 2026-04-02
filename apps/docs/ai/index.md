@@ -11,15 +11,15 @@ Warplane provides first-class support for AI coding agents and LLMs interacting 
 
 ## Artifacts
 
-| Artifact | Purpose | Command |
-|----------|---------|---------|
-| `AGENTS.md` | Coding agent conventions and repo map | — |
-| `llms.txt` | LLM discovery file with links | `pnpm docs:llms` |
-| `llms-full.txt` | Full documentation content for LLMs | `pnpm docs:llms` |
-| `docs/ai/context-map.json` | Machine-readable file index | `pnpm docs:llms` |
-| MCP server | Interactive docs, search, ADRs | `pnpm mcp:docs` |
-| Repomix bundle | Full repo context pack | `pnpm ai:pack` |
-| Docs-only bundle | Documentation context pack | `pnpm ai:pack:docs` |
+| Artifact                   | Purpose                               | Command             |
+| -------------------------- | ------------------------------------- | ------------------- |
+| `AGENTS.md`                | Coding agent conventions and repo map | —                   |
+| `llms.txt`                 | LLM discovery file with links         | `pnpm docs:llms`    |
+| `llms-full.txt`            | Full documentation content for LLMs   | `pnpm docs:llms`    |
+| `docs/ai/context-map.json` | Machine-readable file index           | `pnpm docs:llms`    |
+| MCP server                 | Interactive docs, search, ADRs        | `pnpm mcp:docs`     |
+| Repomix bundle             | Full repo context pack                | `pnpm ai:pack`      |
+| Docs-only bundle           | Documentation context pack            | `pnpm ai:pack:docs` |
 
 ## Sections
 

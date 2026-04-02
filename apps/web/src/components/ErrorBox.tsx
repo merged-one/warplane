@@ -1,10 +1,4 @@
-export function ErrorBox({
-  message,
-  onRetry,
-}: {
-  message: string;
-  onRetry?: () => void;
-}) {
+export function ErrorBox({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
     <div className="error-box">
       <p>Error: {message}</p>

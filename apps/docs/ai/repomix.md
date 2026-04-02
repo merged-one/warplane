@@ -47,10 +47,10 @@ Build output (`dist/`), lock files, node_modules, `.env` files, generated llms f
 
 ## When to Use What
 
-| Need | Method |
-|------|--------|
-| Quick project overview | `llms.txt` |
-| Full docs in one shot | `llms-full.txt` |
-| Interactive doc access | MCP server (`pnpm mcp:docs`) |
-| Full repo for deep work | `pnpm ai:pack` |
-| Just docs for review | `pnpm ai:pack:docs` |
+| Need                    | Method                       |
+| ----------------------- | ---------------------------- |
+| Quick project overview  | `llms.txt`                   |
+| Full docs in one shot   | `llms-full.txt`              |
+| Interactive doc access  | MCP server (`pnpm mcp:docs`) |
+| Full repo for deep work | `pnpm ai:pack`               |
+| Just docs for review    | `pnpm ai:pack:docs`          |

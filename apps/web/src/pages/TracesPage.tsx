@@ -64,10 +64,7 @@ export function TracesPage() {
       <div className="filters">
         <label>
           Scenario:{" "}
-          <select
-            value={scenario}
-            onChange={(e) => updateParam("scenario", e.target.value)}
-          >
+          <select value={scenario} onChange={(e) => updateParam("scenario", e.target.value)}>
             <option value="">All</option>
             {scenarioNames.map((s) => (
               <option key={s} value={s}>
@@ -78,10 +75,7 @@ export function TracesPage() {
         </label>
         <label>
           Status:{" "}
-          <select
-            value={status}
-            onChange={(e) => updateParam("status", e.target.value)}
-          >
+          <select value={status} onChange={(e) => updateParam("status", e.target.value)}>
             <option value="">All</option>
             {STATUSES.map((s) => (
               <option key={s} value={s}>
@@ -182,11 +176,7 @@ function Pagination({
 
   return (
     <div className="pagination">
-      <button
-        disabled={page <= 1}
-        onClick={() => onGoToPage(page - 1)}
-        className="btn btn-sm"
-      >
+      <button disabled={page <= 1} onClick={() => onGoToPage(page - 1)} className="btn btn-sm">
         Prev
       </button>
       <span>

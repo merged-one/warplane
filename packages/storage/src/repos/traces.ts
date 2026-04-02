@@ -18,11 +18,7 @@ export interface TraceFilter {
  * Upsert a trace and all its events in a single transaction.
  * Returns the trace DB id.
  */
-export function upsertTrace(
-  db: Database,
-  trace: MessageTrace,
-  importId?: number,
-): number {
+export function upsertTrace(db: Database, trace: MessageTrace, importId?: number): number {
   const traceId = upsertTraceRow(db, trace, importId);
   replaceEvents(db, traceId, trace.messageId, trace.events);
   return traceId;
@@ -196,10 +192,7 @@ export function listTraces(db: Database, filter?: TraceFilter): MessageTrace[] {
 /**
  * Get events for a trace, ordered by sequence.
  */
-export function getTraceEvents(
-  db: Database,
-  messageId: string,
-): MessageEvent[] {
+export function getTraceEvents(db: Database, messageId: string): MessageEvent[] {
   const rows = db
     .prepare(
       `SELECT e.event_json FROM events e
@@ -249,7 +242,10 @@ export function getTimeline(
 /**
  * Count traces matching a filter.
  */
-export function countTraces(db: Database, filter?: Pick<TraceFilter, "scenario" | "execution">): number {
+export function countTraces(
+  db: Database,
+  filter?: Pick<TraceFilter, "scenario" | "execution">,
+): number {
   const conditions: string[] = [];
   const params: unknown[] = [];
 
@@ -263,6 +259,8 @@ export function countTraces(db: Database, filter?: Pick<TraceFilter, "scenario" 
   }
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-  const row = db.prepare(`SELECT COUNT(*) as count FROM traces ${where}`).get(...params) as { count: number };
+  const row = db.prepare(`SELECT COUNT(*) as count FROM traces ${where}`).get(...params) as {
+    count: number;
+  };
   return row.count;
 }

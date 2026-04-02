@@ -22,13 +22,7 @@
           },
           "execution": {
             "type": "string",
-            "enum": [
-              "success",
-              "retry_success",
-              "replay_blocked",
-              "failed",
-              "pending"
-            ]
+            "enum": ["success", "retry_success", "replay_blocked", "failed", "pending"]
           },
           "source": {
             "type": "object",
@@ -48,12 +42,7 @@
                 "maximum": 9007199254740991
               }
             },
-            "required": [
-              "name",
-              "blockchainId",
-              "subnetId",
-              "evmChainId"
-            ],
+            "required": ["name", "blockchainId", "subnetId", "evmChainId"],
             "additionalProperties": false
           },
           "destination": {
@@ -74,12 +63,7 @@
                 "maximum": 9007199254740991
               }
             },
-            "required": [
-              "name",
-              "blockchainId",
-              "subnetId",
-              "evmChainId"
-            ],
+            "required": ["name", "blockchainId", "subnetId", "evmChainId"],
             "additionalProperties": false
           },
           "sender": {
@@ -121,11 +105,7 @@
                 "maximum": 9007199254740991
               }
             },
-            "required": [
-              "sendTime",
-              "receiveTime",
-              "blockSend"
-            ],
+            "required": ["sendTime", "receiveTime", "blockSend"],
             "additionalProperties": false
           },
           "events": {
@@ -159,13 +139,7 @@
                       "const": "message_sent"
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "blockNumber",
-                    "txHash",
-                    "chain",
-                    "kind"
-                  ],
+                  "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
                   "additionalProperties": false
                 },
                 {
@@ -187,11 +161,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "kind",
-                    "chain"
-                  ],
+                  "required": ["timestamp", "kind", "chain"],
                   "additionalProperties": false
                 },
                 {
@@ -210,10 +180,7 @@
                       "const": "signatures_aggregated"
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "kind"
-                  ],
+                  "required": ["timestamp", "kind"],
                   "additionalProperties": false
                 },
                 {
@@ -243,13 +210,7 @@
                       "const": "relay_submitted"
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "blockNumber",
-                    "txHash",
-                    "chain",
-                    "kind"
-                  ],
+                  "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
                   "additionalProperties": false
                 },
                 {
@@ -279,13 +240,7 @@
                       "const": "delivery_confirmed"
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "blockNumber",
-                    "txHash",
-                    "chain",
-                    "kind"
-                  ],
+                  "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
                   "additionalProperties": false
                 },
                 {
@@ -315,13 +270,7 @@
                       "const": "execution_failed"
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "blockNumber",
-                    "txHash",
-                    "chain",
-                    "kind"
-                  ],
+                  "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
                   "additionalProperties": false
                 },
                 {
@@ -351,13 +300,7 @@
                       "const": "retry_requested"
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "blockNumber",
-                    "txHash",
-                    "chain",
-                    "kind"
-                  ],
+                  "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
                   "additionalProperties": false
                 },
                 {
@@ -387,13 +330,7 @@
                       "const": "retry_succeeded"
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "blockNumber",
-                    "txHash",
-                    "chain",
-                    "kind"
-                  ],
+                  "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
                   "additionalProperties": false
                 },
                 {
@@ -423,13 +360,7 @@
                       "const": "fee_added"
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "blockNumber",
-                    "txHash",
-                    "chain",
-                    "kind"
-                  ],
+                  "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
                   "additionalProperties": false
                 },
                 {
@@ -459,13 +390,7 @@
                       "const": "receipts_sent"
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "blockNumber",
-                    "txHash",
-                    "chain",
-                    "kind"
-                  ],
+                  "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
                   "additionalProperties": false
                 },
                 {
@@ -495,13 +420,7 @@
                       "const": "replay_blocked"
                     }
                   },
-                  "required": [
-                    "timestamp",
-                    "blockNumber",
-                    "txHash",
-                    "chain",
-                    "kind"
-                  ],
+                  "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
                   "additionalProperties": false
                 }
               ]
@@ -517,10 +436,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "address",
-              "txHash"
-            ],
+            "required": ["address", "txHash"],
             "additionalProperties": false
           },
           "fee": {
@@ -539,12 +455,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "feeTokenAddress",
-              "initialAmount",
-              "addedAmount",
-              "totalAmount"
-            ],
+            "required": ["feeTokenAddress", "initialAmount", "addedAmount", "totalAmount"],
             "additionalProperties": false
           },
           "retry": {
@@ -564,11 +475,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "originalGasLimit",
-              "retryGasLimit",
-              "retryTxHash"
-            ],
+            "required": ["originalGasLimit", "retryGasLimit", "retryTxHash"],
             "additionalProperties": false
           },
           "requiredGasLimit": {
@@ -603,13 +510,7 @@
               "properties": {
                 "type": {
                   "type": "string",
-                  "enum": [
-                    "trace",
-                    "scenario_run",
-                    "network_manifest",
-                    "log",
-                    "other"
-                  ]
+                  "enum": ["trace", "scenario_run", "network_manifest", "log", "other"]
                 },
                 "path": {
                   "type": "string"
@@ -618,10 +519,7 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "type",
-                "path"
-              ],
+              "required": ["type", "path"],
               "additionalProperties": false
             }
           },
@@ -671,29 +569,15 @@
                 },
                 "execution": {
                   "type": "string",
-                  "enum": [
-                    "success",
-                    "retry_success",
-                    "replay_blocked",
-                    "failed",
-                    "pending"
-                  ]
+                  "enum": ["success", "retry_success", "replay_blocked", "failed", "pending"]
                 }
               },
-              "required": [
-                "messageId",
-                "scenario",
-                "file",
-                "execution"
-              ],
+              "required": ["messageId", "scenario", "file", "execution"],
               "additionalProperties": false
             }
           }
         },
-        "required": [
-          "generatedAt",
-          "traces"
-        ],
+        "required": ["generatedAt", "traces"],
         "additionalProperties": false
       },
       "TraceIndexEntry": {
@@ -710,21 +594,10 @@
           },
           "execution": {
             "type": "string",
-            "enum": [
-              "success",
-              "retry_success",
-              "replay_blocked",
-              "failed",
-              "pending"
-            ]
+            "enum": ["success", "retry_success", "replay_blocked", "failed", "pending"]
           }
         },
-        "required": [
-          "messageId",
-          "scenario",
-          "file",
-          "execution"
-        ],
+        "required": ["messageId", "scenario", "file", "execution"],
         "additionalProperties": false
       },
       "MessageEvent": {
@@ -756,13 +629,7 @@
                 "const": "message_sent"
               }
             },
-            "required": [
-              "timestamp",
-              "blockNumber",
-              "txHash",
-              "chain",
-              "kind"
-            ],
+            "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
             "additionalProperties": false
           },
           {
@@ -784,11 +651,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "timestamp",
-              "kind",
-              "chain"
-            ],
+            "required": ["timestamp", "kind", "chain"],
             "additionalProperties": false
           },
           {
@@ -807,10 +670,7 @@
                 "const": "signatures_aggregated"
               }
             },
-            "required": [
-              "timestamp",
-              "kind"
-            ],
+            "required": ["timestamp", "kind"],
             "additionalProperties": false
           },
           {
@@ -840,13 +700,7 @@
                 "const": "relay_submitted"
               }
             },
-            "required": [
-              "timestamp",
-              "blockNumber",
-              "txHash",
-              "chain",
-              "kind"
-            ],
+            "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
             "additionalProperties": false
           },
           {
@@ -876,13 +730,7 @@
                 "const": "delivery_confirmed"
               }
             },
-            "required": [
-              "timestamp",
-              "blockNumber",
-              "txHash",
-              "chain",
-              "kind"
-            ],
+            "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
             "additionalProperties": false
           },
           {
@@ -912,13 +760,7 @@
                 "const": "execution_failed"
               }
             },
-            "required": [
-              "timestamp",
-              "blockNumber",
-              "txHash",
-              "chain",
-              "kind"
-            ],
+            "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
             "additionalProperties": false
           },
           {
@@ -948,13 +790,7 @@
                 "const": "retry_requested"
               }
             },
-            "required": [
-              "timestamp",
-              "blockNumber",
-              "txHash",
-              "chain",
-              "kind"
-            ],
+            "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
             "additionalProperties": false
           },
           {
@@ -984,13 +820,7 @@
                 "const": "retry_succeeded"
               }
             },
-            "required": [
-              "timestamp",
-              "blockNumber",
-              "txHash",
-              "chain",
-              "kind"
-            ],
+            "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
             "additionalProperties": false
           },
           {
@@ -1020,13 +850,7 @@
                 "const": "fee_added"
               }
             },
-            "required": [
-              "timestamp",
-              "blockNumber",
-              "txHash",
-              "chain",
-              "kind"
-            ],
+            "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
             "additionalProperties": false
           },
           {
@@ -1056,13 +880,7 @@
                 "const": "receipts_sent"
               }
             },
-            "required": [
-              "timestamp",
-              "blockNumber",
-              "txHash",
-              "chain",
-              "kind"
-            ],
+            "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
             "additionalProperties": false
           },
           {
@@ -1092,13 +910,7 @@
                 "const": "replay_blocked"
               }
             },
-            "required": [
-              "timestamp",
-              "blockNumber",
-              "txHash",
-              "chain",
-              "kind"
-            ],
+            "required": ["timestamp", "blockNumber", "txHash", "chain", "kind"],
             "additionalProperties": false
           }
         ]
@@ -1173,12 +985,7 @@
                 "format": "uri"
               }
             },
-            "required": [
-              "name",
-              "blockchainId",
-              "subnetId",
-              "evmChainId"
-            ],
+            "required": ["name", "blockchainId", "subnetId", "evmChainId"],
             "additionalProperties": false
           },
           "destination": {
@@ -1220,12 +1027,7 @@
                 "format": "uri"
               }
             },
-            "required": [
-              "name",
-              "blockchainId",
-              "subnetId",
-              "evmChainId"
-            ],
+            "required": ["name", "blockchainId", "subnetId", "evmChainId"],
             "additionalProperties": false
           },
           "pChainNodeUris": {
@@ -1278,12 +1080,7 @@
                   "format": "uri"
                 }
               },
-              "required": [
-                "name",
-                "blockchainId",
-                "subnetId",
-                "evmChainId"
-              ],
+              "required": ["name", "blockchainId", "subnetId", "evmChainId"],
               "additionalProperties": false
             }
           },
@@ -1316,28 +1113,17 @@
                         "type": "string"
                       }
                     },
-                    "required": [
-                      "blockchainId",
-                      "contractAddress"
-                    ],
+                    "required": ["blockchainId", "contractAddress"],
                     "additionalProperties": false
                   }
                 }
               },
-              "required": [
-                "name",
-                "chains"
-              ],
+              "required": ["name", "chains"],
               "additionalProperties": false
             }
           }
         },
-        "required": [
-          "schemaVersion",
-          "networkId",
-          "source",
-          "destination"
-        ],
+        "required": ["schemaVersion", "networkId", "source", "destination"],
         "additionalProperties": false
       },
       "ChainRegistryEntry": {
@@ -1379,12 +1165,7 @@
             "format": "uri"
           }
         },
-        "required": [
-          "name",
-          "blockchainId",
-          "subnetId",
-          "evmChainId"
-        ],
+        "required": ["name", "blockchainId", "subnetId", "evmChainId"],
         "additionalProperties": false
       },
       "AppRegistryEntry": {
@@ -1414,18 +1195,12 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "blockchainId",
-                "contractAddress"
-              ],
+              "required": ["blockchainId", "contractAddress"],
               "additionalProperties": false
             }
           }
         },
-        "required": [
-          "name",
-          "chains"
-        ],
+        "required": ["name", "chains"],
         "additionalProperties": false
       },
       "ScenarioRun": {
@@ -1469,14 +1244,7 @@
             }
           }
         },
-        "required": [
-          "scenario",
-          "startedAt",
-          "completedAt",
-          "passed",
-          "messageIds",
-          "traceFiles"
-        ],
+        "required": ["scenario", "startedAt", "completedAt", "passed", "messageIds", "traceFiles"],
         "additionalProperties": false
       }
     }

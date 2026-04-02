@@ -4,16 +4,16 @@ Machine-friendly map of the Warplane repository structure. Use this to orient yo
 
 ## Package Overview
 
-| Package | Path | Role | Exports |
-|---------|------|------|---------|
-| `@warplane/api` | `apps/api/` | Fastify REST API server | — |
-| `@warplane/web` | `apps/web/` | React + Vite dashboard | — |
-| `@warplane/docs-site` | `apps/docs/` | VitePress documentation | — |
-| `@warplane/domain` | `packages/domain/` | Core types: ChainId, Subnet, HealthStatus, ChainStatus | `dist/index.js` |
-| `@warplane/storage` | `packages/storage/` | Persistence interfaces: ChainStatusReader, ChainStatusWriter | `dist/index.js` |
-| `@warplane/ingest` | `packages/ingest/` | Data ingestion pipeline (polling chain health) | `dist/index.js` |
-| `@warplane/cli` | `packages/cli/` | CLI tool (`warplane` binary) | `dist/index.js` |
-| `@warplane/docs-mcp` | `packages/docs-mcp/` | MCP documentation server (stdio) | `dist/index.js` |
+| Package               | Path                 | Role                                                         | Exports         |
+| --------------------- | -------------------- | ------------------------------------------------------------ | --------------- |
+| `@warplane/api`       | `apps/api/`          | Fastify REST API server                                      | —               |
+| `@warplane/web`       | `apps/web/`          | React + Vite dashboard                                       | —               |
+| `@warplane/docs-site` | `apps/docs/`         | VitePress documentation                                      | —               |
+| `@warplane/domain`    | `packages/domain/`   | Core types: ChainId, Subnet, HealthStatus, ChainStatus       | `dist/index.js` |
+| `@warplane/storage`   | `packages/storage/`  | Persistence interfaces: ChainStatusReader, ChainStatusWriter | `dist/index.js` |
+| `@warplane/ingest`    | `packages/ingest/`   | Data ingestion pipeline (polling chain health)               | `dist/index.js` |
+| `@warplane/cli`       | `packages/cli/`      | CLI tool (`warplane` binary)                                 | `dist/index.js` |
+| `@warplane/docs-mcp`  | `packages/docs-mcp/` | MCP documentation server (stdio)                             | `dist/index.js` |
 
 ## Dependency Graph
 
@@ -57,15 +57,15 @@ warplane/
 
 ## Key Config Files
 
-| File | Purpose |
-|------|---------|
-| `package.json` | Root workspace config and scripts |
-| `pnpm-workspace.yaml` | Workspace member globs (`apps/*`, `packages/*`) |
-| `tsconfig.json` | Root project references (composite) |
-| `tsconfig.base.json` | Shared TS options (ES2022, strict, Node16) |
-| `vitest.config.ts` | Test runner config |
-| `eslint.config.js` | Linting rules |
-| `prettier.config.js` | Formatting rules |
-| `Makefile` | Build orchestration (pnpm + Go) |
-| `repomix.config.json` | AI context packing (full) |
-| `repomix-docs.config.json` | AI context packing (docs only) |
+| File                       | Purpose                                         |
+| -------------------------- | ----------------------------------------------- |
+| `package.json`             | Root workspace config and scripts               |
+| `pnpm-workspace.yaml`      | Workspace member globs (`apps/*`, `packages/*`) |
+| `tsconfig.json`            | Root project references (composite)             |
+| `tsconfig.base.json`       | Shared TS options (ES2022, strict, Node16)      |
+| `vitest.config.ts`         | Test runner config                              |
+| `eslint.config.js`         | Linting rules                                   |
+| `prettier.config.js`       | Formatting rules                                |
+| `Makefile`                 | Build orchestration (pnpm + Go)                 |
+| `repomix.config.json`      | AI context packing (full)                       |
+| `repomix-docs.config.json` | AI context packing (docs only)                  |

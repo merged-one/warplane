@@ -39,13 +39,6 @@
       }
     }
   },
-  "required": [
-    "scenario",
-    "startedAt",
-    "completedAt",
-    "passed",
-    "messageIds",
-    "traceFiles"
-  ],
+  "required": ["scenario", "startedAt", "completedAt", "passed", "messageIds", "traceFiles"],
   "additionalProperties": false
 }

@@ -50,9 +50,7 @@ Edit `tsconfig.json` at the repo root:
 
 ```json
 {
-  "references": [
-    { "path": "packages/my-package" }
-  ]
+  "references": [{ "path": "packages/my-package" }]
 }
 ```
 

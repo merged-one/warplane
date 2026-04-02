@@ -1,18 +1,34 @@
 [
   { "name": "type: feature", "color": "0E8A16", "description": "New feature or capability" },
   { "name": "type: bug", "color": "D93F0B", "description": "Something is broken" },
-  { "name": "type: task", "color": "1D76DB", "description": "Chore, refactor, or infrastructure work" },
+  {
+    "name": "type: task",
+    "color": "1D76DB",
+    "description": "Chore, refactor, or infrastructure work"
+  },
   { "name": "type: docs", "color": "0075CA", "description": "Documentation only" },
   { "name": "type: adr", "color": "5319E7", "description": "Architecture Decision Record" },
 
   { "name": "status: triage", "color": "FBCA04", "description": "Needs triage and prioritization" },
   { "name": "status: ready", "color": "C2E0C6", "description": "Ready to be picked up" },
   { "name": "status: in-progress", "color": "006B75", "description": "Actively being worked on" },
-  { "name": "status: blocked", "color": "B60205", "description": "Blocked by a dependency or question" },
+  {
+    "name": "status: blocked",
+    "color": "B60205",
+    "description": "Blocked by a dependency or question"
+  },
 
   { "name": "priority: p0", "color": "B60205", "description": "Critical -- must fix now" },
-  { "name": "priority: p1", "color": "D93F0B", "description": "High -- needed for current milestone" },
-  { "name": "priority: p2", "color": "FBCA04", "description": "Medium -- nice to have this milestone" },
+  {
+    "name": "priority: p1",
+    "color": "D93F0B",
+    "description": "High -- needed for current milestone"
+  },
+  {
+    "name": "priority: p2",
+    "color": "FBCA04",
+    "description": "Medium -- nice to have this milestone"
+  },
   { "name": "priority: p3", "color": "C5DEF5", "description": "Low -- backlog" },
 
   { "name": "pkg: domain", "color": "BFD4F2", "description": "packages/domain" },
@@ -27,5 +43,9 @@
 
   { "name": "milestone: m1", "color": "0E8A16", "description": "Milestone 1 -- Monorepo Skeleton" },
   { "name": "milestone: m2", "color": "1D76DB", "description": "Milestone 2 -- Real Data & CI" },
-  { "name": "milestone: m3", "color": "5319E7", "description": "Milestone 3 -- Operations & Observability" }
+  {
+    "name": "milestone: m3",
+    "color": "5319E7",
+    "description": "Milestone 3 -- Operations & Observability"
+  }
 ]

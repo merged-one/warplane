@@ -19,7 +19,7 @@ const templatePath = resolve(decisionsDir, "templates/structured-madr.md");
 
 const title = process.argv[2];
 if (!title) {
-  console.error("Usage: node scripts/new-adr.mjs \"Title of decision\"");
+  console.error('Usage: node scripts/new-adr.mjs "Title of decision"');
   process.exit(1);
 }
 
@@ -48,10 +48,7 @@ const today = new Date().toISOString().split("T")[0];
 
 const content = template
   .replace("ADR-NNNN: Title", `ADR-${nextNum}: ${title}`)
-  .replace(
-    "Proposed | Accepted | Deprecated | Superseded by [ADR-XXXX](XXXX-title.md)",
-    "Proposed",
-  )
+  .replace("Proposed | Accepted | Deprecated | Superseded by [ADR-XXXX](XXXX-title.md)", "Proposed")
   .replace("YYYY-MM-DD", today);
 
 writeFileSync(filepath, content, "utf-8");
@@ -62,4 +59,6 @@ console.log("Next steps:");
 console.log(`  1. Edit ${filepath}`);
 console.log("  2. Update docs/decisions/README.md table");
 console.log("  3. Update docs/planning/decision-index.md");
-console.log(`  4. Commit: git add docs/decisions/${filename} && git commit -m "Add ADR-${nextNum}: ${title}"`);
+console.log(
+  `  4. Commit: git add docs/decisions/${filename} && git commit -m "Add ADR-${nextNum}: ${title}"`,
+);

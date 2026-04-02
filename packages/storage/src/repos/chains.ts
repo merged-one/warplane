@@ -5,11 +5,7 @@
 import type { Database } from "better-sqlite3";
 import type { ChainRegistryEntry } from "@warplane/domain";
 
-export function upsertChain(
-  db: Database,
-  chain: ChainRegistryEntry,
-  networkDbId?: number,
-): number {
+export function upsertChain(db: Database, chain: ChainRegistryEntry, networkDbId?: number): number {
   const stmt = db.prepare(`
     INSERT INTO chains (name, blockchain_id, subnet_id, evm_chain_id,
       teleporter_address, teleporter_registry_address, rpc_url, explorer_url,
@@ -70,7 +66,9 @@ export function getChain(db: Database, blockchainId: string): ChainRegistryEntry
 
 export function listChains(db: Database): ChainRegistryEntry[] {
   const rows = db
-    .prepare("SELECT name, blockchain_id, subnet_id, evm_chain_id, teleporter_address, teleporter_registry_address, rpc_url, explorer_url, node_uris_json FROM chains ORDER BY name")
+    .prepare(
+      "SELECT name, blockchain_id, subnet_id, evm_chain_id, teleporter_address, teleporter_registry_address, rpc_url, explorer_url, node_uris_json FROM chains ORDER BY name",
+    )
     .all() as Array<Record<string, unknown>>;
   return rows.map((row) => ({
     name: row.name as string,

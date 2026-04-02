@@ -4,21 +4,9 @@
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { openDb, closeDb, runMigrations } from "./index.js";
-import {
-  upsertNetwork,
-  getNetwork,
-  listNetworks,
-} from "./repos/networks.js";
-import {
-  upsertChain,
-  getChain,
-  listChains,
-} from "./repos/chains.js";
-import {
-  upsertScenarioRun,
-  getScenarioRun,
-  listScenarioRuns,
-} from "./repos/scenarios.js";
+import { upsertNetwork, getNetwork, listNetworks } from "./repos/networks.js";
+import { upsertChain, getChain, listChains } from "./repos/chains.js";
+import { upsertScenarioRun, getScenarioRun, listScenarioRuns } from "./repos/scenarios.js";
 import {
   upsertTrace,
   getTrace,
@@ -27,16 +15,8 @@ import {
   getTimeline,
   countTraces,
 } from "./repos/traces.js";
-import {
-  upsertArtifact,
-  listArtifacts,
-} from "./repos/artifacts.js";
-import {
-  startImport,
-  completeImport,
-  getImport,
-  listImports,
-} from "./repos/imports.js";
+import { upsertArtifact, listArtifacts } from "./repos/artifacts.js";
+import { startImport, completeImport, getImport, listImports } from "./repos/imports.js";
 import type { Database } from "better-sqlite3";
 import type { NetworkManifest, MessageTrace, ScenarioRun } from "@warplane/domain";
 
@@ -79,17 +59,44 @@ const sampleTrace: MessageTrace = {
   messageId: "abc123",
   scenario: "basic_send_receive",
   execution: "success",
-  source: { name: "source", blockchainId: "chain-src-001", subnetId: "subnet-src-001", evmChainId: 99999 },
-  destination: { name: "destination", blockchainId: "chain-dst-001", subnetId: "subnet-dst-001", evmChainId: 99998 },
+  source: {
+    name: "source",
+    blockchainId: "chain-src-001",
+    subnetId: "subnet-src-001",
+    evmChainId: 99999,
+  },
+  destination: {
+    name: "destination",
+    blockchainId: "chain-dst-001",
+    subnetId: "subnet-dst-001",
+    evmChainId: 99998,
+  },
   sender: "0xsender",
   recipient: "0xrecipient",
   sourceTxHash: "0xtx1",
   destinationTxHash: "0xtx2",
-  timestamps: { sendTime: "2026-04-01T00:00:00Z", receiveTime: "2026-04-01T00:00:20Z", blockSend: 100, blockRecv: 105 },
+  timestamps: {
+    sendTime: "2026-04-01T00:00:00Z",
+    receiveTime: "2026-04-01T00:00:20Z",
+    blockSend: 100,
+    blockRecv: 105,
+  },
   events: [
-    { kind: "message_sent", timestamp: "2026-04-01T00:00:00Z", blockNumber: 100, txHash: "0xtx1", chain: "source" },
+    {
+      kind: "message_sent",
+      timestamp: "2026-04-01T00:00:00Z",
+      blockNumber: 100,
+      txHash: "0xtx1",
+      chain: "source",
+    },
     { kind: "signatures_aggregated", timestamp: "2026-04-01T00:00:10Z" },
-    { kind: "delivery_confirmed", timestamp: "2026-04-01T00:00:20Z", blockNumber: 105, txHash: "0xtx2", chain: "destination" },
+    {
+      kind: "delivery_confirmed",
+      timestamp: "2026-04-01T00:00:20Z",
+      blockNumber: 105,
+      txHash: "0xtx2",
+      chain: "destination",
+    },
   ],
   relayer: { address: "0xrelayer", txHash: "0xtx2" },
 };
@@ -212,7 +219,12 @@ describe("traces repo", () => {
 
   it("filters by execution status", () => {
     upsertTrace(db, sampleTrace);
-    upsertTrace(db, { ...sampleTrace, messageId: "fail1", scenario: "fail_test", execution: "failed" });
+    upsertTrace(db, {
+      ...sampleTrace,
+      messageId: "fail1",
+      scenario: "fail_test",
+      execution: "failed",
+    });
 
     expect(listTraces(db, { execution: "success" })).toHaveLength(1);
     expect(listTraces(db, { execution: "failed" })).toHaveLength(1);

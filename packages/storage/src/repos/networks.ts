@@ -46,8 +46,8 @@ export function getNetwork(db: Database, networkId: number): NetworkManifest | u
 }
 
 export function listNetworks(db: Database): NetworkManifest[] {
-  const rows = db
-    .prepare("SELECT manifest_json FROM networks ORDER BY network_id")
-    .all() as Array<{ manifest_json: string }>;
+  const rows = db.prepare("SELECT manifest_json FROM networks ORDER BY network_id").all() as Array<{
+    manifest_json: string;
+  }>;
   return rows.map((r) => JSON.parse(r.manifest_json) as NetworkManifest);
 }

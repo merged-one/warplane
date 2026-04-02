@@ -102,10 +102,9 @@ describe("warplane --api-url flag", () => {
   });
 
   it("connects to custom URL when valid", async () => {
-    const { stdout, exitCode } = await run(
-      `--api-url ${apiUrl} --json traces list`,
-      { ICP_API_URL: "" },
-    );
+    const { stdout, exitCode } = await run(`--api-url ${apiUrl} --json traces list`, {
+      ICP_API_URL: "",
+    });
     expect(exitCode).toBe(0);
     const data = JSON.parse(stdout);
     expect(data.traces.length).toBeGreaterThan(0);
@@ -129,7 +128,7 @@ describe("warplane doctor", () => {
   });
 
   it("outputs TTY-formatted text (non-JSON)", async () => {
-    const { stdout, exitCode } = await run("doctor");
+    const { stdout } = await run("doctor");
     // Should contain the heading and check names
     expect(stdout).toContain("warplane doctor");
     expect(stdout).toContain("node");
@@ -229,7 +228,9 @@ describe("warplane traces list", () => {
   });
 
   it("returns empty results for non-matching filter", async () => {
-    const { stdout, exitCode } = await run("--json traces list --scenario nonexistent_scenario_xyz");
+    const { stdout, exitCode } = await run(
+      "--json traces list --scenario nonexistent_scenario_xyz",
+    );
     expect(exitCode).toBe(0);
     const data = JSON.parse(stdout);
     expect(data.traces).toEqual([]);

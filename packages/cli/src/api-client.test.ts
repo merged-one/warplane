@@ -2,7 +2,7 @@
  * Unit tests for the API client.
  */
 
-import { describe, expect, it, beforeAll, afterAll, beforeEach, afterEach } from "vitest";
+import { describe, expect, it, beforeAll, afterAll, beforeEach } from "vitest";
 import http from "node:http";
 import { ApiClient, ApiUnreachableError } from "./api-client.js";
 

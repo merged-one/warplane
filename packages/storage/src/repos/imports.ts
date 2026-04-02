@@ -42,7 +42,8 @@ export function completeImport(
     events: number;
   },
 ): void {
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE import_history SET
       status = 'completed',
       completed_at = datetime('now'),
@@ -52,27 +53,34 @@ export function completeImport(
       traces_count = ?,
       events_count = ?
     WHERE id = ?
-  `).run(counts.networks, counts.chains, counts.scenarios, counts.traces, counts.events, importId);
+  `,
+  ).run(counts.networks, counts.chains, counts.scenarios, counts.traces, counts.events, importId);
 }
 
 export function failImport(db: Database, importId: number, error: string): void {
-  db.prepare(`
+  db.prepare(
+    `
     UPDATE import_history SET
       status = 'failed',
       completed_at = datetime('now'),
       error = ?
     WHERE id = ?
-  `).run(error, importId);
+  `,
+  ).run(error, importId);
 }
 
 export function getImport(db: Database, importId: number): ImportRecord | undefined {
-  const row = db.prepare("SELECT * FROM import_history WHERE id = ?").get(importId) as Record<string, unknown> | undefined;
+  const row = db.prepare("SELECT * FROM import_history WHERE id = ?").get(importId) as
+    | Record<string, unknown>
+    | undefined;
   if (!row) return undefined;
   return mapImportRow(row);
 }
 
 export function listImports(db: Database): ImportRecord[] {
-  const rows = db.prepare("SELECT * FROM import_history ORDER BY started_at DESC").all() as Array<Record<string, unknown>>;
+  const rows = db.prepare("SELECT * FROM import_history ORDER BY started_at DESC").all() as Array<
+    Record<string, unknown>
+  >;
   return rows.map(mapImportRow);
 }
 

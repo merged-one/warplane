@@ -22,28 +22,14 @@
           },
           "execution": {
             "type": "string",
-            "enum": [
-              "success",
-              "retry_success",
-              "replay_blocked",
-              "failed",
-              "pending"
-            ]
+            "enum": ["success", "retry_success", "replay_blocked", "failed", "pending"]
           }
         },
-        "required": [
-          "messageId",
-          "scenario",
-          "file",
-          "execution"
-        ],
+        "required": ["messageId", "scenario", "file", "execution"],
         "additionalProperties": false
       }
     }
   },
-  "required": [
-    "generatedAt",
-    "traces"
-  ],
+  "required": ["generatedAt", "traces"],
   "additionalProperties": false
 }

@@ -45,12 +45,7 @@ export interface RetryInfo {
   retryTxHash: string;
 }
 
-export type ExecutionStatus =
-  | "success"
-  | "retry_success"
-  | "replay_blocked"
-  | "failed"
-  | "pending";
+export type ExecutionStatus = "success" | "retry_success" | "replay_blocked" | "failed" | "pending";
 
 export interface MessageEvent {
   kind: string;
@@ -176,9 +171,7 @@ export function getTrace(messageId: string): Promise<MessageTrace> {
 export function getTraceTimeline(
   messageId: string,
 ): Promise<{ messageId: string; events: MessageEvent[] }> {
-  return fetchJson(
-    `${BASE}/traces/${encodeURIComponent(messageId)}/timeline`,
-  );
+  return fetchJson(`${BASE}/traces/${encodeURIComponent(messageId)}/timeline`);
 }
 
 export function getTraceRaw(messageId: string): Promise<MessageTrace> {

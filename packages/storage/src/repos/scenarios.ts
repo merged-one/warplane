@@ -5,11 +5,7 @@
 import type { Database } from "better-sqlite3";
 import type { ScenarioRun } from "@warplane/domain";
 
-export function upsertScenarioRun(
-  db: Database,
-  run: ScenarioRun,
-  importId?: number,
-): number {
+export function upsertScenarioRun(db: Database, run: ScenarioRun, importId?: number): number {
   const stmt = db.prepare(`
     INSERT INTO scenario_runs (scenario, started_at, completed_at, passed, error,
       tags_json, message_ids_json, trace_files_json, import_id)

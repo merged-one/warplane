@@ -26,19 +26,13 @@ async function main() {
   const schemas = domain.generateJsonSchemas();
   for (const [name, schema] of Object.entries(schemas)) {
     const filename = `${name}.schema.json`;
-    writeFileSync(
-      join(OUT_DIR, filename),
-      JSON.stringify(schema, null, 2) + "\n",
-    );
+    writeFileSync(join(OUT_DIR, filename), JSON.stringify(schema, null, 2) + "\n");
     console.log(`  wrote ${filename}`);
   }
 
   // OpenAPI component bundle
   const openapi = domain.generateOpenAPIComponents();
-  writeFileSync(
-    join(OUT_DIR, "openapi-components.json"),
-    JSON.stringify(openapi, null, 2) + "\n",
-  );
+  writeFileSync(join(OUT_DIR, "openapi-components.json"), JSON.stringify(openapi, null, 2) + "\n");
   console.log("  wrote openapi-components.json");
 
   console.log("\nDone. All schemas written to packages/domain/generated/");

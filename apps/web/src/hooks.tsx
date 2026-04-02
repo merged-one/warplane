@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, createContext, useContext } from "react";
+import { useState, useEffect, useCallback, createContext, useContext } from "react";
 
 /** Generic fetch hook with loading/error states and optional auto-refresh. */
 export function useFetch<T>(
@@ -30,7 +30,6 @@ export function useFetch<T>(
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tick, ...deps]);
 
   // Auto-refresh via polling
@@ -59,7 +58,8 @@ const AutoRefreshContext = createContext<AutoRefreshState>({
 
 export function AutoRefreshProvider({ children }: { children: React.ReactNode }) {
   const [interval, setIntervalState] = useState(() => {
-    const saved = typeof localStorage !== "undefined" ? localStorage.getItem("warplane:autoRefresh") : null;
+    const saved =
+      typeof localStorage !== "undefined" ? localStorage.getItem("warplane:autoRefresh") : null;
     return saved ? Number(saved) : 0;
   });
 
@@ -105,11 +105,7 @@ export function TzProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  return (
-    <TzContext.Provider value={{ tz, setTz }}>
-      {children}
-    </TzContext.Provider>
-  );
+  return <TzContext.Provider value={{ tz, setTz }}>{children}</TzContext.Provider>;
 }
 
 export function useTz() {
@@ -124,7 +120,12 @@ export function useFormatTime() {
       const d = new Date(iso);
       const opts: Intl.DateTimeFormatOptions =
         style === "time"
-          ? { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: tz === "utc" ? "UTC" : undefined }
+          ? {
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+              timeZone: tz === "utc" ? "UTC" : undefined,
+            }
           : { dateStyle: "short", timeStyle: "medium", timeZone: tz === "utc" ? "UTC" : undefined };
       return d.toLocaleString(undefined, opts);
     },

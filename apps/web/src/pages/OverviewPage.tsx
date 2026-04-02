@@ -17,8 +17,7 @@ export function OverviewPage() {
 
   const loading =
     health.loading || chains.loading || networks.loading || traces.loading || scenarios.loading;
-  const error =
-    health.error || chains.error || networks.error || traces.error || scenarios.error;
+  const error = health.error || chains.error || networks.error || traces.error || scenarios.error;
 
   if (loading) return <Loading />;
   if (error) return <ErrorBox message={error} />;
@@ -62,11 +61,7 @@ export function OverviewPage() {
         <h2>Trace Status Breakdown</h2>
         <div className="status-bar">
           {Object.entries(statusCounts).map(([status, count]) => (
-            <Link
-              key={status}
-              to={`/traces?status=${status}`}
-              className="status-bar-segment"
-            >
+            <Link key={status} to={`/traces?status=${status}`} className="status-bar-segment">
               <StatusBadge status={status as ExecutionStatus} /> {count}
             </Link>
           ))}

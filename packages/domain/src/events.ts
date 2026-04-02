@@ -62,16 +62,12 @@ export const WarpMessageExtractedEvent = EventBase.extend({
   kind: z.literal("warp_message_extracted"),
   chain: z.string(),
 });
-export type WarpMessageExtractedEvent = z.infer<
-  typeof WarpMessageExtractedEvent
->;
+export type WarpMessageExtractedEvent = z.infer<typeof WarpMessageExtractedEvent>;
 
 export const SignaturesAggregatedEvent = EventBase.extend({
   kind: z.literal("signatures_aggregated"),
 });
-export type SignaturesAggregatedEvent = z.infer<
-  typeof SignaturesAggregatedEvent
->;
+export type SignaturesAggregatedEvent = z.infer<typeof SignaturesAggregatedEvent>;
 
 export const RelaySubmittedEvent = EventBase.merge(OnChainFields).extend({
   kind: z.literal("relay_submitted"),

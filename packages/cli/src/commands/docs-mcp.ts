@@ -32,9 +32,7 @@ export function docsMcpCommand(): Command {
       }
 
       if (!built) {
-        console.error(
-          `MCP server not built. Build it first:\n\n  pnpm -F docs-mcp build\n`,
-        );
+        console.error(`MCP server not built. Build it first:\n\n  pnpm -F docs-mcp build\n`);
         process.exitCode = 1;
         return;
       }

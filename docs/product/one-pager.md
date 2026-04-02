@@ -14,11 +14,11 @@ lifecycles, and orchestrate cross-chain operations from one interface (web, CLI,
 
 ## Target users
 
-| Persona | Need |
-|---------|------|
-| **L1 Operator** | Real-time health monitoring, alerting, lifecycle automation |
+| Persona              | Need                                                            |
+| -------------------- | --------------------------------------------------------------- |
+| **L1 Operator**      | Real-time health monitoring, alerting, lifecycle automation     |
 | **Subnet Developer** | Fast local dev loops, fixture-based testing, deployment tooling |
-| **Platform Team** | Multi-chain visibility, governance, compliance dashboards |
+| **Platform Team**    | Multi-chain visibility, governance, compliance dashboards       |
 
 ## Key capabilities (Milestone 1 -- Day-1 MVP)
 
@@ -32,12 +32,12 @@ lifecycles, and orchestrate cross-chain operations from one interface (web, CLI,
 
 ## Success metrics
 
-| Metric | M1 Target |
-|--------|-----------|
-| Build + test pass rate | 100% on CI |
-| Domain model coverage | Core types for Chain, Subnet, HealthStatus |
-| API endpoints | `/healthz` + `/api/v1/chains` responding |
-| e2e harness | Go tmpnet compiles and has smoke test |
+| Metric                 | M1 Target                                  |
+| ---------------------- | ------------------------------------------ |
+| Build + test pass rate | 100% on CI                                 |
+| Domain model coverage  | Core types for Chain, Subnet, HealthStatus |
+| API endpoints          | `/healthz` + `/api/v1/chains` responding   |
+| e2e harness            | Go tmpnet compiles and has smoke test      |
 
 ## Risks
 

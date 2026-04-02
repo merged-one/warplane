@@ -109,8 +109,14 @@ export function tracesCommand(): Command {
       detail("Message ID", trace.messageId);
       detail("Scenario", trace.scenario);
       detail("Status", statusLabel(trace.execution));
-      detail("Source", `${trace.source?.name ?? "—"} (${shortId(trace.source?.blockchainId ?? "")})`);
-      detail("Destination", `${trace.destination?.name ?? "—"} (${shortId(trace.destination?.blockchainId ?? "")})`);
+      detail(
+        "Source",
+        `${trace.source?.name ?? "—"} (${shortId(trace.source?.blockchainId ?? "")})`,
+      );
+      detail(
+        "Destination",
+        `${trace.destination?.name ?? "—"} (${shortId(trace.destination?.blockchainId ?? "")})`,
+      );
       detail("Sender", trace.sender);
       detail("Recipient", trace.recipient);
       detail("Send time", trace.timestamps?.sendTime ?? "—");
@@ -176,7 +182,10 @@ function formatTime(iso: string | undefined): string {
   if (!iso) return "—";
   try {
     const d = new Date(iso);
-    return d.toISOString().replace("T", " ").replace(/\.\d{3}Z$/, "Z");
+    return d
+      .toISOString()
+      .replace("T", " ")
+      .replace(/\.\d{3}Z$/, "Z");
   } catch {
     return iso;
   }

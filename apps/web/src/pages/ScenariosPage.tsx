@@ -38,9 +38,7 @@ export function ScenariosPage() {
           {scenarios.map((s) => (
             <tr key={s.scenario}>
               <td>
-                <Link to={`/traces?scenario=${s.scenario}`}>
-                  {s.scenario}
-                </Link>
+                <Link to={`/traces?scenario=${s.scenario}`}>{s.scenario}</Link>
               </td>
               <td>
                 <span className={s.passed ? "text-green" : "text-red"}>

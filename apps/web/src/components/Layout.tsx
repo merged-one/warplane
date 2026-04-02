@@ -29,23 +29,20 @@ export function Layout() {
   const [results, setResults] = useState<SearchResponse | null>(null);
   const [showResults, setShowResults] = useState(false);
 
-  const doSearch = useCallback(
-    async (q: string) => {
-      if (q.length < 1) {
-        setResults(null);
-        setShowResults(false);
-        return;
-      }
-      try {
-        const res = await apiSearch(q, 10);
-        setResults(res);
-        setShowResults(true);
-      } catch {
-        setResults(null);
-      }
-    },
-    [],
-  );
+  const doSearch = useCallback(async (q: string) => {
+    if (q.length < 1) {
+      setResults(null);
+      setShowResults(false);
+      return;
+    }
+    try {
+      const res = await apiSearch(q, 10);
+      setResults(res);
+      setShowResults(true);
+    } catch {
+      setResults(null);
+    }
+  }, []);
 
   function handleSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") {
@@ -65,15 +62,15 @@ export function Layout() {
   return (
     <div className="layout">
       <header className="topbar">
-        <a href="/" className="topbar-brand">Warplane</a>
+        <a href="/" className="topbar-brand">
+          Warplane
+        </a>
         <nav className="topbar-nav">
           {NAV_ITEMS.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
-              className={({ isActive }) =>
-                `topbar-link${isActive ? " active" : ""}`
-              }
+              className={({ isActive }) => `topbar-link${isActive ? " active" : ""}`}
               end={item.to === "/"}
             >
               {item.label}
@@ -95,9 +92,7 @@ export function Layout() {
             <div className="search-dropdown">
               {results.traces.length === 0 &&
                 results.chains.length === 0 &&
-                results.scenarios.length === 0 && (
-                  <div className="search-empty">No results</div>
-                )}
+                results.scenarios.length === 0 && <div className="search-empty">No results</div>}
               {results.traces.map((t) => (
                 <button
                   key={t.messageId}
@@ -113,9 +108,7 @@ export function Layout() {
                 <button
                   key={s.scenario}
                   className="search-item"
-                  onMouseDown={() =>
-                    navigateToResult(`/traces?scenario=${s.scenario}`)
-                  }
+                  onMouseDown={() => navigateToResult(`/traces?scenario=${s.scenario}`)}
                 >
                   <span className="search-type">scenario</span>
                   <span>{s.scenario}</span>
@@ -125,9 +118,7 @@ export function Layout() {
                 <button
                   key={c.blockchainId}
                   className="search-item"
-                  onMouseDown={() =>
-                    navigateToResult(`/traces?chain=${c.blockchainId}`)
-                  }
+                  onMouseDown={() => navigateToResult(`/traces?chain=${c.blockchainId}`)}
                 >
                   <span className="search-type">chain</span>
                   <span>{c.name}</span>
@@ -161,9 +152,7 @@ export function Layout() {
           </select>
         </div>
 
-        <span className="topbar-tag">
-          {interval ? `refresh ${interval / 1000}s` : "local dev"}
-        </span>
+        <span className="topbar-tag">{interval ? `refresh ${interval / 1000}s` : "local dev"}</span>
       </header>
       <main className="content">
         <Outlet />

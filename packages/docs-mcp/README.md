@@ -32,36 +32,36 @@ Add to your Claude Code MCP config (`.claude/settings.json` or `~/.claude/settin
 
 ## Resources
 
-| URI | Description |
-|-----|-------------|
-| `warplane://docs/docs/planning/roadmap.md` | Project roadmap |
-| `warplane://docs/docs/planning/status.md` | Milestone status |
-| `warplane://docs/docs/planning/backlog.md` | Deferred items |
-| `warplane://docs/docs/planning/risk-register.md` | Risk register |
-| `warplane://docs/docs/planning/working-agreement.md` | Coding standards |
-| `warplane://docs/docs/planning/work-items.yaml` | Work items (YAML) |
-| `warplane://adrs/{slug}` | ADR by slug (e.g. `0001-use-structured-madr`) |
-| `warplane://schemas/domain` | Core domain types |
-| `warplane://schemas/storage` | Storage interfaces |
-| `warplane://docs/product/one-pager` | Product vision |
-| `warplane://source/api` | API server source |
+| URI                                                  | Description                                   |
+| ---------------------------------------------------- | --------------------------------------------- |
+| `warplane://docs/docs/planning/roadmap.md`           | Project roadmap                               |
+| `warplane://docs/docs/planning/status.md`            | Milestone status                              |
+| `warplane://docs/docs/planning/backlog.md`           | Deferred items                                |
+| `warplane://docs/docs/planning/risk-register.md`     | Risk register                                 |
+| `warplane://docs/docs/planning/working-agreement.md` | Coding standards                              |
+| `warplane://docs/docs/planning/work-items.yaml`      | Work items (YAML)                             |
+| `warplane://adrs/{slug}`                             | ADR by slug (e.g. `0001-use-structured-madr`) |
+| `warplane://schemas/domain`                          | Core domain types                             |
+| `warplane://schemas/storage`                         | Storage interfaces                            |
+| `warplane://docs/product/one-pager`                  | Product vision                                |
+| `warplane://source/api`                              | API server source                             |
 
 ## Prompts
 
-| Name | Description | Args |
-|------|-------------|------|
-| `summarize-adr` | Summarize an ADR | `slug` |
-| `explain-trace` | Explain the trace model | (none) |
-| `generate-task-plan` | Plan tasks from roadmap/backlog | `goal` |
-| `review-runbook` | Review a runbook | `content` |
+| Name                 | Description                     | Args      |
+| -------------------- | ------------------------------- | --------- |
+| `summarize-adr`      | Summarize an ADR                | `slug`    |
+| `explain-trace`      | Explain the trace model         | (none)    |
+| `generate-task-plan` | Plan tasks from roadmap/backlog | `goal`    |
+| `review-runbook`     | Review a runbook                | `content` |
 
 ## Tools
 
-| Name | Description | Args |
-|------|-------------|------|
-| `search_docs` | Full-text search across docs | `query` |
-| `list_adrs` | List all ADRs with status | (none) |
-| `get_trace_schema` | Get domain + storage types | (none) |
+| Name               | Description                  | Args    |
+| ------------------ | ---------------------------- | ------- |
+| `search_docs`      | Full-text search across docs | `query` |
+| `list_adrs`        | List all ADRs with status    | (none)  |
+| `get_trace_schema` | Get domain + storage types   | (none)  |
 
 ## Architecture
 

@@ -33,6 +33,7 @@ type HealthStatus = "healthy" | "degraded" | "down" | "unknown";
 ```
 
 Four-state health model:
+
 - **healthy**: Chain is responding normally
 - **degraded**: Chain is responding but with issues (high latency, stale blocks)
 - **down**: Chain is not responding

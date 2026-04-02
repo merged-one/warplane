@@ -25,10 +25,7 @@ export interface WatchOptions {
  * Start polling the artifacts directory for changes.
  * Returns a stop function.
  */
-export function startWatcher(
-  db: Database,
-  opts: WatchOptions,
-): { stop: () => void } {
+export function startWatcher(db: Database, opts: WatchOptions): { stop: () => void } {
   const log = opts.log ?? console.log;
   const intervalMs = opts.intervalMs ?? 5000;
   const artifactsDir = path.resolve(opts.artifactsDir);

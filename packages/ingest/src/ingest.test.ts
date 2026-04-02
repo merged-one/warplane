@@ -21,10 +21,7 @@ import {
 import { importArtifacts } from "./importer.js";
 import type { Database } from "@warplane/storage";
 
-const ARTIFACTS_DIR = path.resolve(
-  import.meta.dirname,
-  "../../../harness/tmpnet/artifacts",
-);
+const ARTIFACTS_DIR = path.resolve(import.meta.dirname, "../../../harness/tmpnet/artifacts");
 
 let db: Database;
 

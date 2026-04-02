@@ -11,11 +11,7 @@
 import { z } from "zod";
 import { MessageTrace, TraceIndex, TraceIndexEntry } from "./trace.js";
 import { MessageEvent, MessageEventKind } from "./events.js";
-import {
-  NetworkManifest,
-  ChainRegistryEntry,
-  AppRegistryEntry,
-} from "./registry.js";
+import { NetworkManifest, ChainRegistryEntry, AppRegistryEntry } from "./registry.js";
 import { ScenarioRun } from "./scenarios.js";
 
 export interface DomainJsonSchemas {

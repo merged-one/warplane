@@ -66,12 +66,12 @@ test, and lint pass. Flag any TypeScript conventions I'm violating.
 
 The docs MCP server provides built-in prompts:
 
-| Prompt | Use Case |
-|--------|----------|
-| `summarize-adr` | Quick summary of any ADR by slug |
-| `explain-trace` | Understand the data flow model |
+| Prompt               | Use Case                            |
+| -------------------- | ----------------------------------- |
+| `summarize-adr`      | Quick summary of any ADR by slug    |
+| `explain-trace`      | Understand the data flow model      |
 | `generate-task-plan` | Plan tasks aligned with the roadmap |
-| `review-runbook` | Check a runbook for accuracy |
+| `review-runbook`     | Check a runbook for accuracy        |
 
 ## Tips
 

@@ -13,12 +13,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import {
-  NetworkManifest,
-  MessageTrace,
-  ScenarioRun,
-  TraceIndex,
-} from "@warplane/domain";
+import { NetworkManifest, MessageTrace, ScenarioRun, TraceIndex } from "@warplane/domain";
 import {
   type Database,
   upsertNetwork,
@@ -97,7 +92,7 @@ export function importArtifacts(db: Database, opts: ImportOptions): ImportResult
 
     log(
       `Import complete: ${result.networks} networks, ${result.chains} chains, ` +
-      `${result.scenarios} scenarios, ${result.traces} traces, ${result.events} events`,
+        `${result.scenarios} scenarios, ${result.traces} traces, ${result.events} events`,
     );
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -168,7 +163,7 @@ function importTraces(
 
   // Read trace index if it exists
   const indexPath = path.join(tracesDir, "index.json");
-  let traceFiles: string[] = [];
+  let traceFiles: string[];
 
   if (fs.existsSync(indexPath)) {
     const rawIndex = JSON.parse(fs.readFileSync(indexPath, "utf-8"));
@@ -176,9 +171,7 @@ function importTraces(
     traceFiles = [...new Set(index.traces.map((t) => t.file))];
   } else {
     // Fall back to scanning directory
-    traceFiles = fs
-      .readdirSync(tracesDir)
-      .filter((f) => f.endsWith(".json") && f !== "index.json");
+    traceFiles = fs.readdirSync(tracesDir).filter((f) => f.endsWith(".json") && f !== "index.json");
   }
 
   for (const file of traceFiles) {
@@ -228,7 +221,11 @@ function importTraces(
         // If the index entry has a different scenario than the trace file,
         // upsert with the index scenario/execution override
         if (entry.scenario !== baseTrace.scenario || entry.execution !== baseTrace.execution) {
-          const overrideTrace = { ...baseTrace, scenario: entry.scenario, execution: entry.execution };
+          const overrideTrace = {
+            ...baseTrace,
+            scenario: entry.scenario,
+            execution: entry.execution,
+          };
           upsertTrace(db, overrideTrace as MessageTrace, importId);
           result.traces++;
           result.events += baseTrace.events.length;

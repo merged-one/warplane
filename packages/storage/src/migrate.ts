@@ -52,9 +52,7 @@ export function runMigrations(db: Database): string[] {
     .sort();
 
   const applied = new Set(
-    (
-      db.prepare("SELECT name FROM migrations").all() as Array<{ name: string }>
-    ).map((r) => r.name),
+    (db.prepare("SELECT name FROM migrations").all() as Array<{ name: string }>).map((r) => r.name),
   );
 
   const newlyApplied: string[] = [];
@@ -66,9 +64,7 @@ export function runMigrations(db: Database): string[] {
     db.exec(sql);
 
     // Record migration (skip if the migration itself created the table row)
-    const alreadyRecorded = db
-      .prepare("SELECT 1 FROM migrations WHERE name = ?")
-      .get(file);
+    const alreadyRecorded = db.prepare("SELECT 1 FROM migrations WHERE name = ?").get(file);
     if (!alreadyRecorded) {
       db.prepare("INSERT INTO migrations (name) VALUES (?)").run(file);
     }

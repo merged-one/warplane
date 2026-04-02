@@ -21,7 +21,10 @@ export class ApiClient {
     );
   }
 
-  async get<T = unknown>(path: string, query?: Record<string, string | number | undefined>): Promise<T> {
+  async get<T = unknown>(
+    path: string,
+    query?: Record<string, string | number | undefined>,
+  ): Promise<T> {
     const url = new URL(path, this.baseUrl);
     if (query) {
       for (const [k, v] of Object.entries(query)) {
@@ -91,7 +94,10 @@ function isConnectionError(err: unknown): boolean {
 
 function isTimeoutError(err: unknown): boolean {
   if (err && typeof err === "object" && "name" in err) {
-    return (err as { name: string }).name === "TimeoutError" || (err as { name: string }).name === "AbortError";
+    return (
+      (err as { name: string }).name === "TimeoutError" ||
+      (err as { name: string }).name === "AbortError"
+    );
   }
   return false;
 }

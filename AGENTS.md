@@ -31,20 +31,20 @@ scripts/        Build, demo, and generation scripts
 
 ## Key Commands
 
-| Command | Purpose |
-|---------|---------|
-| `make bootstrap` | Install all dependencies (pnpm + Go) |
-| `make build` | Build all packages |
-| `make test` | Run all tests (vitest + Go) |
-| `make check` | Lint + typecheck |
-| `pnpm dev` | Start API server in dev mode |
-| `pnpm demo:day1` | Run Milestone 1 demo |
-| `pnpm docs:dev` | Start docs site dev server |
-| `pnpm docs:build` | Build docs site |
-| `pnpm docs:llms` | Generate llms.txt, llms-full.txt, context-map.json |
-| `pnpm ai:pack` | Generate full AI context bundle (source + docs) |
-| `pnpm ai:pack:docs` | Generate docs-only AI context bundle |
-| `pnpm mcp:docs` | Start docs MCP server (stdio) |
+| Command             | Purpose                                            |
+| ------------------- | -------------------------------------------------- |
+| `make bootstrap`    | Install all dependencies (pnpm + Go)               |
+| `make build`        | Build all packages                                 |
+| `make test`         | Run all tests (vitest + Go)                        |
+| `make check`        | Lint + typecheck                                   |
+| `pnpm dev`          | Start API server in dev mode                       |
+| `pnpm demo:day1`    | Run Milestone 1 demo                               |
+| `pnpm docs:dev`     | Start docs site dev server                         |
+| `pnpm docs:build`   | Build docs site                                    |
+| `pnpm docs:llms`    | Generate llms.txt, llms-full.txt, context-map.json |
+| `pnpm ai:pack`      | Generate full AI context bundle (source + docs)    |
+| `pnpm ai:pack:docs` | Generate docs-only AI context bundle               |
+| `pnpm mcp:docs`     | Start docs MCP server (stdio)                      |
 
 ## CLI (`warplane`)
 

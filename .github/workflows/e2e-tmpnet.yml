@@ -1,0 +1,52 @@
+name: E2E — Tmpnet
+
+# This workflow is manual-only (workflow_dispatch) because it requires
+# AvalancheGo and subnet-evm binaries which are large (~500MB+) and
+# slow to build. Running this on every PR would be prohibitively expensive.
+#
+# Trigger manually from the Actions tab or via `gh workflow run e2e-tmpnet.yml`.
+# See docs/runbooks/full-e2e.md for local prerequisites.
+
+on:
+  workflow_dispatch:
+    inputs:
+      avalanchego_version:
+        description: "AvalancheGo version (e.g. v1.11.0)"
+        required: false
+        default: "latest"
+
+env:
+  GO_VERSION: "1.22"
+
+jobs:
+  e2e:
+    name: Full Tmpnet E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: harness/tmpnet/go.sum
+
+      # In a real setup, you would download or build AvalancheGo and
+      # subnet-evm binaries here. This is left as a placeholder since
+      # the binary acquisition strategy depends on the team's infra.
+      - name: Check binaries
+        run: |
+          echo "AvalancheGo version: ${{ github.event.inputs.avalanchego_version }}"
+          echo ""
+          echo "NOTE: This workflow requires AvalancheGo and subnet-evm binaries."
+          echo "See docs/runbooks/full-e2e.md for details."
+          echo ""
+          echo "To run locally:"
+          echo "  make e2e"
+
+      - name: Run E2E tests
+        working-directory: harness/tmpnet
+        env:
+          RUN_E2E: "1"
+        run: go test -v -timeout 20m ./...

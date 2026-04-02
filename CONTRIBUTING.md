@@ -12,7 +12,15 @@ Requirements: Node >= 20, pnpm >= 10, Go >= 1.22.
 
 ## Quality bar
 
-Before opening a PR:
+Before opening a PR, run the full check suite:
+
+```bash
+pnpm run repo:check    # or: make repo-check
+```
+
+This validates build, lint, typecheck, format, tests, Go harness, docs, llms, and ADRs — the same checks that CI runs.
+
+Individual checks:
 
 1. **Build passes**: `pnpm build` and `cd harness/tmpnet && go build ./...`
 2. **Tests pass**: `pnpm test` and `cd harness/tmpnet && go test ./...`

@@ -21,10 +21,7 @@ import {
 // Fixture paths
 // ---------------------------------------------------------------------------
 
-const ARTIFACTS_DIR = join(
-  import.meta.dirname,
-  "../../../harness/tmpnet/artifacts",
-);
+const ARTIFACTS_DIR = join(import.meta.dirname, "../../../harness/tmpnet/artifacts");
 const TRACES_DIR = join(ARTIFACTS_DIR, "traces");
 const SCENARIOS_DIR = join(ARTIFACTS_DIR, "scenarios");
 const NETWORK_FILE = join(ARTIFACTS_DIR, "network/network.json");
@@ -35,12 +32,8 @@ const NETWORK_FILE = join(ARTIFACTS_DIR, "network/network.json");
 
 describe("chainId", () => {
   it("creates a ChainId from a valid string", () => {
-    const id = chainId(
-      "2q9e4r6Mu3U68nU1fYjgbR6JvwrRx36CohpAX5UQxse55x1Q5",
-    );
-    expect(id.blockchainId).toBe(
-      "2q9e4r6Mu3U68nU1fYjgbR6JvwrRx36CohpAX5UQxse55x1Q5",
-    );
+    const id = chainId("2q9e4r6Mu3U68nU1fYjgbR6JvwrRx36CohpAX5UQxse55x1Q5");
+    expect(id.blockchainId).toBe("2q9e4r6Mu3U68nU1fYjgbR6JvwrRx36CohpAX5UQxse55x1Q5");
   });
 
   it("throws on empty string", () => {
@@ -192,9 +185,7 @@ describe("golden scenario fixtures", () => {
     .map((d) => d.name);
 
   it.each(scenarioDirs)("validates scenario run: %s", (dir) => {
-    const raw = JSON.parse(
-      readFileSync(join(SCENARIOS_DIR, dir, "run.json"), "utf-8"),
-    );
+    const raw = JSON.parse(readFileSync(join(SCENARIOS_DIR, dir, "run.json"), "utf-8"));
     const run = ScenarioRun.parse(raw);
     expect(run.scenario).toBeTruthy();
     expect(run.passed).toBe(true);

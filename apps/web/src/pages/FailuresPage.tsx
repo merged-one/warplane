@@ -7,9 +7,7 @@ import { Loading } from "../components/Loading.js";
 import { ErrorBox } from "../components/ErrorBox.js";
 
 export function FailuresPage() {
-  const { data, loading, error, reload } = useFetch(() =>
-    getFailures({ pageSize: 100 }),
-  );
+  const { data, loading, error, reload } = useFetch(() => getFailures({ pageSize: 100 }));
   const fmt = useFormatTime();
 
   if (loading) return <Loading />;
@@ -21,8 +19,8 @@ export function FailuresPage() {
     <div>
       <h1>Failures & Anomalies</h1>
       <p className="muted">
-        Traces with status <code>failed</code>, <code>replay_blocked</code>, or{" "}
-        <code>pending</code>.
+        Traces with status <code>failed</code>, <code>replay_blocked</code>, or <code>pending</code>
+        .
       </p>
 
       {failures.length === 0 ? (
@@ -31,12 +29,9 @@ export function FailuresPage() {
         <div className="failure-list">
           {failures.map((t) => {
             const markerEvents = t.events.filter((e) =>
-              [
-                "execution_failed",
-                "retry_requested",
-                "retry_succeeded",
-                "replay_blocked",
-              ].includes(e.kind),
+              ["execution_failed", "retry_requested", "retry_succeeded", "replay_blocked"].includes(
+                e.kind,
+              ),
             );
             return (
               <div key={t.messageId} className="failure-card">
@@ -58,12 +53,8 @@ export function FailuresPage() {
                     {markerEvents.map((ev, i) => (
                       <div key={i} className="failure-marker-item">
                         <EventBadge kind={ev.kind} />
-                        <span className="muted">
-                          {fmt(ev.timestamp, "time")}
-                        </span>
-                        {ev.details && (
-                          <span className="muted"> — {ev.details}</span>
-                        )}
+                        <span className="muted">{fmt(ev.timestamp, "time")}</span>
+                        {ev.details && <span className="muted"> — {ev.details}</span>}
                       </div>
                     ))}
                   </div>

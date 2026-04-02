@@ -11,6 +11,51 @@
 
 Observe, manage, and orchestrate Avalanche L1 subnets from a single pane of glass.
 
+## Quick start — Day-1 Demo
+
+Get a fully working MVP with seeded data in one command. No AvalancheGo binaries required.
+
+```bash
+# Prerequisites: Node >= 20, pnpm >= 10
+git clone <repo-url> && cd warplane
+pnpm install
+pnpm demo:day1
+```
+
+This will build everything, start the API (with golden fixtures auto-seeded), and launch the web dashboard. You'll see:
+
+- **Dashboard**: http://localhost:5173
+- **API**: http://localhost:3100
+- **Swagger UI**: http://localhost:3100/docs
+- **Health**: http://localhost:3100/healthz
+
+The demo uses 8 deterministic Teleporter traces and 5 scenarios generated from golden fixtures — no external services needed.
+
+### Seeded mode vs. full tmpnet mode
+
+|                 | Seeded (default)                               | Full tmpnet                                                |
+| --------------- | ---------------------------------------------- | ---------------------------------------------------------- |
+| **Setup**       | `pnpm demo:day1`                               | See [docs/runbooks/full-e2e.md](docs/runbooks/full-e2e.md) |
+| **Requires**    | Node + pnpm                                    | Node + pnpm + Go + AvalancheGo + subnet-evm                |
+| **Data source** | Golden fixtures in `harness/tmpnet/artifacts/` | Live Avalanche temporary network                           |
+| **Use case**    | Development, demos, CI                         | Integration testing, pre-release validation                |
+
+To switch from seeded to full tmpnet mode:
+
+1. Install Go >= 1.22, AvalancheGo, and subnet-evm binaries
+2. Run `make e2e` to execute the full E2E suite
+3. Start the API with `DEMO_MODE=false pnpm dev` and ingest live artifacts with `pnpm ingest:watch`
+
+## Repo health
+
+Run the full CI check suite locally:
+
+```bash
+pnpm run repo:check    # or: make repo-check
+```
+
+This validates: build, lint, typecheck, format, tests, Go harness, docs build, llms generation, ADR structure, and doc links.
+
 ## Repo layout
 
 ```
@@ -34,50 +79,48 @@ scripts/        Build, demo, and AI helper scripts
 .github/        Issue templates, PR template, CI workflows
 ```
 
-## Milestone 1 goal
-
-Ship a working monorepo skeleton with:
-- Domain types modelling Avalanche L1 chains and subnets
-- A Fastify API with `/healthz` and `/api/v1/chains`
-- A React dashboard shell
-- A VitePress docs site
-- A Go test harness for tmpnet integration
-- CI-ready build, test, and lint pipelines
-
-## Quick start
-
-```bash
-# Prerequisites: Node >= 20, pnpm >= 10, Go >= 1.22
-make bootstrap   # install all deps
-make build        # build everything
-make test         # run all tests
-make check        # lint + typecheck
-```
-
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `pnpm dev` | Start the API server in dev mode |
-| `pnpm demo:day1` | Run the Milestone 1 demo |
-| `pnpm docs:llms` | Bundle docs for LLM consumption |
-| `pnpm ai:pack` | Generate AI context pack |
-| `pnpm mcp:docs` | Start the docs MCP server |
+| Command               | Description                                         |
+| --------------------- | --------------------------------------------------- |
+| `pnpm demo:day1`      | Start API + web with seeded golden fixtures         |
+| `pnpm run repo:check` | Full CI check suite (build, lint, test, docs, ADRs) |
+| `pnpm dev`            | Start the API server in dev mode                    |
+| `pnpm dev:web`        | Start the web dashboard in dev mode                 |
+| `pnpm build`          | Build all packages                                  |
+| `pnpm test`           | Run all unit tests                                  |
+| `pnpm run check`      | Lint + typecheck                                    |
+| `pnpm docs:dev`       | Start docs site locally                             |
+| `pnpm docs:build`     | Build static docs site                              |
+| `pnpm docs:llms`      | Generate llms.txt and LLM context files             |
+| `pnpm ai:pack`        | Generate AI context bundle                          |
+| `pnpm mcp:docs`       | Start the docs MCP server                           |
+| `make repo-check`     | Same as `pnpm run repo:check`                       |
+| `make e2e`            | Full E2E with real tmpnet (requires AvalancheGo)    |
+
+## CI
+
+CI runs automatically on push to `main` and on pull requests:
+
+- **[CI](.github/workflows/ci.yml)**: Build, lint, typecheck, format, unit tests, API integration smoke test, CLI smoke test, docs build, llms generation check, ADR validation
+- **[Go Harness](.github/workflows/ci.yml)**: Go build, vet, and unit tests (parallel with main CI)
+- **[E2E Tmpnet](.github/workflows/e2e-tmpnet.yml)**: Full tmpnet E2E (manual dispatch only — requires AvalancheGo binaries)
+- **[ADR Validation](.github/workflows/adr-validation.yml)**: Validates ADR structure on changes to `docs/decisions/`
 
 ## Planning and governance
 
-| Document | Purpose |
-|----------|---------|
-| [Product one-pager](docs/product/one-pager.md) | What Warplane is and why |
-| [Roadmap](docs/planning/roadmap.md) | Milestone breakdown and timeline |
-| [Work items](docs/planning/work-items.yaml) | Machine-readable task tracking |
-| [Status](docs/planning/status.md) | Current milestone progress |
-| [Risk register](docs/planning/risk-register.md) | Known risks and mitigations |
-| [Decision log](docs/decisions/README.md) | Architecture Decision Records |
-| [Working agreement](docs/planning/working-agreement.md) | Coding and review rules |
-| [Contributing](CONTRIBUTING.md) | How to contribute |
-| [Security](SECURITY.md) | Vulnerability disclosure process |
-| [Release process](RELEASE.md) | Versioning and release steps |
+| Document                                                | Purpose                          |
+| ------------------------------------------------------- | -------------------------------- |
+| [Product one-pager](docs/product/one-pager.md)          | What Warplane is and why         |
+| [Roadmap](docs/planning/roadmap.md)                     | Milestone breakdown and timeline |
+| [Work items](docs/planning/work-items.yaml)             | Machine-readable task tracking   |
+| [Status](docs/planning/status.md)                       | Current milestone progress       |
+| [Risk register](docs/planning/risk-register.md)         | Known risks and mitigations      |
+| [Decision log](docs/decisions/README.md)                | Architecture Decision Records    |
+| [Working agreement](docs/planning/working-agreement.md) | Coding and review rules          |
+| [Contributing](CONTRIBUTING.md)                         | How to contribute                |
+| [Security](SECURITY.md)                                 | Vulnerability disclosure process |
+| [Release process](RELEASE.md)                           | Versioning and release steps     |
 
 ## License
 
@@ -119,20 +162,54 @@ scripts/        Build, demo, and generation scripts
 
 ## Key Commands
 
-| Command | Purpose |
-|---------|---------|
-| `make bootstrap` | Install all dependencies (pnpm + Go) |
-| `make build` | Build all packages |
-| `make test` | Run all tests (vitest + Go) |
-| `make check` | Lint + typecheck |
-| `pnpm dev` | Start API server in dev mode |
-| `pnpm demo:day1` | Run Milestone 1 demo |
-| `pnpm docs:dev` | Start docs site dev server |
-| `pnpm docs:build` | Build docs site |
-| `pnpm docs:llms` | Generate llms.txt, llms-full.txt, context-map.json |
-| `pnpm ai:pack` | Generate full AI context bundle (source + docs) |
-| `pnpm ai:pack:docs` | Generate docs-only AI context bundle |
-| `pnpm mcp:docs` | Start docs MCP server (stdio) |
+| Command             | Purpose                                            |
+| ------------------- | -------------------------------------------------- |
+| `make bootstrap`    | Install all dependencies (pnpm + Go)               |
+| `make build`        | Build all packages                                 |
+| `make test`         | Run all tests (vitest + Go)                        |
+| `make check`        | Lint + typecheck                                   |
+| `pnpm dev`          | Start API server in dev mode                       |
+| `pnpm demo:day1`    | Run Milestone 1 demo                               |
+| `pnpm docs:dev`     | Start docs site dev server                         |
+| `pnpm docs:build`   | Build docs site                                    |
+| `pnpm docs:llms`    | Generate llms.txt, llms-full.txt, context-map.json |
+| `pnpm ai:pack`      | Generate full AI context bundle (source + docs)    |
+| `pnpm ai:pack:docs` | Generate docs-only AI context bundle               |
+| `pnpm mcp:docs`     | Start docs MCP server (stdio)                      |
+
+## CLI (`warplane`)
+
+The `warplane` CLI provides terminal access to all MVP data. Build with `pnpm -F @warplane/cli build`.
+
+**Useful for agents:**
+
+```bash
+# Check environment readiness
+warplane doctor
+warplane --json doctor | jq '.ok'
+
+# Query traces (supports --json for machine parsing)
+warplane --json traces list
+warplane --json traces list --scenario basic_send_receive --status success
+warplane --json traces show <messageId>
+
+# Inspect failures
+warplane --json failures list
+
+# Query registry and scenarios
+warplane --json registry show
+warplane --json scenarios list
+
+# Import artifacts
+warplane --json import harness/tmpnet/artifacts
+
+# Use a different API instance
+warplane --api-url http://localhost:8080 traces list
+```
+
+Always use `--json` when parsing output programmatically. The CLI talks to the local API by default (`http://localhost:3100`); set `ICP_API_URL` to override.
+
+See `docs/runbooks/cli.md` for the full reference.
 
 ## Quality Rules
 
@@ -232,11 +309,11 @@ lifecycles, and orchestrate cross-chain operations from one interface (web, CLI,
 
 ## Target users
 
-| Persona | Need |
-|---------|------|
-| **L1 Operator** | Real-time health monitoring, alerting, lifecycle automation |
+| Persona              | Need                                                            |
+| -------------------- | --------------------------------------------------------------- |
+| **L1 Operator**      | Real-time health monitoring, alerting, lifecycle automation     |
 | **Subnet Developer** | Fast local dev loops, fixture-based testing, deployment tooling |
-| **Platform Team** | Multi-chain visibility, governance, compliance dashboards |
+| **Platform Team**    | Multi-chain visibility, governance, compliance dashboards       |
 
 ## Key capabilities (Milestone 1 -- Day-1 MVP)
 
@@ -250,12 +327,12 @@ lifecycles, and orchestrate cross-chain operations from one interface (web, CLI,
 
 ## Success metrics
 
-| Metric | M1 Target |
-|--------|-----------|
-| Build + test pass rate | 100% on CI |
-| Domain model coverage | Core types for Chain, Subnet, HealthStatus |
-| API endpoints | `/healthz` + `/api/v1/chains` responding |
-| e2e harness | Go tmpnet compiles and has smoke test |
+| Metric                 | M1 Target                                  |
+| ---------------------- | ------------------------------------------ |
+| Build + test pass rate | 100% on CI                                 |
+| Domain model coverage  | Core types for Chain, Subnet, HealthStatus |
+| API endpoints          | `/healthz` + `/api/v1/chains` responding   |
+| e2e harness            | Go tmpnet compiles and has smoke test      |
 
 ## Risks
 
@@ -317,26 +394,26 @@ Go test harness, and CI-ready pipelines.
 
 ### Deliverables
 
-| # | Deliverable | Package(s) | Status |
-|---|-------------|------------|--------|
-| 1 | Core domain types | `packages/domain` | Done |
-| 2 | Storage interfaces | `packages/storage` | Done |
-| 3 | Ingest pipeline stub | `packages/ingest` | Done |
-| 4 | Fastify API (`/healthz`, `/api/v1/chains`) | `apps/api` | Done |
-| 5 | React dashboard shell | `apps/web` | Done |
-| 6 | VitePress docs site | `apps/docs` | Done |
-| 7 | Go tmpnet harness | `harness/tmpnet` | Done |
-| 8 | CLI with `ping` command | `packages/cli` | Done |
-| 9 | Build, test, lint pipelines | root config | Done |
-| 10 | Planning, ADR, and governance system | `docs/`, `.github/` | In progress |
+| #   | Deliverable                                | Package(s)          | Status      |
+| --- | ------------------------------------------ | ------------------- | ----------- |
+| 1   | Core domain types                          | `packages/domain`   | Done        |
+| 2   | Storage interfaces                         | `packages/storage`  | Done        |
+| 3   | Ingest pipeline stub                       | `packages/ingest`   | Done        |
+| 4   | Fastify API (`/healthz`, `/api/v1/chains`) | `apps/api`          | Done        |
+| 5   | React dashboard shell                      | `apps/web`          | Done        |
+| 6   | VitePress docs site                        | `apps/docs`         | Done        |
+| 7   | Go tmpnet harness                          | `harness/tmpnet`    | Done        |
+| 8   | CLI with `ping` command                    | `packages/cli`      | Done        |
+| 9   | Build, test, lint pipelines                | root config         | Done        |
+| 10  | Planning, ADR, and governance system       | `docs/`, `.github/` | In progress |
 
 ### Key dates
 
-| Event | Target |
-|-------|--------|
-| M1 code complete | Week of 2026-03-31 |
+| Event                         | Target             |
+| ----------------------------- | ------------------ |
+| M1 code complete              | Week of 2026-03-31 |
 | M1 governance & docs complete | Week of 2026-04-07 |
-| M1 demo | TBD |
+| M1 demo                       | TBD                |
 
 ## Milestone 2 -- Real Data & CI (planned)
 
@@ -377,7 +454,7 @@ system. All code deliverables are complete. Planning and governance artifacts ar
 
 - [x] `pnpm install` works
 - [x] `pnpm build` works
-- [x] `pnpm test` works (3 tests, 2 files)
+- [x] `pnpm test` works (33 tests, 2 files)
 - [x] `go test ./...` works in `harness/tmpnet`
 - [x] Typecheck passes (`tsc -b`)
 - [x] README documents repo layout and M1 goal
@@ -387,6 +464,12 @@ system. All code deliverables are complete. Planning and governance artifacts ar
 - [x] Core types: ChainId, Subnet, HealthStatus, ChainStatus
 - [x] Storage interfaces defined
 - [x] Ingest pipeline stub
+- [x] Canonical domain schemas (Zod v4): MessageTrace, MessageEvent, NetworkManifest, ScenarioRun, registry types
+- [x] Discriminated union for 11 event kinds
+- [x] JSON Schema generation (`packages/domain/generated/*.schema.json`)
+- [x] OpenAPI 3.1 component bundle (`packages/domain/generated/openapi-components.json`)
+- [x] Golden fixture validation (all 8 traces, 5 scenarios, network manifest)
+- [x] Trace model runbook (`docs/runbooks/trace-model.md`)
 
 ## API
 
@@ -404,13 +487,27 @@ system. All code deliverables are complete. Planning and governance artifacts ar
 ## Harness
 
 - [x] Go tmpnet module compiles and has smoke test
+- [x] Ginkgo/Gomega E2E suite with RUN_E2E gate
+- [x] L1TestInfo and NetworkInfo types in pkg/harness
+- [x] CreateNetworkWithTeleporter helper (scaffold — real tmpnet wiring in M2)
+- [x] Artifact management: writes `artifacts/network/network.json`
+- [x] Unit tests for types, URL builders, and artifact round-trip
+- [x] `make e2e-compile` target for compile-only checks
+- [x] `make e2e` target for full E2E runs
+- [x] `docs/runbooks/full-e2e.md` with prerequisites and fallback story
+- [x] `harness/tmpnet/README.md` with structure and env vars
 
 ## CI / Scripts
 
-- [x] `demo:day1` script
+- [x] `demo:day1` script (interactive: API + web with seeded fixtures)
 - [x] `docs:llms` script
 - [x] `ai:pack` script
-- [x] Makefile with bootstrap, build, test, check targets
+- [x] Makefile with bootstrap, build, test, check, e2e-compile, e2e, repo-check targets
+- [x] GitHub Actions CI workflow (build, lint, typecheck, format, tests, API integration, CLI smoke, docs, llms, ADR validation)
+- [x] GitHub Actions Go harness job (build, vet, test — parallel)
+- [x] GitHub Actions E2E tmpnet workflow (manual dispatch — requires AvalancheGo)
+- [x] `repo:check` / `make repo-check` — full local CI check suite
+- [x] Pre-commit hook (typecheck + lint + format)
 
 ## Planning and tracking
 
@@ -427,6 +524,7 @@ system. All code deliverables are complete. Planning and governance artifacts ar
 - [x] ADR-0001: Use Structured MADR
 - [x] ADR-0002: Use monorepo with TypeScript and Go
 - [x] ADR-0003: Fixture-first approach for Day-1 MVP
+- [x] ADR-0004: Zod as single schema source for domain model
 - [x] `new-adr.mjs` scaffolding script
 - [x] ADR validation CI workflow
 
@@ -461,7 +559,6 @@ system. All code deliverables are complete. Planning and governance artifacts ar
 
 See [`backlog.md`](backlog.md) and [`work-items.yaml`](work-items.yaml) for full details.
 
-- CI pipeline (GitHub Actions)
 - Real Avalanche RPC polling
 - Storage implementations
 - Docker Compose
@@ -519,6 +616,7 @@ Rules and conventions for contributing to Warplane. See also [CONTRIBUTING.md](.
 Imperative mood, concise: "Add chain polling", not "Added chain polling".
 
 Format:
+
 ```
 <type>: <short summary>
 
@@ -573,7 +671,6 @@ Items listed here are recognized as needed but explicitly deferred from Mileston
 
 ## Infrastructure
 
-- **CI pipeline** (GitHub Actions): lint, test, build matrix for Node + Go
 - **Docker Compose**: local dev environment with API + web + database
 - **e2e test wiring**: `make e2e` currently prints a stub; needs tmpnet integration
 
@@ -587,8 +684,6 @@ Items listed here are recognized as needed but explicitly deferred from Mileston
 
 ## Quality
 
-- **ESLint CI enforcement**: config is present but not yet run in CI
-- **Prettier format check in CI**
 - **Test coverage thresholds**
 - **Go linter (golangci-lint) integration**
 
@@ -597,15 +692,15 @@ Items listed here are recognized as needed but explicitly deferred from Mileston
 
 # Warplane -- Risk Register
 
-| ID | Risk | Likelihood | Impact | Mitigation | Owner | Status |
-|----|------|-----------|--------|------------|-------|--------|
-| R1 | Avalanche RPC API changes break ingest pipeline | Medium | High | Pin RPC versions; abstract behind interface; fixture-first testing | unassigned | Open |
-| R2 | tmpnet instability causes flaky e2e tests | High | Medium | Isolate e2e from CI gate initially; retry logic; fallback to fixture mode | unassigned | Open |
-| R3 | pnpm + Go monorepo tooling complexity | Medium | Medium | Makefile abstracts common ops; document setup in CONTRIBUTING.md | unassigned | Mitigated |
-| R4 | Scope creep beyond M1 MVP | Medium | High | Strict backlog discipline; work-items.yaml tracks scope; ADRs document decisions | unassigned | Mitigated |
-| R5 | Single-contributor bus factor | High | High | Document decisions via ADRs; automate what can be automated; clear onboarding docs | unassigned | Open |
-| R6 | No CI pipeline yet | High | Medium | M2 priority; local `make check` and `make test` serve as stopgap | unassigned | Open |
-| R7 | Dist artifacts committed to repo | Low | Low | Add to .gitignore once CI builds artifacts; currently needed for demo | unassigned | Accepted |
+| ID  | Risk                                            | Likelihood | Impact | Mitigation                                                                         | Owner      | Status    |
+| --- | ----------------------------------------------- | ---------- | ------ | ---------------------------------------------------------------------------------- | ---------- | --------- |
+| R1  | Avalanche RPC API changes break ingest pipeline | Medium     | High   | Pin RPC versions; abstract behind interface; fixture-first testing                 | unassigned | Open      |
+| R2  | tmpnet instability causes flaky e2e tests       | High       | Medium | Isolate e2e from CI gate initially; retry logic; fallback to fixture mode          | unassigned | Open      |
+| R3  | pnpm + Go monorepo tooling complexity           | Medium     | Medium | Makefile abstracts common ops; document setup in CONTRIBUTING.md                   | unassigned | Mitigated |
+| R4  | Scope creep beyond M1 MVP                       | Medium     | High   | Strict backlog discipline; work-items.yaml tracks scope; ADRs document decisions   | unassigned | Mitigated |
+| R5  | Single-contributor bus factor                   | High       | High   | Document decisions via ADRs; automate what can be automated; clear onboarding docs | unassigned | Open      |
+| R6  | No CI pipeline yet                              | High       | Medium | M2 priority; local `make check` and `make test` serve as stopgap                   | unassigned | Open      |
+| R7  | Dist artifacts committed to repo                | Low        | Low    | Add to .gitignore once CI builds artifacts; currently needed for demo              | unassigned | Accepted  |
 
 ## Review cadence
 
@@ -627,11 +722,11 @@ using [Structured MADR](https://adr.github.io/madr/) format.
 
 ## Decisions
 
-| ADR | Title | Status |
-|-----|-------|--------|
-| [0001](0001-use-structured-madr.md) | Use Structured MADR for architecture decisions | Accepted |
-| [0002](0002-use-monorepo-with-ts-and-go.md) | Use monorepo with TypeScript and Go | Accepted |
-| [0003](0003-fixture-first-day1-mvp.md) | Fixture-first approach for Day-1 MVP | Accepted |
+| ADR                                         | Title                                          | Status   |
+| ------------------------------------------- | ---------------------------------------------- | -------- |
+| [0001](0001-use-structured-madr.md)         | Use Structured MADR for architecture decisions | Accepted |
+| [0002](0002-use-monorepo-with-ts-and-go.md) | Use monorepo with TypeScript and Go            | Accepted |
+| [0003](0003-fixture-first-day1-mvp.md)      | Fixture-first approach for Day-1 MVP           | Accepted |
 
 ## Creating a new ADR
 
@@ -650,11 +745,11 @@ After writing the ADR:
 
 ## ADR lifecycle
 
-| Status | Meaning |
-|--------|---------|
-| Proposed | Under discussion, not yet decided |
-| Accepted | Decision made, in effect |
-| Deprecated | Superseded by a later ADR |
+| Status     | Meaning                                     |
+| ---------- | ------------------------------------------- |
+| Proposed   | Under discussion, not yet decided           |
+| Accepted   | Decision made, in effect                    |
+| Deprecated | Superseded by a later ADR                   |
 | Superseded | Replaced by another ADR (link to successor) |
 
 ## Validation
@@ -954,7 +1049,15 @@ Requirements: Node >= 20, pnpm >= 10, Go >= 1.22.
 
 ## Quality bar
 
-Before opening a PR:
+Before opening a PR, run the full check suite:
+
+```bash
+pnpm run repo:check    # or: make repo-check
+```
+
+This validates build, lint, typecheck, format, tests, Go harness, docs, llms, and ADRs — the same checks that CI runs.
+
+Individual checks:
 
 1. **Build passes**: `pnpm build` and `cd harness/tmpnet && go build ./...`
 2. **Tests pass**: `pnpm test` and `cd harness/tmpnet && go test ./...`
@@ -976,6 +1079,17 @@ Use concise, imperative commit messages: "Add chain polling", not "Added chain p
 
 ---
 ## File: packages/domain/src/index.ts
+
+/**
+ * @warplane/domain -- canonical domain model for the Interchain Control Plane.
+ *
+ * Single source of truth for types, runtime validation, JSON Schema,
+ * and OpenAPI components shared across API, CLI, UI, docs, and MCP server.
+ *
+ * @version 1.0.0
+ */
+
+// -- Legacy types (retained for backward compatibility) ---------------------
 
 /** Identifies a chain by its blockchain ID on the Avalanche Primary Network. */
 export interface ChainId {
@@ -1006,58 +1120,92 @@ export function chainId(blockchainId: string): ChainId {
   return { blockchainId };
 }
 
+// -- Canonical domain schemas -----------------------------------------------
+
+export * from "./events.js";
+export * from "./trace.js";
+export * from "./registry.js";
+export * from "./scenarios.js";
+export * from "./json-schema.js";
+export * from "./openapi.js";
+
 ---
 ## File: packages/storage/src/index.ts
 
-import type { ChainId, ChainStatus } from "@warplane/domain";
+/**
+ * @warplane/storage — Local SQLite persistence layer.
+ *
+ * Provides typed repository functions for networks, chains, scenarios,
+ * traces, events, artifacts, and import history backed by better-sqlite3.
+ */
 
-/** Read-side interface for chain status storage. */
-export interface ChainStatusReader {
-  get(chain: ChainId): Promise<ChainStatus | undefined>;
-}
+// Database lifecycle
+export { openDb, closeDb, type DbOptions, type Database } from "./db.js";
 
-/** Write-side interface for chain status storage. */
-export interface ChainStatusWriter {
-  put(status: ChainStatus): Promise<void>;
-}
+// Migrations
+export { runMigrations } from "./migrate.js";
 
-/** Combined storage interface. */
-export type ChainStatusStore = ChainStatusReader & ChainStatusWriter;
+// Repositories
+export { upsertNetwork, getNetwork, listNetworks } from "./repos/networks.js";
+
+export { upsertChain, getChain, listChains } from "./repos/chains.js";
+
+export { upsertScenarioRun, getScenarioRun, listScenarioRuns } from "./repos/scenarios.js";
+
+export {
+  upsertTrace,
+  getTrace,
+  listTraces,
+  getTraceEvents,
+  getTimeline,
+  countTraces,
+  type TraceFilter,
+} from "./repos/traces.js";
+
+export { upsertArtifact, listArtifacts, type Artifact } from "./repos/artifacts.js";
+
+export {
+  startImport,
+  completeImport,
+  failImport,
+  getImport,
+  listImports,
+  type ImportRecord,
+} from "./repos/imports.js";
 
 ---
 ## File: packages/ingest/src/index.ts
 
-import type { ChainId, ChainStatus, HealthStatus } from "@warplane/domain";
+/**
+ * @warplane/ingest — Artifact ingestion pipeline.
+ *
+ * Imports harness artifacts (traces, network manifests, scenario runs)
+ * into the @warplane/storage SQLite database with full domain validation.
+ */
 
-/** Polls an Avalanche node for chain health. */
-export async function pollChainHealth(chain: ChainId): Promise<ChainStatus> {
-  const health: HealthStatus = "unknown";
-  return {
-    chain,
-    health,
-    blockHeight: 0n,
-    timestamp: new Date(),
-  };
-}
+export { importArtifacts, type ImportResult, type ImportOptions } from "./importer.js";
+export { startWatcher, type WatchOptions } from "./watcher.js";
 
 ---
 ## File: apps/api/src/index.ts
 
-import Fastify from "fastify";
+/**
+ * @warplane/api — Fastify REST API for the Interchain Control Plane.
+ *
+ * Serves traces, chains, networks, and scenarios from the local
+ * SQLite database. Supports demo-mode auto-seeding from golden fixtures.
+ */
 
-const app = Fastify({ logger: true });
-
-app.get("/healthz", async () => ({ status: "ok" }));
-
-app.get("/api/v1/chains", async () => ({
-  chains: [],
-  message: "No chains registered yet",
-}));
+import { buildApp } from "./app.js";
 
 const port = Number(process.env["PORT"] ?? 3100);
+const host = process.env["HOST"] ?? "0.0.0.0";
+const demoMode = process.env["DEMO_MODE"] !== "false";
+
+const app = await buildApp({ demoMode });
 
 try {
-  await app.listen({ port, host: "0.0.0.0" });
+  await app.listen({ port, host });
 } catch (err) {
   app.log.error(err);
   process.exit(1);
@@ -1068,16 +1216,147 @@ try {
 
 #!/usr/bin/env node
 
-import { chainId } from "@warplane/domain";
+/**
+ * warplane CLI — Interchain Control Plane for Avalanche L1s.
+ *
+ * Talks to the local API by default (http://localhost:3100).
+ * Set ICP_API_URL to override.
+ */
 
-const args = process.argv.slice(2);
+import { Command } from "commander";
+import { setJsonMode } from "./output.js";
+import { doctorCommand } from "./commands/doctor.js";
+import { demoCommand } from "./commands/demo.js";
+import { tracesCommand } from "./commands/traces.js";
+import { failuresCommand } from "./commands/failures.js";
+import { scenariosCommand } from "./commands/scenarios.js";
+import { importCommand } from "./commands/import.js";
+import { registryCommand } from "./commands/registry.js";
+import { docsMcpCommand } from "./commands/docs-mcp.js";
+import { ApiUnreachableError } from "./api-client.js";
 
-if (args[0] === "ping") {
-  const id = chainId(args[1] ?? "default-chain");
-  console.log(`warplane: pinging chain ${id.blockchainId}`);
-} else {
-  console.log("warplane CLI — Interchain Control Plane for Avalanche L1s");
-  console.log("Usage: warplane ping <chain-id>");
+const program = new Command();
+
+program
+  .name("warplane")
+  .description("Interchain Control Plane CLI for Avalanche L1s")
+  .version("0.1.0")
+  .option("--json", "Output JSON (for scripting)")
+  .option("--api-url <url>", "API base URL (default: http://localhost:3100)")
+  .hook("preAction", (_thisCmd, _actionCmd) => {
+    const opts = program.opts();
+    if (opts.json) setJsonMode(true);
+    if (opts.apiUrl) process.env["ICP_API_URL"] = opts.apiUrl;
+  });
+
+program.addCommand(doctorCommand());
+program.addCommand(demoCommand());
+program.addCommand(tracesCommand());
+program.addCommand(failuresCommand());
+program.addCommand(scenariosCommand());
+program.addCommand(importCommand());
+program.addCommand(registryCommand());
+program.addCommand(docsMcpCommand());
+
+// Shell completion helper
+program
+  .command("completion")
+  .description("Output shell completion script")
+  .argument("[shell]", "Shell type: bash, zsh, fish", "bash")
+  .action((shell: string) => {
+    if (shell === "zsh") {
+      console.log(zshCompletion());
+    } else if (shell === "fish") {
+      console.log(fishCompletion());
+    } else {
+      console.log(bashCompletion());
+    }
+  });
+
+// Global error handler for nicer API-down messages
+process.on("unhandledRejection", (err) => {
+  if (err instanceof ApiUnreachableError) {
+    console.error(err.message);
+    process.exit(1);
+  }
+  console.error(err);
+  process.exit(1);
+});
+
+try {
+  await program.parseAsync(process.argv);
+} catch (err) {
+  if (err instanceof ApiUnreachableError) {
+    console.error(err.message);
+    process.exitCode = 1;
+  } else if (err instanceof Error && err.message.startsWith("API ")) {
+    console.error(err.message);
+    process.exitCode = 1;
+  } else {
+    throw err;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Shell completion scripts
+// ---------------------------------------------------------------------------
+
+function bashCompletion(): string {
+  return `# warplane bash completion
+# Add to ~/.bashrc: eval "$(warplane completion bash)"
+_warplane_completions() {
+  local cur="\${COMP_WORDS[COMP_CWORD]}"
+  local prev="\${COMP_WORDS[COMP_CWORD-1]}"
+  local cmds="doctor demo traces failures scenarios import registry docs completion"
+  local subcmds_demo="seed start"
+  local subcmds_traces="list show"
+  local subcmds_failures="list"
+  local subcmds_scenarios="list"
+  local subcmds_registry="show"
+  local subcmds_docs="mcp"
+
+  case "\${prev}" in
+    warplane) COMPREPLY=( $(compgen -W "\${cmds}" -- "\${cur}") ) ;;
+    demo) COMPREPLY=( $(compgen -W "\${subcmds_demo}" -- "\${cur}") ) ;;
+    traces) COMPREPLY=( $(compgen -W "\${subcmds_traces}" -- "\${cur}") ) ;;
+    failures) COMPREPLY=( $(compgen -W "\${subcmds_failures}" -- "\${cur}") ) ;;
+    scenarios) COMPREPLY=( $(compgen -W "\${subcmds_scenarios}" -- "\${cur}") ) ;;
+    registry) COMPREPLY=( $(compgen -W "\${subcmds_registry}" -- "\${cur}") ) ;;
+    docs) COMPREPLY=( $(compgen -W "\${subcmds_docs}" -- "\${cur}") ) ;;
+  esac
+}
+complete -F _warplane_completions warplane`;
+}
+
+function zshCompletion(): string {
+  return `# warplane zsh completion
+# Add to ~/.zshrc: eval "$(warplane completion zsh)"
+_warplane() {
+  local -a commands subcmds
+  commands=(doctor demo traces failures scenarios import registry docs completion)
+  _arguments '1:command:compadd -a commands'
+  case "\${words[2]}" in
+    demo) subcmds=(seed start); _arguments '2:subcommand:compadd -a subcmds' ;;
+    traces) subcmds=(list show); _arguments '2:subcommand:compadd -a subcmds' ;;
+    failures) subcmds=(list); _arguments '2:subcommand:compadd -a subcmds' ;;
+    scenarios) subcmds=(list); _arguments '2:subcommand:compadd -a subcmds' ;;
+    registry) subcmds=(show); _arguments '2:subcommand:compadd -a subcmds' ;;
+    docs) subcmds=(mcp); _arguments '2:subcommand:compadd -a subcmds' ;;
+  esac
+}
+compdef _warplane warplane`;
+}
+
+function fishCompletion(): string {
+  return `# warplane fish completion
+# Add to ~/.config/fish/completions/warplane.fish
+complete -c warplane -n '__fish_use_subcommand' -a 'doctor demo traces failures scenarios import registry docs completion'
+complete -c warplane -n '__fish_seen_subcommand_from demo' -a 'seed start'
+complete -c warplane -n '__fish_seen_subcommand_from traces' -a 'list show'
+complete -c warplane -n '__fish_seen_subcommand_from failures' -a 'list'
+complete -c warplane -n '__fish_seen_subcommand_from scenarios' -a 'list'
+complete -c warplane -n '__fish_seen_subcommand_from registry' -a 'show'
+complete -c warplane -n '__fish_seen_subcommand_from docs' -a 'mcp'`;
 }
 
 ---
@@ -1089,25 +1368,28 @@ This directory contains documentation optimized for AI agents and LLMs working w
 
 ## Files
 
-| File | Purpose |
-|------|---------|
-| [context-map.json](context-map.json) | Machine-readable index of important files with roles and priorities |
-| [prompting-guide.md](prompting-guide.md) | How to prompt effectively about this repo |
-| [repo-map.md](repo-map.md) | Detailed repo structure and package descriptions |
-| [mcp-usage.md](mcp-usage.md) | How to use the docs MCP server |
-| [repomix.md](repomix.md) | How to use repomix for AI context packing |
+| File                                     | Purpose                                                             |
+| ---------------------------------------- | ------------------------------------------------------------------- |
+| [context-map.json](context-map.json)     | Machine-readable index of important files with roles and priorities |
+| [prompting-guide.md](prompting-guide.md) | How to prompt effectively about this repo                           |
+| [repo-map.md](repo-map.md)               | Detailed repo structure and package descriptions                    |
+| [mcp-usage.md](mcp-usage.md)             | How to use the docs MCP server                                      |
+| [repomix.md](repomix.md)                 | How to use repomix for AI context packing                           |
 
 ## Quick Context Loading
 
 For LLMs that support llms.txt:
+
 - `llms.txt` (repo root) — discovery file with links and descriptions
 - `llms-full.txt` (repo root) — full documentation content
 
 For MCP-capable agents:
+
 - Run `pnpm mcp:docs` to start the docs MCP server
 - See [mcp-usage.md](mcp-usage.md) for configuration
 
 For repomix bundles:
+
 - Run `pnpm ai:pack` to generate a context bundle
 - See [repomix.md](repomix.md) for details
 
@@ -1187,6 +1469,7 @@ Machine-friendly map of the Warplane repository structure.
 ## Packages
 
 ### apps/api — @warplane/api
+
 - **Role:** Fastify REST API server
 - **Entry:** `src/index.ts`
 - **Endpoints:** `/healthz`, `/api/v1/chains`
@@ -1194,48 +1477,56 @@ Machine-friendly map of the Warplane repository structure.
 - **Test:** `src/index.test.ts`
 
 ### apps/web — @warplane/web
+
 - **Role:** React + Vite dashboard shell
 - **Entry:** `src/main.tsx`
 - **Component:** `src/App.tsx`
 - **Build:** Vite (not tsc)
 
 ### apps/docs — @warplane/docs-site
+
 - **Role:** VitePress documentation site
 - **Config:** `.vitepress/config.ts`
 - **Home:** `index.md`
 - **Build:** VitePress
 
 ### packages/domain — @warplane/domain
+
 - **Role:** Core domain types and validation
 - **Entry:** `src/index.ts`
 - **Exports:** `ChainId`, `Subnet`, `HealthStatus`, `ChainStatus`, `chainId()`
 - **Test:** `src/index.test.ts`
 
 ### packages/storage — @warplane/storage
+
 - **Role:** Persistence interfaces
 - **Entry:** `src/index.ts`
 - **Exports:** `ChainStatusReader`, `ChainStatusWriter`, `ChainStatusStore`
 - **Depends on:** `@warplane/domain`
 
 ### packages/ingest — @warplane/ingest
+
 - **Role:** Data ingestion pipeline (fixture data in M1)
 - **Entry:** `src/index.ts`
 - **Exports:** `pollChainHealth()`
 - **Depends on:** `@warplane/domain`
 
 ### packages/cli — @warplane/cli
+
 - **Role:** Command-line tool
 - **Entry:** `src/index.ts`
 - **Commands:** `ping`
 - **Depends on:** `@warplane/domain`
 
 ### packages/docs-mcp — @warplane/docs-mcp
+
 - **Role:** MCP server for documentation access
 - **Entry:** `src/index.ts`
 - **Transport:** stdio
 - **Dependencies:** `@modelcontextprotocol/sdk`, `zod`
 
 ### harness/tmpnet
+
 - **Role:** Go test harness for Avalanche tmpnet
 - **Entry:** `main.go`
 - **Test:** `main_test.go`
@@ -1243,43 +1534,43 @@ Machine-friendly map of the Warplane repository structure.
 
 ## Documentation
 
-| Path | Content |
-|------|---------|
-| `docs/planning/roadmap.md` | Milestone breakdown |
-| `docs/planning/status.md` | Current progress |
-| `docs/planning/work-items.yaml` | Machine-readable tasks |
-| `docs/planning/backlog.md` | Deferred items |
-| `docs/planning/risk-register.md` | Known risks |
-| `docs/planning/working-agreement.md` | Coding standards |
-| `docs/decisions/*.md` | Architecture Decision Records |
-| `docs/product/one-pager.md` | Product vision |
-| `docs/ai/` | AI-facing docs and context map |
+| Path                                 | Content                        |
+| ------------------------------------ | ------------------------------ |
+| `docs/planning/roadmap.md`           | Milestone breakdown            |
+| `docs/planning/status.md`            | Current progress               |
+| `docs/planning/work-items.yaml`      | Machine-readable tasks         |
+| `docs/planning/backlog.md`           | Deferred items                 |
+| `docs/planning/risk-register.md`     | Known risks                    |
+| `docs/planning/working-agreement.md` | Coding standards               |
+| `docs/decisions/*.md`                | Architecture Decision Records  |
+| `docs/product/one-pager.md`          | Product vision                 |
+| `docs/ai/`                           | AI-facing docs and context map |
 
 ## Config Files
 
-| File | Purpose |
-|------|---------|
-| `package.json` | Root workspace scripts and deps |
-| `pnpm-workspace.yaml` | Workspace member globs |
-| `tsconfig.json` | Root project references |
-| `tsconfig.base.json` | Shared TS compiler options |
-| `vitest.config.ts` | Test runner config |
-| `eslint.config.js` | Linting rules |
-| `prettier.config.js` | Formatting rules |
-| `Makefile` | Build orchestration (Node + Go) |
-| `.editorconfig` | Editor settings |
-| `.nvmrc` | Node version (20) |
+| File                  | Purpose                         |
+| --------------------- | ------------------------------- |
+| `package.json`        | Root workspace scripts and deps |
+| `pnpm-workspace.yaml` | Workspace member globs          |
+| `tsconfig.json`       | Root project references         |
+| `tsconfig.base.json`  | Shared TS compiler options      |
+| `vitest.config.ts`    | Test runner config              |
+| `eslint.config.js`    | Linting rules                   |
+| `prettier.config.js`  | Formatting rules                |
+| `Makefile`            | Build orchestration (Node + Go) |
+| `.editorconfig`       | Editor settings                 |
+| `.nvmrc`              | Node version (20)               |
 
 ## Scripts
 
-| Script | Purpose |
-|--------|---------|
-| `scripts/demo-day1.sh` | M1 demo runner |
-| `scripts/generate-llms.mjs` | Generate llms.txt artifacts |
-| `scripts/docs-llms.sh` | Shell wrapper for llms generation |
-| `scripts/ai-pack.sh` | AI context bundle generator |
-| `scripts/new-adr.mjs` | ADR scaffolding |
-| `scripts/sync-labels.mjs` | GitHub label sync |
+| Script                      | Purpose                           |
+| --------------------------- | --------------------------------- |
+| `scripts/demo-day1.sh`      | M1 demo runner                    |
+| `scripts/generate-llms.mjs` | Generate llms.txt artifacts       |
+| `scripts/docs-llms.sh`      | Shell wrapper for llms generation |
+| `scripts/ai-pack.sh`        | AI context bundle generator       |
+| `scripts/new-adr.mjs`       | ADR scaffolding                   |
+| `scripts/sync-labels.mjs`   | GitHub label sync                 |
 
 ---
 ## File: docs/ai/mcp-usage.md
@@ -1360,20 +1651,20 @@ warplane://docs/product/one-pager — Product vision
 
 ## Available Prompts
 
-| Prompt | Description | Args |
-|--------|-------------|------|
-| `summarize-adr` | Summarize an ADR | `slug`: ADR filename slug |
-| `explain-trace` | Explain the trace/domain model | (none) |
-| `generate-task-plan` | Plan tasks for a goal | `goal`: what to plan |
-| `review-runbook` | Review runbook quality | `content`: runbook text |
+| Prompt               | Description                    | Args                      |
+| -------------------- | ------------------------------ | ------------------------- |
+| `summarize-adr`      | Summarize an ADR               | `slug`: ADR filename slug |
+| `explain-trace`      | Explain the trace/domain model | (none)                    |
+| `generate-task-plan` | Plan tasks for a goal          | `goal`: what to plan      |
+| `review-runbook`     | Review runbook quality         | `content`: runbook text   |
 
 ## Available Tools
 
-| Tool | Description | Args |
-|------|-------------|------|
-| `search_docs` | Search all docs for a query | `query`: search text |
-| `list_adrs` | List all ADRs with status | (none) |
-| `get_trace_schema` | Get domain + storage types | (none) |
+| Tool               | Description                 | Args                 |
+| ------------------ | --------------------------- | -------------------- |
+| `search_docs`      | Search all docs for a query | `query`: search text |
+| `list_adrs`        | List all ADRs with status   | (none)               |
+| `get_trace_schema` | Get domain + storage types  | (none)               |
 
 ## Example Session
 

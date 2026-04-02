@@ -97,11 +97,15 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
   registerRoutes(app);
 
   // --- OpenAPI JSON endpoint ---
-  app.get("/openapi.json", {
-    schema: { hide: true },
-  }, async () => {
-    return app.swagger();
-  });
+  app.get(
+    "/openapi.json",
+    {
+      schema: { hide: true },
+    },
+    async () => {
+      return app.swagger();
+    },
+  );
 
   return app;
 }

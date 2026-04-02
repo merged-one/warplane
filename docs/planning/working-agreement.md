@@ -39,6 +39,7 @@ Rules and conventions for contributing to Warplane. See also [CONTRIBUTING.md](.
 Imperative mood, concise: "Add chain polling", not "Added chain polling".
 
 Format:
+
 ```
 <type>: <short summary>
 

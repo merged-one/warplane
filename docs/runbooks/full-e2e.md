@@ -92,15 +92,16 @@ RUN_E2E=1 ginkgo -v --timeout=10m --focus="replay_or_duplicate_blocked"
 
 The E2E suite implements five deterministic Teleporter scenarios:
 
-| Scenario | Description |
-|----------|-------------|
-| `basic_send_receive` | Send cross-chain message, aggregate signatures, relay, verify delivery |
-| `add_fee` | Send with zero fee, call AddFeeAmount, verify fee_added event |
-| `specified_receipts` | Send 3 messages A→B, relay, call SendSpecifiedReceipts B→A |
-| `retry_failed_execution` | Send with low gas, verify execution failure, retry with enough gas |
-| `replay_or_duplicate_blocked` | Deliver message, attempt duplicate, verify replay_blocked |
+| Scenario                      | Description                                                            |
+| ----------------------------- | ---------------------------------------------------------------------- |
+| `basic_send_receive`          | Send cross-chain message, aggregate signatures, relay, verify delivery |
+| `add_fee`                     | Send with zero fee, call AddFeeAmount, verify fee_added event          |
+| `specified_receipts`          | Send 3 messages A→B, relay, call SendSpecifiedReceipts B→A             |
+| `retry_failed_execution`      | Send with low gas, verify execution failure, retry with enough gas     |
+| `replay_or_duplicate_blocked` | Deliver message, attempt duplicate, verify replay_blocked              |
 
 Each scenario produces:
+
 - A `run.json` in `artifacts/scenarios/<name>/`
 - One or more trace JSON files in `artifacts/traces/`
 
@@ -124,6 +125,7 @@ go run ./cmd/generate-golden --output-dir artifacts
 ```
 
 Golden fixtures are committed to the repo and serve as:
+
 - Regression tests for the trace schema
 - Development fixtures for the API and CLI
 - Documentation of expected Teleporter lifecycle events
@@ -162,39 +164,39 @@ WARPLANE_ARTIFACTS_DIR=/tmp/warplane-artifacts make e2e
 
 Each trace file (`<messageId>.json`) contains:
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `messageId` | string | Deterministic SHA-256 message identifier |
-| `scenario` | string | Scenario name |
-| `source` | ChainMeta | Source chain identity |
-| `destination` | ChainMeta | Destination chain identity |
-| `sender` | string | Sender address |
-| `recipient` | string | Recipient address |
-| `sourceTxHash` | string | Transaction hash on source chain |
-| `destinationTxHash` | string | Transaction hash on destination chain |
-| `timestamps` | object | Send/receive times and block numbers |
-| `events` | array | Normalized event timeline |
-| `relayer` | object | Relayer address and tx hash |
-| `fee` | object | Fee token, initial/added/total amounts |
-| `execution` | string | Outcome: success, failed_execution, retry_success, replay_blocked |
-| `retry` | object | Retry gas limits and tx hash |
-| `rawRefs` | array | All referenced transaction hashes |
+| Field               | Type      | Description                                                       |
+| ------------------- | --------- | ----------------------------------------------------------------- |
+| `messageId`         | string    | Deterministic SHA-256 message identifier                          |
+| `scenario`          | string    | Scenario name                                                     |
+| `source`            | ChainMeta | Source chain identity                                             |
+| `destination`       | ChainMeta | Destination chain identity                                        |
+| `sender`            | string    | Sender address                                                    |
+| `recipient`         | string    | Recipient address                                                 |
+| `sourceTxHash`      | string    | Transaction hash on source chain                                  |
+| `destinationTxHash` | string    | Transaction hash on destination chain                             |
+| `timestamps`        | object    | Send/receive times and block numbers                              |
+| `events`            | array     | Normalized event timeline                                         |
+| `relayer`           | object    | Relayer address and tx hash                                       |
+| `fee`               | object    | Fee token, initial/added/total amounts                            |
+| `execution`         | string    | Outcome: success, failed_execution, retry_success, replay_blocked |
+| `retry`             | object    | Retry gas limits and tx hash                                      |
+| `rawRefs`           | array     | All referenced transaction hashes                                 |
 
 ### Normalized event kinds
 
-| Kind | Description |
-|------|-------------|
-| `message_sent` | Cross-chain message submitted on source |
+| Kind                     | Description                              |
+| ------------------------ | ---------------------------------------- |
+| `message_sent`           | Cross-chain message submitted on source  |
 | `warp_message_extracted` | Warp message extracted from receipt logs |
-| `signatures_aggregated` | Quorum signatures collected |
-| `relay_submitted` | Message relayed to destination chain |
-| `delivery_confirmed` | MessageReceived == true on destination |
-| `execution_failed` | Message delivered but execution reverted |
-| `retry_requested` | RetryMessageExecution called |
-| `retry_succeeded` | Execution succeeded on retry |
-| `fee_added` | AddFeeAmount called |
-| `receipts_sent` | SendSpecifiedReceipts called |
-| `replay_blocked` | Duplicate/wrong-chain delivery rejected |
+| `signatures_aggregated`  | Quorum signatures collected              |
+| `relay_submitted`        | Message relayed to destination chain     |
+| `delivery_confirmed`     | MessageReceived == true on destination   |
+| `execution_failed`       | Message delivered but execution reverted |
+| `retry_requested`        | RetryMessageExecution called             |
+| `retry_succeeded`        | Execution succeeded on retry             |
+| `fee_added`              | AddFeeAmount called                      |
+| `receipts_sent`          | SendSpecifiedReceipts called             |
+| `replay_blocked`         | Duplicate/wrong-chain delivery rejected  |
 
 ### Using Ginkgo CLI (optional)
 
@@ -232,14 +234,14 @@ full Avalanche build environment.
 
 ## Troubleshooting
 
-| Issue | Fix |
-|---|---|
-| `AVALANCHEGO_PATH not set` | Export the env var pointing to the built binary |
-| `AVALANCHEGO_PLUGIN_DIR not set` | Export the env var pointing to the plugins dir |
-| Timeout during network bootstrap | Increase `-timeout` (default 10m) |
-| Port conflicts | tmpnet uses ephemeral ports; check for stale processes |
-| `go test` shows 0 tests | RUN_E2E is not set — this is expected for compile checks |
-| Golden verify fails | Run `make golden` to regenerate fixtures |
+| Issue                            | Fix                                                      |
+| -------------------------------- | -------------------------------------------------------- |
+| `AVALANCHEGO_PATH not set`       | Export the env var pointing to the built binary          |
+| `AVALANCHEGO_PLUGIN_DIR not set` | Export the env var pointing to the plugins dir           |
+| Timeout during network bootstrap | Increase `-timeout` (default 10m)                        |
+| Port conflicts                   | tmpnet uses ephemeral ports; check for stale processes   |
+| `go test` shows 0 tests          | RUN_E2E is not set — this is expected for compile checks |
+| Golden verify fails              | Run `make golden` to regenerate fixtures                 |
 
 ## Architecture
 

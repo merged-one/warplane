@@ -2,9 +2,9 @@
 
 ## Supported versions
 
-| Version | Supported |
-|---------|-----------|
-| main (HEAD) | Yes |
+| Version     | Supported |
+| ----------- | --------- |
+| main (HEAD) | Yes       |
 
 ## Reporting a vulnerability
 
@@ -16,7 +16,7 @@ If you discover a security vulnerability in Warplane, please report it responsib
 
 1. **Email** the maintainers at the email listed in the repo's GitHub profile,
    or use GitHub's private vulnerability reporting feature:
-   *Repository > Security > Advisories > Report a vulnerability*
+   _Repository > Security > Advisories > Report a vulnerability_
 
 2. Include:
    - Description of the vulnerability
@@ -35,6 +35,7 @@ If you discover a security vulnerability in Warplane, please report it responsib
 ## Scope
 
 This policy covers:
+
 - All code in the `warplane` repository
 - The API server (`apps/api`)
 - The CLI (`packages/cli`)

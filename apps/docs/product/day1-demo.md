@@ -17,11 +17,11 @@ This script:
 
 ## What It Proves
 
-| Check | Validates |
-|-------|-----------|
+| Check        | Validates                                        |
+| ------------ | ------------------------------------------------ |
 | `pnpm build` | All packages compile, project references resolve |
-| `pnpm test` | Domain types, API endpoints are correct |
-| `go test` | Go harness compiles and runs |
+| `pnpm test`  | Domain types, API endpoints are correct          |
+| `go test`    | Go harness compiles and runs                     |
 
 ## Expected Output
 

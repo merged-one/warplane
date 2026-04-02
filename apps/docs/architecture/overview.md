@@ -4,16 +4,16 @@ Warplane is a TypeScript + Go monorepo managed with pnpm workspaces.
 
 ## Package Map
 
-| Package | Role | Key Exports |
-|---------|------|-------------|
-| `@warplane/domain` | Core types and validation | `ChainId`, `Subnet`, `HealthStatus`, `ChainStatus`, `chainId()` |
-| `@warplane/storage` | Persistence interfaces | `ChainStatusReader`, `ChainStatusWriter`, `ChainStatusStore` |
-| `@warplane/ingest` | Data ingestion pipeline | `pollChainHealth()` |
-| `@warplane/api` | Fastify REST server | `/healthz`, `/api/v1/chains` |
-| `@warplane/web` | React + Vite dashboard | Browser app |
-| `@warplane/cli` | Command-line tool | `warplane ping` |
-| `@warplane/docs-mcp` | MCP server for docs | Stdio-based MCP resources, tools, prompts |
-| `harness/tmpnet` | Go test harness | tmpnet integration for e2e |
+| Package              | Role                      | Key Exports                                                     |
+| -------------------- | ------------------------- | --------------------------------------------------------------- |
+| `@warplane/domain`   | Core types and validation | `ChainId`, `Subnet`, `HealthStatus`, `ChainStatus`, `chainId()` |
+| `@warplane/storage`  | Persistence interfaces    | `ChainStatusReader`, `ChainStatusWriter`, `ChainStatusStore`    |
+| `@warplane/ingest`   | Data ingestion pipeline   | `pollChainHealth()`                                             |
+| `@warplane/api`      | Fastify REST server       | `/healthz`, `/api/v1/chains`                                    |
+| `@warplane/web`      | React + Vite dashboard    | Browser app                                                     |
+| `@warplane/cli`      | Command-line tool         | `warplane ping`                                                 |
+| `@warplane/docs-mcp` | MCP server for docs       | Stdio-based MCP resources, tools, prompts                       |
+| `harness/tmpnet`     | Go test harness           | tmpnet integration for e2e                                      |
 
 ## Dependency Graph
 

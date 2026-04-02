@@ -23,16 +23,16 @@ Default database file: `warplane.db` in the project root.
 
 ### Schema
 
-| Table | Purpose |
-|-------|---------|
-| `networks` | Network manifests (full JSON + indexed fields) |
-| `chains` | Chain registry entries (one row per blockchain ID) |
-| `traces` | Message traces with denormalized fields for filtering |
-| `events` | Timeline events, ordered by sequence within each trace |
-| `scenario_runs` | Test scenario execution records |
-| `artifacts` | Raw file path references for all imported artifacts |
-| `import_history` | Import run tracking with counts and status |
-| `migrations` | Applied migration tracking |
+| Table            | Purpose                                                |
+| ---------------- | ------------------------------------------------------ |
+| `networks`       | Network manifests (full JSON + indexed fields)         |
+| `chains`         | Chain registry entries (one row per blockchain ID)     |
+| `traces`         | Message traces with denormalized fields for filtering  |
+| `events`         | Timeline events, ordered by sequence within each trace |
+| `scenario_runs`  | Test scenario execution records                        |
+| `artifacts`      | Raw file path references for all imported artifacts    |
+| `import_history` | Import run tracking with counts and status             |
+| `migrations`     | Applied migration tracking                             |
 
 ### Key design decisions
 
@@ -82,6 +82,7 @@ sqlite> SELECT kind, timestamp, message_id FROM events ORDER BY timestamp;
 Migrations live in `packages/storage/src/migrations/` as numbered SQL files (e.g., `001_initial.sql`).
 
 The runner:
+
 1. Reads all `.sql` files in sorted order
 2. Skips any already recorded in the `migrations` table
 3. Executes new ones in a transaction

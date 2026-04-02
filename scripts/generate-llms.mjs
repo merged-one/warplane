@@ -25,14 +25,23 @@ const SECTIONS = [
   {
     title: "Product",
     pages: [
-      { path: "docs/product/one-pager.md", desc: "Product vision, target users, and key capabilities" },
+      {
+        path: "docs/product/one-pager.md",
+        desc: "Product vision, target users, and key capabilities",
+      },
     ],
   },
   {
     title: "Architecture",
     pages: [
-      { path: "packages/domain/src/index.ts", desc: "Core domain types: ChainId, Subnet, HealthStatus, ChainStatus" },
-      { path: "packages/storage/src/index.ts", desc: "Storage interfaces for chain state persistence" },
+      {
+        path: "packages/domain/src/index.ts",
+        desc: "Core domain types: ChainId, Subnet, HealthStatus, ChainStatus",
+      },
+      {
+        path: "packages/storage/src/index.ts",
+        desc: "Storage interfaces for chain state persistence",
+      },
       { path: "packages/ingest/src/index.ts", desc: "Data ingestion pipeline stub" },
     ],
   },
@@ -52,8 +61,14 @@ const SECTIONS = [
     pages: [
       { path: "docs/decisions/README.md", desc: "ADR index and process" },
       { path: "docs/decisions/0001-use-structured-madr.md", desc: "ADR-0001: Use Structured MADR" },
-      { path: "docs/decisions/0002-use-monorepo-with-ts-and-go.md", desc: "ADR-0002: Monorepo with TS + Go" },
-      { path: "docs/decisions/0003-fixture-first-day1-mvp.md", desc: "ADR-0003: Fixture-first MVP" },
+      {
+        path: "docs/decisions/0002-use-monorepo-with-ts-and-go.md",
+        desc: "ADR-0002: Monorepo with TS + Go",
+      },
+      {
+        path: "docs/decisions/0003-fixture-first-day1-mvp.md",
+        desc: "ADR-0003: Fixture-first MVP",
+      },
     ],
   },
   {
@@ -112,14 +127,30 @@ const CONTEXT_MAP_ENTRIES = [
   { path: "docs/product/one-pager.md", role: "Product vision and target users", priority: "high" },
   { path: "docs/planning/roadmap.md", role: "Milestone breakdown", priority: "high" },
   { path: "docs/planning/status.md", role: "Current milestone progress", priority: "medium" },
-  { path: "docs/planning/work-items.yaml", role: "Machine-readable task tracking", priority: "medium" },
+  {
+    path: "docs/planning/work-items.yaml",
+    role: "Machine-readable task tracking",
+    priority: "medium",
+  },
   { path: "docs/planning/backlog.md", role: "Deferred items", priority: "medium" },
   { path: "docs/planning/risk-register.md", role: "Known risks", priority: "medium" },
   { path: "docs/planning/working-agreement.md", role: "Coding standards", priority: "high" },
   { path: "docs/decisions/README.md", role: "ADR index", priority: "medium" },
-  { path: "docs/decisions/0001-use-structured-madr.md", role: "ADR: Structured MADR", priority: "low" },
-  { path: "docs/decisions/0002-use-monorepo-with-ts-and-go.md", role: "ADR: Monorepo structure", priority: "medium" },
-  { path: "docs/decisions/0003-fixture-first-day1-mvp.md", role: "ADR: Fixture-first approach", priority: "medium" },
+  {
+    path: "docs/decisions/0001-use-structured-madr.md",
+    role: "ADR: Structured MADR",
+    priority: "low",
+  },
+  {
+    path: "docs/decisions/0002-use-monorepo-with-ts-and-go.md",
+    role: "ADR: Monorepo structure",
+    priority: "medium",
+  },
+  {
+    path: "docs/decisions/0003-fixture-first-day1-mvp.md",
+    role: "ADR: Fixture-first approach",
+    priority: "medium",
+  },
   { path: "packages/domain/src/index.ts", role: "Core domain types", priority: "high" },
   { path: "packages/storage/src/index.ts", role: "Storage interfaces", priority: "medium" },
   { path: "packages/ingest/src/index.ts", role: "Ingest pipeline", priority: "medium" },
@@ -171,7 +202,9 @@ function generateLlmsTxt() {
   lines.push("- [SECURITY.md](SECURITY.md): Vulnerability disclosure process");
   lines.push("- [RELEASE.md](RELEASE.md): Versioning and release steps");
   lines.push("- [CODEOWNERS](CODEOWNERS): Code ownership routing");
-  lines.push("- [.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md): PR checklist");
+  lines.push(
+    "- [.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md): PR checklist",
+  );
   lines.push("");
 
   return lines.join("\n");
@@ -181,7 +214,9 @@ function generateLlmsFullTxt() {
   const lines = [];
   lines.push("# Warplane — Full Documentation Context");
   lines.push("");
-  lines.push("> Complete documentation for LLM consumption. Generated deterministically from source docs.");
+  lines.push(
+    "> Complete documentation for LLM consumption. Generated deterministically from source docs.",
+  );
   lines.push("");
 
   for (const filePath of FULL_CONTENT_FILES) {
@@ -219,7 +254,7 @@ const contextMap = generateContextMap();
 
 writeFileSync(join(ROOT, "llms.txt"), llmsTxt);
 writeFileSync(join(ROOT, "llms-full.txt"), llmsFullTxt);
-writeFileSync(join(ROOT, "docs", "ai", "context-map.json"), contextMap);
+writeFileSync(join(ROOT, "docs", "ai", "context-map.json"), contextMap + "\n");
 
 console.log("Generated:");
 console.log(`  llms.txt          (${llmsTxt.length} bytes)`);

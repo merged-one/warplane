@@ -49,7 +49,10 @@ export function scenariosCommand(): Command {
 function formatTime(iso: string | undefined): string {
   if (!iso) return "—";
   try {
-    return new Date(iso).toISOString().replace("T", " ").replace(/\.\d{3}Z$/, "Z");
+    return new Date(iso)
+      .toISOString()
+      .replace("T", " ")
+      .replace(/\.\d{3}Z$/, "Z");
   } catch {
     return iso;
   }

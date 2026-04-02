@@ -25,17 +25,11 @@
             "type": "string"
           }
         },
-        "required": [
-          "blockchainId",
-          "contractAddress"
-        ],
+        "required": ["blockchainId", "contractAddress"],
         "additionalProperties": false
       }
     }
   },
-  "required": [
-    "name",
-    "chains"
-  ],
+  "required": ["name", "chains"],
   "additionalProperties": false
 }

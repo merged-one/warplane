@@ -81,13 +81,13 @@ Open **http://localhost:5180** in a browser.
 
 ## Expected Data (Day 1 Fixtures)
 
-| Scenario | Status | Traces |
-|---|---|---|
-| basic_send_receive | success | 2 |
-| add_fee | success | 1 |
-| specified_receipts | success | 1 |
-| retry_failed_execution | retry_success | 2 |
-| replay_or_duplicate_blocked | replay_blocked | 2 |
+| Scenario                    | Status         | Traces |
+| --------------------------- | -------------- | ------ |
+| basic_send_receive          | success        | 2      |
+| add_fee                     | success        | 1      |
+| specified_receipts          | success        | 1      |
+| retry_failed_execution      | retry_success  | 2      |
+| replay_or_duplicate_blocked | replay_blocked | 2      |
 
 ## Known Rough Edges
 
