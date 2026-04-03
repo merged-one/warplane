@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------
-# Warplane — Multi-stage Docker build
+# Warplane — Multi-stage Docker build (Postgres-native)
 # ---------------------------------------------------------------------------
 
 # Stage 1: Build
@@ -45,9 +45,6 @@ COPY --from=builder /app/apps/web/dist ./apps/web/dist
 
 # Example config files (operator mounts or overrides at runtime)
 COPY config/ config/
-
-# Persistent data directory
-RUN mkdir -p /data
 
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s CMD wget -qO- http://localhost:3000/healthz || exit 1

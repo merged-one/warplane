@@ -15,7 +15,7 @@
     }
   },
   "scripts": {
-    "build": "tsc -b",
+    "build": "tsc -b && cp src/schema.sql dist/schema.sql",
     "clean": "rm -rf dist *.tsbuildinfo",
     "db:init": "node --import tsx src/cli-migrate.ts"
   },

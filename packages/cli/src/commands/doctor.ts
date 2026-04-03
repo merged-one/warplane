@@ -48,13 +48,12 @@ export function doctorCommand(): Command {
       });
     }
 
-    // 4. Database file
-    const dbPath = process.env["DB_PATH"] ?? "data/warplane.db";
-    const dbExists = fs.existsSync(dbPath);
+    // 4. Database URL
+    const dbUrl = process.env["DATABASE_URL"];
     checks.push({
       name: "database",
-      ok: dbExists,
-      detail: dbExists ? dbPath : `not found at ${dbPath} (will be created on first API start)`,
+      ok: !!dbUrl,
+      detail: dbUrl ? "DATABASE_URL configured" : "DATABASE_URL not set (required for Postgres)",
     });
 
     // 5. API reachability

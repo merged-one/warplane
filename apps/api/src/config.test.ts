@@ -55,7 +55,7 @@ relayer:
     vi.spyOn(fs, "readFileSync").mockReturnValue(yamlContent);
 
     process.env["WARPLANE_RELAYER_METRICS_URL"] = "http://env-relayer/metrics";
-    process.env["DB_PATH"] = "/data/override.db";
+    process.env["DATABASE_URL"] = "postgresql://localhost/override";
 
     const config = loadConfig("/some/config.yaml");
 
@@ -66,8 +66,8 @@ relayer:
     // Relayer overridden by env
     expect(config.relayer?.metricsUrl).toBe("http://env-relayer/metrics");
 
-    // DB path from env
-    expect(config.database?.path).toBe("/data/override.db");
+    // Database URL from env
+    expect(config.database?.url).toBe("postgresql://localhost/override");
   });
 
   it("returns empty chains when no config file exists", () => {

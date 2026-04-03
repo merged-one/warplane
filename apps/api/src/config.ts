@@ -28,7 +28,7 @@ export interface WarplaneConfig {
   chains: ChainYaml[];
   relayer?: { metricsUrl: string };
   sigagg?: { metricsUrl: string };
-  database?: { path: string };
+  database?: { url: string };
   port?: number;
   logLevel?: string;
 }
@@ -61,7 +61,7 @@ export function loadConfig(configPath?: string): WarplaneConfig {
       }
       if (parsed.database && typeof parsed.database === "object") {
         const d = parsed.database as Record<string, unknown>;
-        if (d.path) config.database = { path: String(d.path) };
+        if (d.url) config.database = { url: String(d.url) };
       }
       if (typeof parsed.port === "number") config.port = parsed.port;
       if (typeof parsed.logLevel === "string") config.logLevel = parsed.logLevel;
@@ -84,8 +84,8 @@ export function loadConfig(configPath?: string): WarplaneConfig {
   const envSigagg = process.env["WARPLANE_SIGAGG_METRICS_URL"];
   if (envSigagg) config.sigagg = { metricsUrl: envSigagg };
 
-  const envDbPath = process.env["DB_PATH"];
-  if (envDbPath) config.database = { path: envDbPath };
+  const envDbUrl = process.env["DATABASE_URL"];
+  if (envDbUrl) config.database = { url: envDbUrl };
 
   const envLogLevel = process.env["WARPLANE_LOG_LEVEL"];
   if (envLogLevel) config.logLevel = envLogLevel;
