@@ -5,15 +5,16 @@ using [Structured MADR](https://adr.github.io/madr/) format.
 
 ## Decisions
 
-| ADR                                              | Title                                                | Status   |
-| ------------------------------------------------ | ---------------------------------------------------- | -------- |
-| [0001](0001-use-structured-madr.md)              | Use Structured MADR for architecture decisions       | Accepted |
-| [0002](0002-use-monorepo-with-ts-and-go.md)      | Use monorepo with TypeScript and Go                  | Accepted |
-| [0003](0003-fixture-first-day1-mvp.md)           | Fixture-first approach for MVP                       | Accepted |
-| [0004](0004-zod-single-schema-approach.md)       | Zod as single schema source for domain model         | Accepted |
-| [0005](0005-rpc-first-multi-source-ingestion.md) | RPC-first multi-source data ingestion                | Accepted |
-| [0006](0006-event-model-contract-alignment.md)   | Event model aligned to TeleporterMessenger contracts | Accepted |
-| [0007](0007-four-milestone-grant-delivery.md)    | Four-milestone grant delivery structure              | Accepted |
+| ADR                                                   | Title                                                | Status   |
+| ----------------------------------------------------- | ---------------------------------------------------- | -------- |
+| [0001](0001-use-structured-madr.md)                   | Use Structured MADR for architecture decisions       | Accepted |
+| [0002](0002-use-monorepo-with-ts-and-go.md)           | Use monorepo with TypeScript and Go                  | Accepted |
+| [0003](0003-fixture-first-day1-mvp.md)                | Fixture-first approach for MVP                       | Accepted |
+| [0004](0004-zod-single-schema-approach.md)            | Zod as single schema source for domain model         | Accepted |
+| [0005](0005-rpc-first-multi-source-ingestion.md)      | RPC-first multi-source data ingestion                | Accepted |
+| [0006](0006-event-model-contract-alignment.md)        | Event model aligned to TeleporterMessenger contracts | Accepted |
+| [0007](0007-four-milestone-grant-delivery.md)         | Four-milestone grant delivery structure              | Accepted |
+| [0008](0008-prometheus-offchain-event-correlation.md) | Prometheus-based off-chain event correlation         | Accepted |
 
 ## Creating a new ADR
 

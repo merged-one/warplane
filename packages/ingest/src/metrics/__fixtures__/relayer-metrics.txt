@@ -1,0 +1,27 @@
+# HELP successful_relay_message_count Total number of successfully relayed messages
+# TYPE successful_relay_message_count counter
+successful_relay_message_count{source_chain_id="chain-a",destination_chain_id="chain-b"} 42
+successful_relay_message_count{source_chain_id="chain-b",destination_chain_id="chain-a"} 15
+# HELP failed_relay_message_count Total number of failed relay attempts
+# TYPE failed_relay_message_count counter
+failed_relay_message_count{source_chain_id="chain-a",destination_chain_id="chain-b",failure_reason="insufficient_gas"} 3
+failed_relay_message_count{source_chain_id="chain-a",destination_chain_id="chain-b",failure_reason="timeout"} 1
+# HELP create_signed_message_latency_ms Latency of creating a signed message in milliseconds
+# TYPE create_signed_message_latency_ms gauge
+create_signed_message_latency_ms 1250
+# HELP checkpoint_committed_height The latest committed checkpoint height
+# TYPE checkpoint_committed_height gauge
+checkpoint_committed_height{chain_id="chain-a"} 50000
+checkpoint_committed_height{chain_id="chain-b"} 30000
+# HELP checkpoint_pending_commits_heap_length Number of pending checkpoint commits
+# TYPE checkpoint_pending_commits_heap_length gauge
+checkpoint_pending_commits_heap_length 5
+# HELP p_chain_api_call_latency_ms Latency of P-chain API calls in milliseconds
+# TYPE p_chain_api_call_latency_ms gauge
+p_chain_api_call_latency_ms 45
+# HELP connects Total number of peer connections
+# TYPE connects counter
+connects 120
+# HELP disconnects Total number of peer disconnections
+# TYPE disconnects counter
+disconnects 3

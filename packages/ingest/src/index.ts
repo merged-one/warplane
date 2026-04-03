@@ -10,3 +10,9 @@ export { startWatcher, type WatchOptions } from "./watcher.js";
 
 // RPC ingestion engine
 export * from "./rpc/index.js";
+
+// Event normalization & correlation pipeline
+export * from "./pipeline/index.js";
+
+// Prometheus metrics scraping & health
+export * from "./metrics/index.js";
