@@ -16,6 +16,7 @@ import {
   createPostgresAdapter,
   initSchema,
   countTraces,
+  upsertChain,
   type DatabaseAdapter,
 } from "@warplane/storage";
 import {
@@ -142,6 +143,18 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
   const chainConfig = opts.config?.chains ?? [];
   if (chainConfig.length > 0) {
     app.log.info(`Configuring ingestion for ${chainConfig.length} chain(s)…`);
+
+    // Register configured chains in the database so the UI chain dropdown works
+    for (const chain of chainConfig) {
+      await upsertChain(db, {
+        name: chain.name,
+        blockchainId: chain.blockchainId,
+        subnetId: "",
+        evmChainId: chain.evmChainId ?? 0,
+        teleporterAddress: chain.teleporterAddress,
+        rpcUrl: chain.rpcUrl,
+      });
+    }
 
     // Alert & delivery subsystem
     const deliveryEngine = createDeliveryEngine(db);
