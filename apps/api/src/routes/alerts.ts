@@ -54,7 +54,7 @@ export function registerAlertRoutes(app: FastifyInstance): void {
         enabled?: boolean;
         cooldownMs?: number;
       };
-      const id = await insertAlertRule(app.asyncDb, body);
+      const id = await insertAlertRule(app.db, body);
       return reply.code(201).send({ id });
     },
   );
@@ -86,7 +86,7 @@ export function registerAlertRoutes(app: FastifyInstance): void {
     },
     async (request) => {
       const q = request.query as { enabled?: boolean };
-      const rules = await listAlertRules(app.asyncDb, {
+      const rules = await listAlertRules(app.db, {
         enabled: q.enabled,
       });
       return { rules };
@@ -125,7 +125,7 @@ export function registerAlertRoutes(app: FastifyInstance): void {
     },
     async (request, reply) => {
       const { id } = request.params as { id: string };
-      const existing = await getAlertRule(app.asyncDb, id);
+      const existing = await getAlertRule(app.db, id);
       if (!existing) return reply.code(404).send({ error: "Not found" });
 
       const body = request.body as Partial<{
@@ -135,7 +135,7 @@ export function registerAlertRoutes(app: FastifyInstance): void {
         enabled: boolean;
         cooldownMs: number;
       }>;
-      await updateAlertRule(app.asyncDb, id, body);
+      await updateAlertRule(app.db, id, body);
       return { ok: true };
     },
   );
@@ -162,10 +162,10 @@ export function registerAlertRoutes(app: FastifyInstance): void {
     },
     async (request, reply) => {
       const { id } = request.params as { id: string };
-      const existing = await getAlertRule(app.asyncDb, id);
+      const existing = await getAlertRule(app.db, id);
       if (!existing) return reply.code(404).send({ error: "Not found" });
 
-      await deleteAlertRule(app.asyncDb, id);
+      await deleteAlertRule(app.db, id);
       return { ok: true };
     },
   );

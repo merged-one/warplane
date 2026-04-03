@@ -1,23 +1,19 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { openDb, type Database } from "./db.js";
-import { runMigrations } from "./migrate.js";
-import { createSqliteAdapter } from "./sqlite-adapter.js";
+import { createTestAdapter, initTestSchema } from "./test-utils/index.js";
 import type { DatabaseAdapter } from "./adapter.js";
 
-let rawDb: Database;
 let db: DatabaseAdapter;
 
-beforeEach(() => {
-  rawDb = openDb({ path: ":memory:" });
-  runMigrations(rawDb);
-  db = createSqliteAdapter(rawDb);
+beforeEach(async () => {
+  db = createTestAdapter();
+  await initTestSchema(db);
 });
 
 afterEach(async () => {
   await db.close();
 });
 
-describe("SqliteAdapter", () => {
+describe("TestAdapter (DatabaseAdapter)", () => {
   it("reports sqlite dialect", () => {
     expect(db.dialect).toBe("sqlite");
   });

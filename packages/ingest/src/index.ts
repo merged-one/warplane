@@ -2,7 +2,7 @@
  * @warplane/ingest — Artifact ingestion pipeline.
  *
  * Imports harness artifacts (traces, network manifests, scenario runs)
- * into the @warplane/storage SQLite database with full domain validation.
+ * into the @warplane/storage database with full domain validation.
  */
 
 export { importArtifacts, type ImportResult, type ImportOptions } from "./importer.js";

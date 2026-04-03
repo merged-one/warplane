@@ -3,11 +3,11 @@
  * CLI entry point for artifact ingestion.
  *
  * Usage:
- *   node --import tsx src/cli.ts import <artifacts-dir> [--db <path>]
- *   node --import tsx src/cli.ts watch <artifacts-dir> [--db <path>] [--interval <ms>]
+ *   DATABASE_URL=postgresql://... node --import tsx src/cli.ts import <artifacts-dir>
+ *   DATABASE_URL=postgresql://... node --import tsx src/cli.ts watch <artifacts-dir> [--interval <ms>]
  */
 
-import { openDb, closeDb, runMigrations } from "@warplane/storage";
+import { createPostgresAdapter, initSchema } from "@warplane/storage";
 import { importArtifacts } from "./importer.js";
 import { startWatcher } from "./watcher.js";
 
@@ -20,21 +20,25 @@ function getFlag(flag: string): string | undefined {
   return idx !== -1 ? args[idx + 1] : undefined;
 }
 
-const dbPath = getFlag("--db") ?? "warplane.db";
-
-if (!command || !artifactsDir) {
-  console.error("Usage:");
-  console.error("  ingest import <artifacts-dir> [--db <path>]");
-  console.error("  ingest watch  <artifacts-dir> [--db <path>] [--interval <ms>]");
+const databaseUrl = process.env["DATABASE_URL"];
+if (!databaseUrl) {
+  console.error("DATABASE_URL environment variable is required.");
   process.exit(1);
 }
 
-const db = openDb({ path: dbPath });
-runMigrations(db);
+if (!command || !artifactsDir) {
+  console.error("Usage:");
+  console.error("  DATABASE_URL=... ingest import <artifacts-dir>");
+  console.error("  DATABASE_URL=... ingest watch  <artifacts-dir> [--interval <ms>]");
+  process.exit(1);
+}
+
+const db = createPostgresAdapter({ connectionString: databaseUrl });
+await initSchema(db);
 
 if (command === "import") {
-  const result = importArtifacts(db, { artifactsDir });
-  closeDb(db);
+  const result = await importArtifacts(db, { artifactsDir });
+  await db.close();
 
   if (result.errors.length > 0) {
     console.error(`Completed with ${result.errors.length} error(s)`);
@@ -43,18 +47,18 @@ if (command === "import") {
   process.exit(0);
 } else if (command === "watch") {
   const intervalMs = Number(getFlag("--interval") ?? 5000);
-  console.log(`Watching ${artifactsDir} every ${intervalMs}ms (db: ${dbPath})`);
+  console.log(`Watching ${artifactsDir} every ${intervalMs}ms`);
 
-  const { stop } = startWatcher(db, { artifactsDir, intervalMs });
+  const { stop } = await startWatcher(db, { artifactsDir, intervalMs });
 
-  process.on("SIGINT", () => {
+  process.on("SIGINT", async () => {
     stop();
-    closeDb(db);
+    await db.close();
     process.exit(0);
   });
-  process.on("SIGTERM", () => {
+  process.on("SIGTERM", async () => {
     stop();
-    closeDb(db);
+    await db.close();
     process.exit(0);
   });
 } else {

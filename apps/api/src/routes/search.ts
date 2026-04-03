@@ -35,7 +35,7 @@ export function registerSearchRoutes(app: FastifyInstance): void {
       const query = q.toLowerCase();
 
       // Search traces — check message ID, scenario, sender, recipient
-      const allTraces = listTraces(app.db, { limit: 500 });
+      const allTraces = await listTraces(app.db, { limit: 500 });
       const matchedTraces = allTraces
         .filter(
           (t) =>
@@ -52,7 +52,7 @@ export function registerSearchRoutes(app: FastifyInstance): void {
         .slice(0, maxResults);
 
       // Search chains
-      const allChains = listChains(app.db);
+      const allChains = await listChains(app.db);
       const matchedChains = allChains
         .filter(
           (c) =>
@@ -61,7 +61,7 @@ export function registerSearchRoutes(app: FastifyInstance): void {
         .slice(0, maxResults);
 
       // Search scenarios
-      const allScenarios = listScenarioRuns(app.db);
+      const allScenarios = await listScenarioRuns(app.db);
       const matchedScenarios = allScenarios
         .filter((s) => s.scenario.toLowerCase().includes(query))
         .slice(0, maxResults);

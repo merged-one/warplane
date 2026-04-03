@@ -8,7 +8,7 @@
  * Persists checkpoints after each batch and handles reorgs via BlockTracker.
  */
 
-import type { Database } from "@warplane/storage";
+import type { DatabaseAdapter } from "@warplane/storage";
 import { upsertCheckpoint, getCheckpoint } from "@warplane/storage";
 import type { RpcClient } from "./client.js";
 import { BlockTracker } from "./block-tracker.js";
@@ -81,7 +81,7 @@ interface ChainState {
 // ---------------------------------------------------------------------------
 
 export function createOrchestrator(
-  db: Database,
+  db: DatabaseAdapter,
   clients: Map<string, RpcClient>,
   config: OrchestratorConfig,
 ): Orchestrator {
@@ -110,7 +110,7 @@ export function createOrchestrator(
     }
 
     // Load checkpoint
-    const cp = getCheckpoint(db, state.config.chainId, state.config.contractAddress);
+    const cp = await getCheckpoint(db, state.config.chainId, state.config.contractAddress);
     if (cp) {
       state.lastBlock = BigInt(cp.lastBlock);
     } else if (state.config.startBlock !== undefined) {
@@ -132,7 +132,7 @@ export function createOrchestrator(
         }
 
         state.lastBlock = to;
-        saveCheckpoint(db, state);
+        await saveCheckpoint(db, state);
       }
     } catch (err) {
       if (state.abortController.signal.aborted) return;
@@ -157,7 +157,7 @@ export function createOrchestrator(
           if (reorg) {
             // Rewind checkpoint
             state.lastBlock = reorg.forkBlock;
-            saveCheckpoint(db, state);
+            await saveCheckpoint(db, state);
             await config.onReorg?.(state.config.chainId, reorg.depth, reorg.invalidatedHashes);
             continue;
           }
@@ -180,7 +180,7 @@ export function createOrchestrator(
           }
 
           state.lastBlock = tipBlock;
-          saveCheckpoint(db, state);
+          await saveCheckpoint(db, state);
         }
 
         await sleep(pollInterval, state.abortController.signal);
@@ -193,8 +193,8 @@ export function createOrchestrator(
     }
   }
 
-  function saveCheckpoint(db: Database, state: ChainState): void {
-    upsertCheckpoint(db, {
+  async function saveCheckpoint(db: DatabaseAdapter, state: ChainState): Promise<void> {
+    await upsertCheckpoint(db, {
       chainId: state.config.chainId,
       contractAddress: state.config.contractAddress,
       lastBlock: Number(state.lastBlock),

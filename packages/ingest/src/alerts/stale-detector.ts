@@ -6,7 +6,6 @@
  * timeout-type alert rules via the alert evaluator's delivery engine.
  */
 
-import type { Database } from "@warplane/storage";
 import type { DatabaseAdapter } from "@warplane/storage";
 import { listAlertRules } from "@warplane/storage";
 import type { WebhookDeliveryEngine } from "./webhook-delivery.js";
@@ -43,8 +42,7 @@ export interface StaleDetector {
 // ---------------------------------------------------------------------------
 
 export function createStaleDetector(
-  syncDb: Database,
-  asyncDb: DatabaseAdapter,
+  db: DatabaseAdapter,
   deliveryEngine: WebhookDeliveryEngine,
   config?: StaleDetectorConfig,
 ): StaleDetector {
@@ -67,24 +65,25 @@ export function createStaleDetector(
 
     // Find stale pending messages
     const pendingCutoff = new Date(now - pendingTimeoutMs).toISOString();
-    const staleRows = syncDb
-      .prepare(
-        `SELECT message_id, execution, send_time
-         FROM traces
-         WHERE execution IN ('pending', 'failed')
-           AND send_time IS NOT NULL
-           AND send_time < ?
-         ORDER BY send_time ASC
-         LIMIT 100`,
-      )
-      .all(pendingCutoff) as Array<{
+    const result = await db.query<{
       message_id: string;
       execution: string;
       send_time: string;
-    }>;
+    }>(
+      `SELECT message_id, execution, send_time
+       FROM traces
+       WHERE execution IN ('pending', 'failed')
+         AND send_time IS NOT NULL
+         AND send_time < ?
+       ORDER BY send_time ASC
+       LIMIT 100`,
+      [pendingCutoff],
+    );
+
+    const staleRows = result.rows;
 
     // Load timeout rules
-    const rules = await listAlertRules(asyncDb, { enabled: true });
+    const rules = await listAlertRules(db, { enabled: true });
     const timeoutRules = rules.filter((r) => r.condition.type === "timeout");
 
     if (timeoutRules.length === 0) return;

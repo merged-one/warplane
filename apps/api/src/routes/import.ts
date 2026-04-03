@@ -52,7 +52,7 @@ export function registerImportRoutes(app: FastifyInstance): void {
         return reply.status(400).send({ error: `Directory not found: ${body.artifactsDir}` });
       }
 
-      const result = importArtifacts(app.db, {
+      const result = await importArtifacts(app.db, {
         artifactsDir: resolved,
         sourceType: body.sourceType ?? "manual",
         log: (msg) => app.log.info(msg),
@@ -79,7 +79,7 @@ export function registerImportRoutes(app: FastifyInstance): void {
       },
     },
     async () => {
-      return { imports: listImports(app.db) };
+      return { imports: await listImports(app.db) };
     },
   );
 }

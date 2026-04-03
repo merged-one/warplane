@@ -1,17 +1,16 @@
 /**
- * @warplane/storage — Local SQLite persistence layer.
+ * @warplane/storage — Postgres-native persistence layer.
  *
- * Provides typed repository functions for networks, chains, scenarios,
- * traces, events, artifacts, and import history backed by better-sqlite3.
+ * Provides typed async repository functions backed by the DatabaseAdapter
+ * interface. Production uses Postgres; tests use an in-memory SQLite adapter.
  */
 
-// Database lifecycle
-export { openDb, closeDb, type DbOptions, type Database } from "./db.js";
+// Database adapter
+export { type DatabaseAdapter, type QueryResult } from "./adapter.js";
+export { createPostgresAdapter, type PostgresAdapterConfig } from "./postgres-adapter.js";
+export { initSchema } from "./migrate.js";
 
-// Migrations
-export { runMigrations } from "./migrate.js";
-
-// Repositories
+// Repositories — all async, all use DatabaseAdapter
 export { upsertNetwork, getNetwork, listNetworks } from "./repos/networks.js";
 
 export { upsertChain, getChain, listChains } from "./repos/chains.js";
@@ -51,11 +50,7 @@ export {
   type Checkpoint,
 } from "./repos/checkpoints.js";
 
-// Database adapter (async interface for new repos)
-export { type DatabaseAdapter, type QueryResult } from "./adapter.js";
-export { createSqliteAdapter } from "./sqlite-adapter.js";
-
-// Health snapshot repositories (async, use DatabaseAdapter)
+// Health snapshot repositories
 export {
   insertRelayerHealth,
   getLatestRelayerHealth,
@@ -72,7 +67,7 @@ export {
   type InsertSigAggHealth,
 } from "./repos/sigagg-health.js";
 
-// Webhook repositories (async, use DatabaseAdapter)
+// Webhook repositories
 export {
   insertWebhookDestination,
   getWebhookDestination,
@@ -91,7 +86,7 @@ export {
   type DeliveryStatus,
 } from "./repos/webhooks.js";
 
-// Alert rule repositories (async, use DatabaseAdapter)
+// Alert rule repositories
 export {
   insertAlertRule,
   getAlertRule,

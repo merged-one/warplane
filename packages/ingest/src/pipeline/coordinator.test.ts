@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { openDb, closeDb, runMigrations, type Database, getTrace } from "@warplane/storage";
+import { createTestAdapter, initTestSchema } from "@warplane/storage/test-utils";
+import type { DatabaseAdapter } from "@warplane/storage";
+import { getTrace } from "@warplane/storage";
 import type { TeleporterEvent } from "../rpc/decoder.js";
 import { createPipeline } from "./coordinator.js";
 import type { AlertEvaluator } from "../alerts/alert-evaluator.js";
@@ -91,15 +93,15 @@ function makeFeeEvent(blockNumber: bigint): TeleporterEvent {
 // Setup
 // ---------------------------------------------------------------------------
 
-let db: Database;
+let db: DatabaseAdapter;
 
-beforeEach(() => {
-  db = openDb({ path: ":memory:" });
-  runMigrations(db);
+beforeEach(async () => {
+  db = createTestAdapter();
+  await initTestSchema(db);
 });
 
-afterEach(() => {
-  closeDb(db);
+afterEach(async () => {
+  await db.close();
 });
 
 // ---------------------------------------------------------------------------
@@ -110,7 +112,7 @@ describe("Pipeline Coordinator", () => {
   it("normalizes and correlates a SendCrossChainMessage", async () => {
     const pipeline = createPipeline(db);
     await pipeline.handleEvents(CHAIN_A, [makeSendEvent(1n)]);
-    pipeline.flush();
+    await pipeline.flush();
 
     const stats = pipeline.stats();
     expect(stats.eventsReceived).toBe(1);
@@ -121,9 +123,9 @@ describe("Pipeline Coordinator", () => {
   it("creates a trace stored in DB after flush", async () => {
     const pipeline = createPipeline(db);
     await pipeline.handleEvents(CHAIN_A, [makeSendEvent(1n)]);
-    pipeline.flush();
+    await pipeline.flush();
 
-    const trace = getTrace(db, MSG_ID);
+    const trace = await getTrace(db, MSG_ID);
     expect(trace).toBeDefined();
     expect(trace!.messageId).toBe(MSG_ID);
     expect(trace!.execution).toBe("pending");
@@ -132,7 +134,7 @@ describe("Pipeline Coordinator", () => {
   it("skips BlockchainIDInitialized", async () => {
     const pipeline = createPipeline(db);
     await pipeline.handleEvents(CHAIN_A, [makeInitEvent(1n)]);
-    pipeline.flush();
+    await pipeline.flush();
 
     const stats = pipeline.stats();
     expect(stats.eventsReceived).toBe(1);
@@ -143,7 +145,7 @@ describe("Pipeline Coordinator", () => {
   it("handles batch of mixed events", async () => {
     const pipeline = createPipeline(db);
     await pipeline.handleEvents(CHAIN_A, [makeSendEvent(1n), makeInitEvent(2n), makeFeeEvent(3n)]);
-    pipeline.flush();
+    await pipeline.flush();
 
     const stats = pipeline.stats();
     expect(stats.eventsReceived).toBe(3);
@@ -155,9 +157,9 @@ describe("Pipeline Coordinator", () => {
     const pipeline = createPipeline(db);
     await pipeline.handleEvents(CHAIN_A, [makeSendEvent(1n)]);
     await pipeline.handleEvents("chain-b", [makeReceiveEvent(5n)]);
-    pipeline.flush();
+    await pipeline.flush();
 
-    const trace = getTrace(db, MSG_ID);
+    const trace = await getTrace(db, MSG_ID);
     expect(trace).toBeDefined();
     expect(trace!.execution).toBe("success");
   });
@@ -179,7 +181,7 @@ describe("Pipeline Coordinator", () => {
     await pipeline.handleEvents(CHAIN_A, [makeSendEvent(1n)]);
     // Should have auto-flushed since writeBatchSize=1
 
-    const trace = getTrace(db, MSG_ID);
+    const trace = await getTrace(db, MSG_ID);
     expect(trace).toBeDefined();
   });
 
@@ -188,10 +190,10 @@ describe("Pipeline Coordinator", () => {
     await pipeline.handleEvents(CHAIN_A, [makeSendEvent(1n)]);
 
     // Not flushed yet
-    expect(getTrace(db, MSG_ID)).toBeUndefined();
+    expect(await getTrace(db, MSG_ID)).toBeUndefined();
 
-    pipeline.flush();
-    expect(getTrace(db, MSG_ID)).toBeDefined();
+    await pipeline.flush();
+    expect(await getTrace(db, MSG_ID)).toBeDefined();
   });
 
   it("stop() flushes and prevents further processing", async () => {
@@ -200,7 +202,7 @@ describe("Pipeline Coordinator", () => {
     pipeline.stop();
 
     // Should be flushed
-    expect(getTrace(db, MSG_ID)).toBeDefined();
+    expect(await getTrace(db, MSG_ID)).toBeDefined();
 
     // Further events ignored
     await pipeline.handleEvents("chain-b", [makeReceiveEvent(5n)]);
@@ -211,7 +213,7 @@ describe("Pipeline Coordinator", () => {
   it("handles empty event batches", async () => {
     const pipeline = createPipeline(db);
     await pipeline.handleEvents(CHAIN_A, []);
-    pipeline.flush();
+    await pipeline.flush();
 
     const stats = pipeline.stats();
     expect(stats.eventsReceived).toBe(0);
@@ -247,9 +249,9 @@ describe("Pipeline Coordinator", () => {
     const pipeline = createPipeline(db);
     await pipeline.handleEvents(CHAIN_A, [makeSendEvent(1n)]);
     await pipeline.handleEvents("chain-b", [makeReceiveEvent(5n)]);
-    pipeline.flush();
+    await pipeline.flush();
 
-    const trace = getTrace(db, MSG_ID);
+    const trace = await getTrace(db, MSG_ID);
     expect(trace).toBeDefined();
     expect(trace!.execution).toBe("success");
 

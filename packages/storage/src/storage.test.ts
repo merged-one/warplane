@@ -3,7 +3,8 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { openDb, closeDb, runMigrations } from "./index.js";
+import { createTestAdapter, initTestSchema } from "./test-utils/index.js";
+import type { DatabaseAdapter } from "./adapter.js";
 import { upsertNetwork, getNetwork, listNetworks } from "./repos/networks.js";
 import { upsertChain, getChain, listChains } from "./repos/chains.js";
 import { upsertScenarioRun, getScenarioRun, listScenarioRuns } from "./repos/scenarios.js";
@@ -17,18 +18,17 @@ import {
 } from "./repos/traces.js";
 import { upsertArtifact, listArtifacts } from "./repos/artifacts.js";
 import { startImport, completeImport, getImport, listImports } from "./repos/imports.js";
-import type { Database } from "better-sqlite3";
 import type { NetworkManifest, MessageTrace, ScenarioRun } from "@warplane/domain";
 
-let db: Database;
+let db: DatabaseAdapter;
 
-beforeEach(() => {
-  db = openDb({ path: ":memory:" });
-  runMigrations(db);
+beforeEach(async () => {
+  db = createTestAdapter();
+  await initTestSchema(db);
 });
 
-afterEach(() => {
-  closeDb(db);
+afterEach(async () => {
+  await db.close();
 });
 
 // ---------------------------------------------------------------------------
@@ -115,11 +115,13 @@ const sampleRun: ScenarioRun = {
 // ---------------------------------------------------------------------------
 
 describe("migrations", () => {
-  it("runs cleanly on a fresh database", () => {
+  it("runs cleanly on a fresh database", async () => {
     // Already ran in beforeEach — verify tables exist
-    const tables = db
-      .prepare("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
-      .all() as Array<{ name: string }>;
+    const tables = (
+      await db.query<{ name: string }>(
+        "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name",
+      )
+    ).rows;
     const names = tables.map((t) => t.name);
 
     expect(names).toContain("networks");
@@ -129,12 +131,6 @@ describe("migrations", () => {
     expect(names).toContain("events");
     expect(names).toContain("artifacts");
     expect(names).toContain("import_history");
-    expect(names).toContain("migrations");
-  });
-
-  it("is idempotent — running twice is safe", () => {
-    const second = runMigrations(db);
-    expect(second).toHaveLength(0);
   });
 });
 
@@ -143,18 +139,18 @@ describe("migrations", () => {
 // ---------------------------------------------------------------------------
 
 describe("networks repo", () => {
-  it("upserts and retrieves a network manifest", () => {
-    upsertNetwork(db, sampleManifest);
-    const found = getNetwork(db, 88888);
+  it("upserts and retrieves a network manifest", async () => {
+    await upsertNetwork(db, sampleManifest);
+    const found = await getNetwork(db, 88888);
     expect(found).toBeDefined();
     expect(found!.networkId).toBe(88888);
     expect(found!.source.blockchainId).toBe("chain-src-001");
   });
 
-  it("upserts idempotently", () => {
-    upsertNetwork(db, sampleManifest);
-    upsertNetwork(db, sampleManifest);
-    expect(listNetworks(db)).toHaveLength(1);
+  it("upserts idempotently", async () => {
+    await upsertNetwork(db, sampleManifest);
+    await upsertNetwork(db, sampleManifest);
+    expect(await listNetworks(db)).toHaveLength(1);
   });
 });
 
@@ -163,18 +159,18 @@ describe("networks repo", () => {
 // ---------------------------------------------------------------------------
 
 describe("chains repo", () => {
-  it("upserts and retrieves chains", () => {
-    upsertChain(db, sampleManifest.source);
-    const found = getChain(db, "chain-src-001");
+  it("upserts and retrieves chains", async () => {
+    await upsertChain(db, sampleManifest.source);
+    const found = await getChain(db, "chain-src-001");
     expect(found).toBeDefined();
     expect(found!.name).toBe("source");
     expect(found!.evmChainId).toBe(99999);
   });
 
-  it("lists all chains", () => {
-    upsertChain(db, sampleManifest.source);
-    upsertChain(db, sampleManifest.destination);
-    expect(listChains(db)).toHaveLength(2);
+  it("lists all chains", async () => {
+    await upsertChain(db, sampleManifest.source);
+    await upsertChain(db, sampleManifest.destination);
+    expect(await listChains(db)).toHaveLength(2);
   });
 });
 
@@ -183,56 +179,56 @@ describe("chains repo", () => {
 // ---------------------------------------------------------------------------
 
 describe("traces repo", () => {
-  it("upserts a trace with events", () => {
-    const id = upsertTrace(db, sampleTrace);
+  it("upserts a trace with events", async () => {
+    const id = await upsertTrace(db, sampleTrace);
     expect(id).toBeGreaterThan(0);
 
-    const found = getTrace(db, "abc123");
+    const found = await getTrace(db, "abc123");
     expect(found).toBeDefined();
     expect(found!.execution).toBe("success");
     expect(found!.events).toHaveLength(3);
   });
 
-  it("is idempotent on re-import", () => {
-    upsertTrace(db, sampleTrace);
-    upsertTrace(db, sampleTrace);
-    expect(countTraces(db)).toBe(1);
+  it("is idempotent on re-import", async () => {
+    await upsertTrace(db, sampleTrace);
+    await upsertTrace(db, sampleTrace);
+    expect(await countTraces(db)).toBe(1);
   });
 
-  it("preserves event ordering", () => {
-    upsertTrace(db, sampleTrace);
-    const events = getTraceEvents(db, "abc123");
+  it("preserves event ordering", async () => {
+    await upsertTrace(db, sampleTrace);
+    const events = await getTraceEvents(db, "abc123");
     expect(events).toHaveLength(3);
     expect(events[0]!.kind).toBe("message_sent");
     expect(events[1]!.kind).toBe("signatures_aggregated");
     expect(events[2]!.kind).toBe("delivery_confirmed");
   });
 
-  it("filters by scenario", () => {
-    upsertTrace(db, sampleTrace);
-    upsertTrace(db, { ...sampleTrace, messageId: "xyz789", scenario: "add_fee" });
+  it("filters by scenario", async () => {
+    await upsertTrace(db, sampleTrace);
+    await upsertTrace(db, { ...sampleTrace, messageId: "xyz789", scenario: "add_fee" });
 
-    expect(listTraces(db, { scenario: "basic_send_receive" })).toHaveLength(1);
-    expect(listTraces(db, { scenario: "add_fee" })).toHaveLength(1);
-    expect(listTraces(db)).toHaveLength(2);
+    expect(await listTraces(db, { scenario: "basic_send_receive" })).toHaveLength(1);
+    expect(await listTraces(db, { scenario: "add_fee" })).toHaveLength(1);
+    expect(await listTraces(db)).toHaveLength(2);
   });
 
-  it("filters by execution status", () => {
-    upsertTrace(db, sampleTrace);
-    upsertTrace(db, {
+  it("filters by execution status", async () => {
+    await upsertTrace(db, sampleTrace);
+    await upsertTrace(db, {
       ...sampleTrace,
       messageId: "fail1",
       scenario: "fail_test",
       execution: "failed",
     });
 
-    expect(listTraces(db, { execution: "success" })).toHaveLength(1);
-    expect(listTraces(db, { execution: "failed" })).toHaveLength(1);
+    expect(await listTraces(db, { execution: "success" })).toHaveLength(1);
+    expect(await listTraces(db, { execution: "failed" })).toHaveLength(1);
   });
 
-  it("builds a chronological timeline", () => {
-    upsertTrace(db, sampleTrace);
-    const timeline = getTimeline(db);
+  it("builds a chronological timeline", async () => {
+    await upsertTrace(db, sampleTrace);
+    const timeline = await getTimeline(db);
     expect(timeline.length).toBe(3);
     // Verify chronological order
     for (let i = 1; i < timeline.length; i++) {
@@ -248,18 +244,22 @@ describe("traces repo", () => {
 // ---------------------------------------------------------------------------
 
 describe("scenario_runs repo", () => {
-  it("upserts and retrieves scenario runs", () => {
-    upsertScenarioRun(db, sampleRun);
-    const found = getScenarioRun(db, "basic_send_receive");
+  it("upserts and retrieves scenario runs", async () => {
+    await upsertScenarioRun(db, sampleRun);
+    const found = await getScenarioRun(db, "basic_send_receive");
     expect(found).toBeDefined();
     expect(found!.passed).toBe(true);
     expect(found!.messageIds).toEqual(["abc123"]);
   });
 
-  it("lists all runs", () => {
-    upsertScenarioRun(db, sampleRun);
-    upsertScenarioRun(db, { ...sampleRun, scenario: "add_fee", startedAt: "2026-04-01T00:10:00Z" });
-    expect(listScenarioRuns(db)).toHaveLength(2);
+  it("lists all runs", async () => {
+    await upsertScenarioRun(db, sampleRun);
+    await upsertScenarioRun(db, {
+      ...sampleRun,
+      scenario: "add_fee",
+      startedAt: "2026-04-01T00:10:00Z",
+    });
+    expect(await listScenarioRuns(db)).toHaveLength(2);
   });
 });
 
@@ -268,17 +268,17 @@ describe("scenario_runs repo", () => {
 // ---------------------------------------------------------------------------
 
 describe("artifacts repo", () => {
-  it("upserts and lists artifacts", () => {
-    upsertArtifact(db, { type: "trace", path: "/tmp/trace.json", description: "test" });
-    upsertArtifact(db, { type: "network_manifest", path: "/tmp/network.json" });
-    expect(listArtifacts(db)).toHaveLength(2);
-    expect(listArtifacts(db, { type: "trace" })).toHaveLength(1);
+  it("upserts and lists artifacts", async () => {
+    await upsertArtifact(db, { type: "trace", path: "/tmp/trace.json", description: "test" });
+    await upsertArtifact(db, { type: "network_manifest", path: "/tmp/network.json" });
+    expect(await listArtifacts(db)).toHaveLength(2);
+    expect(await listArtifacts(db, { type: "trace" })).toHaveLength(1);
   });
 
-  it("is idempotent on same path", () => {
-    upsertArtifact(db, { type: "trace", path: "/tmp/trace.json" });
-    upsertArtifact(db, { type: "trace", path: "/tmp/trace.json" });
-    expect(listArtifacts(db)).toHaveLength(1);
+  it("is idempotent on same path", async () => {
+    await upsertArtifact(db, { type: "trace", path: "/tmp/trace.json" });
+    await upsertArtifact(db, { type: "trace", path: "/tmp/trace.json" });
+    expect(await listArtifacts(db)).toHaveLength(1);
   });
 });
 
@@ -287,21 +287,21 @@ describe("artifacts repo", () => {
 // ---------------------------------------------------------------------------
 
 describe("import_history repo", () => {
-  it("tracks import lifecycle", () => {
-    const id = startImport(db, "/tmp/artifacts", "fixture");
-    const started = getImport(db, id);
+  it("tracks import lifecycle", async () => {
+    const id = await startImport(db, "/tmp/artifacts", "fixture");
+    const started = await getImport(db, id);
     expect(started!.status).toBe("running");
 
-    completeImport(db, id, { networks: 1, chains: 2, scenarios: 5, traces: 8, events: 40 });
-    const completed = getImport(db, id);
+    await completeImport(db, id, { networks: 1, chains: 2, scenarios: 5, traces: 8, events: 40 });
+    const completed = await getImport(db, id);
     expect(completed!.status).toBe("completed");
     expect(completed!.tracesCount).toBe(8);
   });
 
-  it("lists imports in reverse chronological order", () => {
-    startImport(db, "/tmp/a");
-    startImport(db, "/tmp/b");
-    const imports = listImports(db);
+  it("lists imports in reverse chronological order", async () => {
+    await startImport(db, "/tmp/a");
+    await startImport(db, "/tmp/b");
+    const imports = await listImports(db);
     expect(imports).toHaveLength(2);
   });
 });

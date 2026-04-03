@@ -3,10 +3,10 @@
  *
  * The coordinator is the glue layer: it receives raw TeleporterEvents from the
  * orchestrator's onEvents callback, normalizes them, correlates into traces,
- * and persists to SQLite via upsertTrace.
+ * and persists via async upsertTrace.
  */
 
-import type { Database } from "@warplane/storage";
+import type { DatabaseAdapter } from "@warplane/storage";
 import { upsertTrace } from "@warplane/storage";
 import type { TeleporterEvent } from "../rpc/decoder.js";
 import { normalize } from "./normalizer.js";
@@ -35,7 +35,7 @@ export interface Pipeline {
   /** Inject pre-normalized off-chain events (bypasses normalizer). */
   injectEvents(events: NormalizedEvent[]): void;
   /** Flush all pending trace writes to the database. */
-  flush(): void;
+  flush(): Promise<void>;
   /** Get pipeline statistics. */
   stats(): PipelineStats;
   /** Flush and prevent further processing. */
@@ -46,7 +46,7 @@ export interface Pipeline {
 // Factory
 // ---------------------------------------------------------------------------
 
-export function createPipeline(db: Database, config?: PipelineConfig): Pipeline {
+export function createPipeline(db: DatabaseAdapter, config?: PipelineConfig): Pipeline {
   const writeBatchSize = config?.writeBatchSize ?? 50;
   const alertEvaluator = config?.alertEvaluator;
   const correlator: Correlator = createCorrelator();
@@ -94,7 +94,7 @@ export function createPipeline(db: Database, config?: PipelineConfig): Pipeline 
     }
 
     if (pendingFlush.size >= writeBatchSize) {
-      flush();
+      await flush();
     }
   }
 
@@ -115,16 +115,20 @@ export function createPipeline(db: Database, config?: PipelineConfig): Pipeline 
       }
     }
 
+    // Note: auto-flush is async but injectEvents is sync for backward compat.
+    // If needed, callers should call flush() explicitly.
     if (pendingFlush.size >= writeBatchSize) {
-      flush();
+      flush().catch(() => {
+        /* pipeline error handling at higher level */
+      });
     }
   }
 
-  function flush(): void {
+  async function flush(): Promise<void> {
     for (const messageId of pendingFlush) {
       const trace = correlator.getTrace(messageId);
       if (trace) {
-        upsertTrace(db, trace);
+        await upsertTrace(db, trace);
       }
     }
     pendingFlush = new Set();
@@ -135,7 +139,9 @@ export function createPipeline(db: Database, config?: PipelineConfig): Pipeline 
   }
 
   function stop(): void {
-    flush();
+    flush().catch(() => {
+      /* best-effort flush on stop */
+    });
     stopped = true;
   }
 

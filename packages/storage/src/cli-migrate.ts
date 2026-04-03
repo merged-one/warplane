@@ -1,27 +1,24 @@
 #!/usr/bin/env node
 /**
- * CLI entry point for running migrations.
- * Usage: node --import tsx src/cli-migrate.ts [db-path]
+ * CLI entry point for initializing the Postgres schema.
+ * Usage: DATABASE_URL=postgresql://... node --import tsx src/cli-migrate.ts
  */
 
-import { openDb, closeDb } from "./db.js";
-import { runMigrations } from "./migrate.js";
+import { createPostgresAdapter } from "./postgres-adapter.js";
+import { initSchema } from "./migrate.js";
 
-const dbPath = process.argv[2] || "warplane.db";
+const databaseUrl = process.env["DATABASE_URL"];
+if (!databaseUrl) {
+  console.error("DATABASE_URL environment variable is required.");
+  process.exit(1);
+}
 
-console.log(`Running migrations on ${dbPath}...`);
-const db = openDb({ path: dbPath });
+console.log("Initializing schema...");
+const adapter = createPostgresAdapter({ connectionString: databaseUrl });
 
 try {
-  const applied = runMigrations(db);
-  if (applied.length === 0) {
-    console.log("All migrations already applied.");
-  } else {
-    console.log(`Applied ${applied.length} migration(s):`);
-    for (const name of applied) {
-      console.log(`  ✓ ${name}`);
-    }
-  }
+  await initSchema(adapter);
+  console.log("Schema initialized successfully.");
 } finally {
-  closeDb(db);
+  await adapter.close();
 }

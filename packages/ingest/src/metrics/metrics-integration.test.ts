@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { openDb, closeDb, runMigrations, type Database, getTrace } from "@warplane/storage";
+import { createTestAdapter, initTestSchema } from "@warplane/storage/test-utils";
+import type { DatabaseAdapter } from "@warplane/storage";
+import { getTrace } from "@warplane/storage";
 import type { TeleporterEvent } from "../rpc/decoder.js";
 import { createPipeline } from "../pipeline/coordinator.js";
 import type { NormalizedEvent } from "../pipeline/types.js";
@@ -81,15 +83,15 @@ function offChainEvent(
 // Setup
 // ---------------------------------------------------------------------------
 
-let db: Database;
+let db: DatabaseAdapter;
 
-beforeEach(() => {
-  db = openDb({ path: ":memory:" });
-  runMigrations(db);
+beforeEach(async () => {
+  db = createTestAdapter();
+  await initTestSchema(db);
 });
 
-afterEach(() => {
-  closeDb(db);
+afterEach(async () => {
+  await db.close();
 });
 
 // ---------------------------------------------------------------------------
@@ -102,9 +104,9 @@ describe("Pipeline Integration — Off-chain Events", () => {
     await pipeline.handleEvents("chain-a", [makeSendEvent(1n)]);
 
     pipeline.injectEvents([offChainEvent("warp_message_extracted", MSG_ID, "chain-a")]);
-    pipeline.flush();
+    await pipeline.flush();
 
-    const trace = getTrace(db, MSG_ID);
+    const trace = await getTrace(db, MSG_ID);
     expect(trace).toBeDefined();
     expect(trace!.execution).toBe("pending"); // relaying maps to "pending" execution
   });
@@ -119,9 +121,9 @@ describe("Pipeline Integration — Off-chain Events", () => {
         aggregationLatencyMs: 2000,
       }),
     ]);
-    pipeline.flush();
+    await pipeline.flush();
 
-    const trace = getTrace(db, MSG_ID);
+    const trace = await getTrace(db, MSG_ID);
     expect(trace).toBeDefined();
     expect(trace!.events.length).toBeGreaterThanOrEqual(3); // send + warp + sig_agg
   });
@@ -134,9 +136,9 @@ describe("Pipeline Integration — Off-chain Events", () => {
       offChainEvent("warp_message_extracted", MSG_ID, "chain-a"),
       offChainEvent("relay_submitted", MSG_ID, "chain-b"),
     ]);
-    pipeline.flush();
+    await pipeline.flush();
 
-    const trace = getTrace(db, MSG_ID);
+    const trace = await getTrace(db, MSG_ID);
     expect(trace).toBeDefined();
     expect(trace!.events.length).toBeGreaterThanOrEqual(3);
   });
@@ -158,20 +160,20 @@ describe("Pipeline Integration — Off-chain Events", () => {
 
     // 3. On-chain delivery
     await pipeline.handleEvents("chain-b", [makeReceiveEvent(10n)]);
-    pipeline.flush();
+    await pipeline.flush();
 
-    const trace = getTrace(db, MSG_ID);
+    const trace = await getTrace(db, MSG_ID);
     expect(trace).toBeDefined();
     expect(trace!.execution).toBe("success");
     expect(trace!.events.length).toBe(5); // send + warp + sig + relay + deliver
   });
 
-  it("off-chain events with no matching trace create partial trace", () => {
+  it("off-chain events with no matching trace create partial trace", async () => {
     const pipeline = createPipeline(db);
     const syntheticId = "metrics:chain-a:chain-b:2024-01-01T00:00:00Z:0:warp";
 
     pipeline.injectEvents([offChainEvent("warp_message_extracted", syntheticId, "chain-a")]);
-    pipeline.flush();
+    await pipeline.flush();
 
     const stats = pipeline.stats();
     expect(stats.tracesCreated).toBe(1);
@@ -190,9 +192,9 @@ describe("Pipeline Integration — Off-chain Events", () => {
 
     // On-chain send arrives later
     await pipeline.handleEvents("chain-a", [makeSendEvent(1n)]);
-    pipeline.flush();
+    await pipeline.flush();
 
-    const trace = getTrace(db, MSG_ID);
+    const trace = await getTrace(db, MSG_ID);
     expect(trace).toBeDefined();
     // delivery_confirmed creates in "delivered" state; message_sent enriches but
     // doesn't override state since there's no transition from delivered→pending
@@ -203,15 +205,15 @@ describe("Pipeline Integration — Off-chain Events", () => {
     const pipeline = createPipeline(db);
     await pipeline.handleEvents("chain-a", [makeSendEvent(1n)]);
     await pipeline.handleEvents("chain-b", [makeReceiveEvent(5n)]);
-    pipeline.flush();
+    await pipeline.flush();
 
-    const trace = getTrace(db, MSG_ID);
+    const trace = await getTrace(db, MSG_ID);
     expect(trace).toBeDefined();
     expect(trace!.execution).toBe("success");
     expect(trace!.events.length).toBe(2);
   });
 
-  it("stats correctly count injected off-chain events", () => {
+  it("stats correctly count injected off-chain events", async () => {
     const pipeline = createPipeline(db);
 
     pipeline.injectEvents([

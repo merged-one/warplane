@@ -7,14 +7,9 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import {
-  openDb,
-  closeDb,
-  runMigrations,
-  type Database,
-  getTrace,
-  listTraces,
-} from "@warplane/storage";
+import { createTestAdapter, initTestSchema } from "@warplane/storage/test-utils";
+import type { DatabaseAdapter } from "@warplane/storage";
+import { getTrace, listTraces } from "@warplane/storage";
 import type { TeleporterEvent } from "../rpc/decoder.js";
 import { createPipeline } from "./coordinator.js";
 
@@ -116,15 +111,15 @@ function makeRetryEvent(messageId: string, blockNumber: bigint): TeleporterEvent
 // Setup
 // ---------------------------------------------------------------------------
 
-let db: Database;
+let db: DatabaseAdapter;
 
-beforeEach(() => {
-  db = openDb({ path: ":memory:" });
-  runMigrations(db);
+beforeEach(async () => {
+  db = createTestAdapter();
+  await initTestSchema(db);
 });
 
-afterEach(() => {
-  closeDb(db);
+afterEach(async () => {
+  await db.close();
 });
 
 // ---------------------------------------------------------------------------
@@ -141,10 +136,10 @@ describe("Pipeline integration", () => {
     // Process events directly through pipeline (simulating orchestrator callback)
     await pipeline.handleEvents(CHAIN_A, [sendEvent]);
     await pipeline.handleEvents(CHAIN_B, [deliveryEvent]);
-    pipeline.flush();
+    await pipeline.flush();
 
     // Verify trace exists in storage with correct state
-    const trace = getTrace(db, MSG_ID_1);
+    const trace = await getTrace(db, MSG_ID_1);
     expect(trace).toBeDefined();
     expect(trace!.execution).toBe("success");
     expect(trace!.events.length).toBe(2);
@@ -158,9 +153,9 @@ describe("Pipeline integration", () => {
     // Send on chain A, deliver on chain B
     await pipeline.handleEvents(CHAIN_A, [makeSendEvent(MSG_ID_1, 5n)]);
     await pipeline.handleEvents(CHAIN_B, [makeDeliveryEvent(MSG_ID_1, 15n)]);
-    pipeline.flush();
+    await pipeline.flush();
 
-    const traces = listTraces(db);
+    const traces = await listTraces(db);
     expect(traces.length).toBe(1);
     expect(traces[0]!.execution).toBe("success");
     // Events from different chains correlated into one trace
@@ -186,7 +181,7 @@ describe("Pipeline integration", () => {
       makeSendEvent(MSG_ID_1, 5n),
       makeDeliveryEvent(MSG_ID_1, 10n),
     ]);
-    pipeline.flush();
+    await pipeline.flush();
 
     const stats = pipeline.stats();
     expect(stats.eventsReceived).toBe(3);
@@ -202,9 +197,9 @@ describe("Pipeline integration", () => {
     await pipeline.handleEvents(CHAIN_A, [makeSendEvent(MSG_ID_1, 5n)]);
     await pipeline.handleEvents(CHAIN_B, [makeFailedEvent(MSG_ID_1, 15n)]);
     await pipeline.handleEvents(CHAIN_B, [makeRetryEvent(MSG_ID_1, 25n)]);
-    pipeline.flush();
+    await pipeline.flush();
 
-    const trace = getTrace(db, MSG_ID_1);
+    const trace = await getTrace(db, MSG_ID_1);
     expect(trace).toBeDefined();
     expect(trace!.execution).toBe("retry_success");
     expect(trace!.events.length).toBe(3);
@@ -215,12 +210,12 @@ describe("Pipeline integration", () => {
 
     // Empty batch should not cause errors
     await pipeline.handleEvents(CHAIN_A, []);
-    pipeline.flush();
+    await pipeline.flush();
 
     const stats = pipeline.stats();
     expect(stats.eventsReceived).toBe(0);
     expect(stats.tracesCreated).toBe(0);
-    expect(listTraces(db).length).toBe(0);
+    expect((await listTraces(db)).length).toBe(0);
   });
 
   it("stops gracefully and prevents further processing", async () => {
@@ -230,13 +225,13 @@ describe("Pipeline integration", () => {
     pipeline.stop(); // Should flush + stop
 
     // Verify pending data was flushed
-    expect(getTrace(db, MSG_ID_1)).toBeDefined();
+    expect(await getTrace(db, MSG_ID_1)).toBeDefined();
 
     // Further events should be ignored
     await pipeline.handleEvents(CHAIN_A, [makeSendEvent(MSG_ID_2, 10n)]);
-    pipeline.flush();
+    await pipeline.flush();
 
-    expect(getTrace(db, MSG_ID_2)).toBeUndefined();
+    expect(await getTrace(db, MSG_ID_2)).toBeUndefined();
     expect(pipeline.stats().tracesCreated).toBe(1);
   });
 
@@ -252,10 +247,10 @@ describe("Pipeline integration", () => {
       makeDeliveryEvent(MSG_ID_1, 15n),
       makeFailedEvent(MSG_ID_2, 16n),
     ]);
-    pipeline.flush();
+    await pipeline.flush();
 
-    const trace1 = getTrace(db, MSG_ID_1);
-    const trace2 = getTrace(db, MSG_ID_2);
+    const trace1 = await getTrace(db, MSG_ID_1);
+    const trace2 = await getTrace(db, MSG_ID_2);
     expect(trace1!.execution).toBe("success");
     expect(trace2!.execution).toBe("failed");
     expect(pipeline.stats().tracesCreated).toBe(2);

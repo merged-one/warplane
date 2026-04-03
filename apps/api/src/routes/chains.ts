@@ -19,7 +19,7 @@ export function registerChainRoutes(app: FastifyInstance): void {
       },
     },
     async () => {
-      return { chains: listChains(app.db) };
+      return { chains: await listChains(app.db) };
     },
   );
 }

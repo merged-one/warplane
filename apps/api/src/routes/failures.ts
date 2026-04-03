@@ -32,21 +32,21 @@ export function registerFailureRoutes(app: FastifyInstance): void {
       const pageSize = q.pageSize ?? 50;
 
       // Get non-success traces: failed, replay_blocked, pending
-      const failedTraces = listTraces(app.db, {
+      const failedTraces = await listTraces(app.db, {
         scenario: q.scenario,
         execution: "failed",
         limit: pageSize,
         offset: (page - 1) * pageSize,
       });
 
-      const replayBlocked = listTraces(app.db, {
+      const replayBlocked = await listTraces(app.db, {
         scenario: q.scenario,
         execution: "replay_blocked",
         limit: pageSize,
         offset: (page - 1) * pageSize,
       });
 
-      const pending = listTraces(app.db, {
+      const pending = await listTraces(app.db, {
         scenario: q.scenario,
         execution: "pending",
         limit: pageSize,

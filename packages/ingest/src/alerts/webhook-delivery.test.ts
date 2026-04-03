@@ -1,22 +1,19 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { openDb, closeDb, type Database } from "@warplane/storage";
-import { runMigrations, createSqliteAdapter } from "@warplane/storage";
+import { createTestAdapter, initTestSchema } from "@warplane/storage/test-utils";
 import type { DatabaseAdapter } from "@warplane/storage";
 import { insertWebhookDestination, getPendingDeliveries } from "@warplane/storage";
 import { createDeliveryEngine, MAX_ATTEMPTS, computeSignature } from "./webhook-delivery.js";
 import type { WebhookPayload } from "./types.js";
 
-let rawDb: Database;
 let db: DatabaseAdapter;
 
-beforeEach(() => {
-  rawDb = openDb({ path: ":memory:" });
-  runMigrations(rawDb);
-  db = createSqliteAdapter(rawDb);
+beforeEach(async () => {
+  db = createTestAdapter();
+  await initTestSchema(db);
 });
 
-afterEach(() => {
-  closeDb(rawDb);
+afterEach(async () => {
+  await db.close();
   vi.restoreAllMocks();
 });
 

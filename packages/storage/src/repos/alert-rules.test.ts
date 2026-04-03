@@ -1,7 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { openDb, closeDb, type Database } from "../db.js";
-import { runMigrations } from "../migrate.js";
-import { createSqliteAdapter } from "../sqlite-adapter.js";
+import { createTestAdapter, initTestSchema } from "../test-utils/index.js";
 import type { DatabaseAdapter } from "../adapter.js";
 import {
   insertAlertRule,
@@ -12,17 +10,15 @@ import {
   markAlertRuleFired,
 } from "./alert-rules.js";
 
-let rawDb: Database;
 let db: DatabaseAdapter;
 
-beforeEach(() => {
-  rawDb = openDb({ path: ":memory:" });
-  runMigrations(rawDb);
-  db = createSqliteAdapter(rawDb);
+beforeEach(async () => {
+  db = createTestAdapter();
+  await initTestSchema(db);
 });
 
-afterEach(() => {
-  closeDb(rawDb);
+afterEach(async () => {
+  await db.close();
 });
 
 describe("Alert Rules", () => {

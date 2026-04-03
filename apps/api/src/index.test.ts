@@ -1,12 +1,15 @@
 import { describe, expect, it, beforeAll, afterAll } from "vitest";
 import { buildApp } from "./app.js";
 import type { FastifyInstance } from "fastify";
+import { createTestAdapter, initTestSchema } from "@warplane/storage/test-utils";
 
 let app: FastifyInstance;
 
 beforeAll(async () => {
+  const adapter = createTestAdapter();
+  await initTestSchema(adapter);
   app = await buildApp({
-    dbPath: ":memory:",
+    adapter,
     demoMode: true,
     logger: false,
   });

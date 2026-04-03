@@ -1,12 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import {
-  openDb,
-  closeDb,
-  runMigrations,
-  type Database,
-  getCheckpoint,
-  upsertCheckpoint,
-} from "@warplane/storage";
+import { createTestAdapter, initTestSchema } from "@warplane/storage/test-utils";
+import type { DatabaseAdapter } from "@warplane/storage";
+import { getCheckpoint, upsertCheckpoint } from "@warplane/storage";
 import { encodeEventTopics } from "viem";
 import { teleporterMessengerAbi, TELEPORTER_MESSENGER_ADDRESS } from "./abi.js";
 import { createOrchestrator } from "./orchestrator.js";
@@ -74,15 +69,15 @@ function sleep(ms: number): Promise<void> {
 // Setup
 // ---------------------------------------------------------------------------
 
-let db: Database;
+let db: DatabaseAdapter;
 
-beforeEach(() => {
-  db = openDb({ path: ":memory:" });
-  runMigrations(db);
+beforeEach(async () => {
+  db = createTestAdapter();
+  await initTestSchema(db);
 });
 
-afterEach(() => {
-  closeDb(db);
+afterEach(async () => {
+  await db.close();
 });
 
 // ---------------------------------------------------------------------------
@@ -124,7 +119,7 @@ describe("Orchestrator", () => {
   });
 
   it("resumes from checkpoint on restart", async () => {
-    upsertCheckpoint(db, {
+    await upsertCheckpoint(db, {
       chainId: "chain-a",
       contractAddress: "0xabc",
       lastBlock: 50,
@@ -165,7 +160,7 @@ describe("Orchestrator", () => {
     await sleep(100);
     await orch.stop();
 
-    const cp = getCheckpoint(db, "chain-a", "0xabc");
+    const cp = await getCheckpoint(db, "chain-a", "0xabc");
     expect(cp).toBeDefined();
     expect(cp!.lastBlock).toBe(20);
   });
@@ -384,7 +379,7 @@ describe("Orchestrator", () => {
     await sleep(100);
     await orch.stop();
 
-    const cp = getCheckpoint(db, "chain-a", "0xabc");
+    const cp = await getCheckpoint(db, "chain-a", "0xabc");
     expect(cp).toBeDefined();
     expect(cp!.lastBlock).toBe(5);
   });

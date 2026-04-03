@@ -19,7 +19,7 @@ export function registerNetworkRoutes(app: FastifyInstance): void {
       },
     },
     async () => {
-      return { networks: listNetworks(app.db) };
+      return { networks: await listNetworks(app.db) };
     },
   );
 }

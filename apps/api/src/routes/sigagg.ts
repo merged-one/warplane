@@ -28,7 +28,7 @@ export function registerSigAggRoutes(app: FastifyInstance): void {
       },
     },
     async () => {
-      const health = await getLatestSigAggHealth(app.asyncDb);
+      const health = await getLatestSigAggHealth(app.db);
       return { health: health ?? null };
     },
   );
@@ -58,7 +58,7 @@ export function registerSigAggRoutes(app: FastifyInstance): void {
     },
     async (request) => {
       const q = request.query as { limit?: number; since?: string };
-      const history = await listSigAggHealthHistory(app.asyncDb, {
+      const history = await listSigAggHealthHistory(app.db, {
         limit: q.limit,
         since: q.since,
       });

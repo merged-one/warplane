@@ -15,7 +15,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { NetworkManifest, MessageTrace, ScenarioRun, TraceIndex } from "@warplane/domain";
 import {
-  type Database,
+  type DatabaseAdapter,
   upsertNetwork,
   upsertChain,
   upsertScenarioRun,
@@ -48,7 +48,10 @@ export interface ImportOptions {
 /**
  * Import all artifacts from a directory into the database.
  */
-export function importArtifacts(db: Database, opts: ImportOptions): ImportResult {
+export async function importArtifacts(
+  db: DatabaseAdapter,
+  opts: ImportOptions,
+): Promise<ImportResult> {
   const log = opts.log ?? console.log;
   const artifactsDir = path.resolve(opts.artifactsDir);
 
@@ -56,7 +59,7 @@ export function importArtifacts(db: Database, opts: ImportOptions): ImportResult
     throw new Error(`Artifacts directory not found: ${artifactsDir}`);
   }
 
-  const importId = startImport(db, artifactsDir, opts.sourceType ?? "fixture");
+  const importId = await startImport(db, artifactsDir, opts.sourceType ?? "fixture");
   const result: ImportResult = {
     importId,
     networks: 0,
@@ -68,21 +71,12 @@ export function importArtifacts(db: Database, opts: ImportOptions): ImportResult
   };
 
   try {
-    // Wrap the entire import in a transaction for atomicity
-    const doImport = db.transaction(() => {
-      // 1. Import network manifest
-      importNetwork(db, artifactsDir, importId, result, log);
+    // Import all artifacts (adapter handles transaction if needed)
+    await importNetwork(db, artifactsDir, importId, result, log);
+    await importTraces(db, artifactsDir, importId, result, log);
+    await importScenarios(db, artifactsDir, importId, result, log);
 
-      // 2. Import traces
-      importTraces(db, artifactsDir, importId, result, log);
-
-      // 3. Import scenario runs
-      importScenarios(db, artifactsDir, importId, result, log);
-    });
-
-    doImport();
-
-    completeImport(db, importId, {
+    await completeImport(db, importId, {
       networks: result.networks,
       chains: result.chains,
       scenarios: result.scenarios,
@@ -96,7 +90,7 @@ export function importArtifacts(db: Database, opts: ImportOptions): ImportResult
     );
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    failImport(db, importId, msg);
+    await failImport(db, importId, msg);
     result.errors.push(msg);
     log(`Import failed: ${msg}`);
   }
@@ -104,13 +98,13 @@ export function importArtifacts(db: Database, opts: ImportOptions): ImportResult
   return result;
 }
 
-function importNetwork(
-  db: Database,
+async function importNetwork(
+  db: DatabaseAdapter,
   artifactsDir: string,
   importId: number,
   result: ImportResult,
   log: (msg: string) => void,
-): void {
+): Promise<void> {
   const manifestPath = path.join(artifactsDir, "network", "network.json");
   if (!fs.existsSync(manifestPath)) {
     log("No network manifest found, skipping.");
@@ -120,11 +114,11 @@ function importNetwork(
   const raw = JSON.parse(fs.readFileSync(manifestPath, "utf-8"));
   const parsed = NetworkManifest.parse(raw);
 
-  const networkDbId = upsertNetwork(db, parsed);
+  const networkDbId = await upsertNetwork(db, parsed);
   result.networks++;
 
   // Register artifact
-  upsertArtifact(db, {
+  await upsertArtifact(db, {
     type: "network_manifest",
     path: manifestPath,
     description: `Network ${parsed.networkId}`,
@@ -133,14 +127,14 @@ function importNetwork(
 
   // Extract chains from source/destination
   for (const chain of [parsed.source, parsed.destination]) {
-    upsertChain(db, chain, networkDbId);
+    await upsertChain(db, chain, networkDbId);
     result.chains++;
   }
 
   // Additional chains array if present
   if (parsed.chains) {
     for (const chain of parsed.chains) {
-      upsertChain(db, chain, networkDbId);
+      await upsertChain(db, chain, networkDbId);
       result.chains++;
     }
   }
@@ -148,13 +142,13 @@ function importNetwork(
   log(`Imported network ${parsed.networkId} with ${result.chains} chains`);
 }
 
-function importTraces(
-  db: Database,
+async function importTraces(
+  db: DatabaseAdapter,
   artifactsDir: string,
   importId: number,
   result: ImportResult,
   log: (msg: string) => void,
-): void {
+): Promise<void> {
   const tracesDir = path.join(artifactsDir, "traces");
   if (!fs.existsSync(tracesDir)) {
     log("No traces directory found, skipping.");
@@ -185,11 +179,11 @@ function importTraces(
       const raw = JSON.parse(fs.readFileSync(filePath, "utf-8"));
       const trace = MessageTrace.parse(raw);
 
-      const traceId = upsertTrace(db, trace, importId);
+      const traceId = await upsertTrace(db, trace, importId);
       result.traces++;
       result.events += trace.events.length;
 
-      upsertArtifact(db, {
+      await upsertArtifact(db, {
         type: "trace",
         path: filePath,
         description: `Trace ${trace.messageId.slice(0, 12)}... (${trace.scenario})`,
@@ -204,8 +198,6 @@ function importTraces(
   }
 
   // Handle duplicate scenarios in index (e.g. replay_or_duplicate_blocked)
-  // The trace file is the same but the index has different scenario/execution entries.
-  // We import the same file under different scenario names.
   if (fs.existsSync(indexPath)) {
     const rawIndex = JSON.parse(fs.readFileSync(indexPath, "utf-8"));
     const index = TraceIndex.parse(rawIndex);
@@ -226,7 +218,7 @@ function importTraces(
             scenario: entry.scenario,
             execution: entry.execution,
           };
-          upsertTrace(db, overrideTrace as MessageTrace, importId);
+          await upsertTrace(db, overrideTrace as MessageTrace, importId);
           result.traces++;
           result.events += baseTrace.events.length;
         }
@@ -239,13 +231,13 @@ function importTraces(
   log(`Imported ${result.traces} traces with ${result.events} events`);
 }
 
-function importScenarios(
-  db: Database,
+async function importScenarios(
+  db: DatabaseAdapter,
   artifactsDir: string,
   importId: number,
   result: ImportResult,
   log: (msg: string) => void,
-): void {
+): Promise<void> {
   const scenariosDir = path.join(artifactsDir, "scenarios");
   if (!fs.existsSync(scenariosDir)) {
     log("No scenarios directory found, skipping.");
@@ -264,10 +256,10 @@ function importScenarios(
     try {
       const raw = JSON.parse(fs.readFileSync(runPath, "utf-8"));
       const run = ScenarioRun.parse(raw);
-      upsertScenarioRun(db, run, importId);
+      await upsertScenarioRun(db, run, importId);
       result.scenarios++;
 
-      upsertArtifact(db, {
+      await upsertArtifact(db, {
         type: "scenario_run",
         path: runPath,
         description: `Scenario ${run.scenario} (${run.passed ? "passed" : "failed"})`,

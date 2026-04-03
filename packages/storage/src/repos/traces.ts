@@ -1,8 +1,10 @@
 /**
  * Repository functions for message traces and their events.
+ *
+ * Async, Postgres-native. Uses DatabaseAdapter interface.
  */
 
-import type { Database } from "better-sqlite3";
+import type { DatabaseAdapter } from "../adapter.js";
 import type { MessageTrace, MessageEvent } from "@warplane/domain";
 
 export interface TraceFilter {
@@ -15,18 +17,26 @@ export interface TraceFilter {
 }
 
 /**
- * Upsert a trace and all its events in a single transaction.
+ * Upsert a trace and all its events.
  * Returns the trace DB id.
  */
-export function upsertTrace(db: Database, trace: MessageTrace, importId?: number): number {
-  const traceId = upsertTraceRow(db, trace, importId);
-  replaceEvents(db, traceId, trace.messageId, trace.events);
+export async function upsertTrace(
+  db: DatabaseAdapter,
+  trace: MessageTrace,
+  importId?: number,
+): Promise<number> {
+  const traceId = await upsertTraceRow(db, trace, importId);
+  await replaceEvents(db, traceId, trace.messageId, trace.events);
   return traceId;
 }
 
-function upsertTraceRow(db: Database, trace: MessageTrace, importId?: number): number {
-  const stmt = db.prepare(`
-    INSERT INTO traces (
+async function upsertTraceRow(
+  db: DatabaseAdapter,
+  trace: MessageTrace,
+  importId?: number,
+): Promise<number> {
+  const result = await db.query<{ id: number }>(
+    `INSERT INTO traces (
       message_id, scenario, execution, schema_version,
       source_name, source_blockchain_id, source_subnet_id, source_evm_chain_id,
       dest_name, dest_blockchain_id, dest_subnet_id, dest_evm_chain_id,
@@ -71,93 +81,94 @@ function upsertTraceRow(db: Database, trace: MessageTrace, importId?: number): n
       raw_refs_json = excluded.raw_refs_json,
       trace_json = excluded.trace_json,
       import_id = excluded.import_id,
-      updated_at = datetime('now')
-    RETURNING id
-  `);
+      updated_at = CURRENT_TIMESTAMP
+    RETURNING id`,
+    [
+      trace.messageId,
+      trace.scenario,
+      trace.execution,
+      trace.schemaVersion ?? "1.0.0",
+      trace.source.name,
+      trace.source.blockchainId,
+      trace.source.subnetId,
+      trace.source.evmChainId,
+      trace.destination.name,
+      trace.destination.blockchainId,
+      trace.destination.subnetId,
+      trace.destination.evmChainId,
+      trace.sender,
+      trace.recipient,
+      trace.sourceTxHash,
+      trace.destinationTxHash ?? null,
+      trace.relayTxHash ?? null,
+      trace.timestamps.sendTime,
+      trace.timestamps.receiveTime,
+      trace.timestamps.blockSend,
+      trace.timestamps.blockRecv ?? null,
+      trace.relayer ? JSON.stringify(trace.relayer) : null,
+      trace.fee ? JSON.stringify(trace.fee) : null,
+      trace.retry ? JSON.stringify(trace.retry) : null,
+      trace.rawRefs ? JSON.stringify(trace.rawRefs) : null,
+      JSON.stringify(trace),
+      importId ?? null,
+    ],
+  );
 
-  const row = stmt.get(
-    trace.messageId,
-    trace.scenario,
-    trace.execution,
-    trace.schemaVersion ?? "1.0.0",
-    trace.source.name,
-    trace.source.blockchainId,
-    trace.source.subnetId,
-    trace.source.evmChainId,
-    trace.destination.name,
-    trace.destination.blockchainId,
-    trace.destination.subnetId,
-    trace.destination.evmChainId,
-    trace.sender,
-    trace.recipient,
-    trace.sourceTxHash,
-    trace.destinationTxHash ?? null,
-    trace.relayTxHash ?? null,
-    trace.timestamps.sendTime,
-    trace.timestamps.receiveTime,
-    trace.timestamps.blockSend,
-    trace.timestamps.blockRecv ?? null,
-    trace.relayer ? JSON.stringify(trace.relayer) : null,
-    trace.fee ? JSON.stringify(trace.fee) : null,
-    trace.retry ? JSON.stringify(trace.retry) : null,
-    trace.rawRefs ? JSON.stringify(trace.rawRefs) : null,
-    JSON.stringify(trace),
-    importId ?? null,
-  ) as { id: number };
-
-  return row.id;
+  return result.rows[0]!.id;
 }
 
-function replaceEvents(
-  db: Database,
+async function replaceEvents(
+  db: DatabaseAdapter,
   traceId: number,
   messageId: string,
   events: MessageEvent[],
-): void {
-  db.prepare("DELETE FROM events WHERE trace_id = ?").run(traceId);
-
-  const stmt = db.prepare(`
-    INSERT INTO events (trace_id, message_id, kind, timestamp, block_number, tx_hash, chain, details, seq, event_json)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `);
+): Promise<void> {
+  await db.execute("DELETE FROM events WHERE trace_id = ?", [traceId]);
 
   for (let i = 0; i < events.length; i++) {
     const e = events[i]!;
-    stmt.run(
-      traceId,
-      messageId,
-      e.kind,
-      e.timestamp,
-      "blockNumber" in e ? (e.blockNumber as number) : null,
-      "txHash" in e ? (e.txHash as string) : null,
-      "chain" in e ? (e.chain as string) : null,
-      e.details ?? null,
-      i,
-      JSON.stringify(e),
+    await db.execute(
+      `INSERT INTO events (trace_id, message_id, kind, timestamp, block_number, tx_hash, chain, details, seq, event_json)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        traceId,
+        messageId,
+        e.kind,
+        e.timestamp,
+        "blockNumber" in e ? (e.blockNumber as number) : null,
+        "txHash" in e ? (e.txHash as string) : null,
+        "chain" in e ? (e.chain as string) : null,
+        e.details ?? null,
+        i,
+        JSON.stringify(e),
+      ],
     );
   }
 }
 
 /**
- * Get a single trace by message ID and scenario.
+ * Get a single trace by message ID and optional scenario.
  */
-export function getTrace(
-  db: Database,
+export async function getTrace(
+  db: DatabaseAdapter,
   messageId: string,
   scenario?: string,
-): MessageTrace | undefined {
+): Promise<MessageTrace | undefined> {
   const sql = scenario
     ? "SELECT trace_json FROM traces WHERE message_id = ? AND scenario = ?"
     : "SELECT trace_json FROM traces WHERE message_id = ? ORDER BY created_at DESC LIMIT 1";
   const params = scenario ? [messageId, scenario] : [messageId];
-  const row = db.prepare(sql).get(...params) as { trace_json: string } | undefined;
-  return row ? (JSON.parse(row.trace_json) as MessageTrace) : undefined;
+  const result = await db.query<{ trace_json: string }>(sql, params);
+  return result.rows[0] ? (JSON.parse(result.rows[0].trace_json) as MessageTrace) : undefined;
 }
 
 /**
  * List traces with optional filtering.
  */
-export function listTraces(db: Database, filter?: TraceFilter): MessageTrace[] {
+export async function listTraces(
+  db: DatabaseAdapter,
+  filter?: TraceFilter,
+): Promise<MessageTrace[]> {
   const conditions: string[] = [];
   const params: unknown[] = [];
 
@@ -182,35 +193,38 @@ export function listTraces(db: Database, filter?: TraceFilter): MessageTrace[] {
   const limit = filter?.limit ?? 100;
   const offset = filter?.offset ?? 0;
 
-  const rows = db
-    .prepare(`SELECT trace_json FROM traces ${where} ORDER BY send_time ASC LIMIT ? OFFSET ?`)
-    .all(...params, limit, offset) as Array<{ trace_json: string }>;
+  const result = await db.query<{ trace_json: string }>(
+    `SELECT trace_json FROM traces ${where} ORDER BY send_time ASC LIMIT ? OFFSET ?`,
+    [...params, limit, offset],
+  );
 
-  return rows.map((r) => JSON.parse(r.trace_json) as MessageTrace);
+  return result.rows.map((r) => JSON.parse(r.trace_json) as MessageTrace);
 }
 
 /**
  * Get events for a trace, ordered by sequence.
  */
-export function getTraceEvents(db: Database, messageId: string): MessageEvent[] {
-  const rows = db
-    .prepare(
-      `SELECT e.event_json FROM events e
-       JOIN traces t ON e.trace_id = t.id
-       WHERE t.message_id = ?
-       ORDER BY e.seq ASC`,
-    )
-    .all(messageId) as Array<{ event_json: string }>;
-  return rows.map((r) => JSON.parse(r.event_json) as MessageEvent);
+export async function getTraceEvents(
+  db: DatabaseAdapter,
+  messageId: string,
+): Promise<MessageEvent[]> {
+  const result = await db.query<{ event_json: string }>(
+    `SELECT e.event_json FROM events e
+     JOIN traces t ON e.trace_id = t.id
+     WHERE t.message_id = ?
+     ORDER BY e.seq ASC`,
+    [messageId],
+  );
+  return result.rows.map((r) => JSON.parse(r.event_json) as MessageEvent);
 }
 
 /**
  * Get a timeline of events across all traces, sorted chronologically.
  */
-export function getTimeline(
-  db: Database,
+export async function getTimeline(
+  db: DatabaseAdapter,
   opts?: { scenario?: string; limit?: number },
-): Array<MessageEvent & { messageId: string }> {
+): Promise<Array<MessageEvent & { messageId: string }>> {
   const conditions: string[] = [];
   const params: unknown[] = [];
 
@@ -222,18 +236,17 @@ export function getTimeline(
   const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
   const limit = opts?.limit ?? 200;
 
-  const rows = db
-    .prepare(
-      `SELECT e.event_json, e.message_id
-       FROM events e
-       JOIN traces t ON e.trace_id = t.id
-       ${where}
-       ORDER BY e.timestamp ASC, e.seq ASC
-       LIMIT ?`,
-    )
-    .all(...params, limit) as Array<{ event_json: string; message_id: string }>;
+  const result = await db.query<{ event_json: string; message_id: string }>(
+    `SELECT e.event_json, e.message_id
+     FROM events e
+     JOIN traces t ON e.trace_id = t.id
+     ${where}
+     ORDER BY e.timestamp ASC, e.seq ASC
+     LIMIT ?`,
+    [...params, limit],
+  );
 
-  return rows.map((r) => ({
+  return result.rows.map((r) => ({
     ...(JSON.parse(r.event_json) as MessageEvent),
     messageId: r.message_id,
   }));
@@ -242,10 +255,10 @@ export function getTimeline(
 /**
  * Count traces matching a filter.
  */
-export function countTraces(
-  db: Database,
+export async function countTraces(
+  db: DatabaseAdapter,
   filter?: Pick<TraceFilter, "scenario" | "execution">,
-): number {
+): Promise<number> {
   const conditions: string[] = [];
   const params: unknown[] = [];
 
@@ -259,10 +272,11 @@ export function countTraces(
   }
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-  const row = db.prepare(`SELECT COUNT(*) as count FROM traces ${where}`).get(...params) as {
-    count: number;
-  };
-  return row.count;
+  const result = await db.query<{ count: number }>(
+    `SELECT COUNT(*) as count FROM traces ${where}`,
+    params,
+  );
+  return result.rows[0]?.count ?? 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -278,10 +292,10 @@ export interface FailureClassificationEntry {
  * Group execution_failed events by their details field.
  * Returns failure reasons sorted by count descending.
  */
-export function getFailureClassification(
-  db: Database,
+export async function getFailureClassification(
+  db: DatabaseAdapter,
   opts?: { since?: string },
-): FailureClassificationEntry[] {
+): Promise<FailureClassificationEntry[]> {
   const conditions = ["e.kind = 'execution_failed'"];
   const params: unknown[] = [];
 
@@ -291,17 +305,16 @@ export function getFailureClassification(
   }
 
   const where = conditions.join(" AND ");
-  const rows = db
-    .prepare(
-      `SELECT COALESCE(e.details, 'unknown') as reason, COUNT(*) as count
-       FROM events e
-       WHERE ${where}
-       GROUP BY reason
-       ORDER BY count DESC`,
-    )
-    .all(...params) as Array<{ reason: string; count: number }>;
+  const result = await db.query<{ reason: string; count: number }>(
+    `SELECT COALESCE(e.details, 'unknown') as reason, COUNT(*) as count
+     FROM events e
+     WHERE ${where}
+     GROUP BY reason
+     ORDER BY count DESC`,
+    params,
+  );
 
-  return rows;
+  return result.rows;
 }
 
 export interface LatencyStats {
@@ -314,8 +327,13 @@ export interface LatencyStats {
 /**
  * Compute delivery latency percentiles from completed traces.
  * Returns p50/p90/p99 in milliseconds and hourly time-series data.
+ *
+ * Computes latency in application code (not SQL) for cross-DB compatibility.
  */
-export function getDeliveryLatencyStats(db: Database, opts?: { since?: string }): LatencyStats {
+export async function getDeliveryLatencyStats(
+  db: DatabaseAdapter,
+  opts?: { since?: string },
+): Promise<LatencyStats> {
   const conditions = [
     "execution = 'success'",
     "send_time IS NOT NULL",
@@ -331,23 +349,25 @@ export function getDeliveryLatencyStats(db: Database, opts?: { since?: string })
 
   const where = conditions.join(" AND ");
 
-  // Get all latencies in ms
-  const rows = db
-    .prepare(
-      `SELECT send_time, receive_time,
-              CAST((julianday(receive_time) - julianday(send_time)) * 86400000 AS INTEGER) as latency_ms
-       FROM traces
-       WHERE ${where}
-       ORDER BY send_time ASC`,
-    )
-    .all(...params) as Array<{ send_time: string; receive_time: string; latency_ms: number }>;
+  const result = await db.query<{ send_time: string; receive_time: string }>(
+    `SELECT send_time, receive_time
+     FROM traces
+     WHERE ${where}
+     ORDER BY send_time ASC`,
+    params,
+  );
 
-  if (rows.length === 0) {
+  if (result.rows.length === 0) {
     return { p50: 0, p90: 0, p99: 0, timeSeries: [] };
   }
 
-  // Compute percentiles
-  const latencies = rows.map((r) => r.latency_ms).sort((a, b) => a - b);
+  // Compute latencies in application code
+  const rows = result.rows.map((r) => ({
+    sendTime: r.send_time,
+    latencyMs: Math.max(0, Date.parse(r.receive_time) - Date.parse(r.send_time)),
+  }));
+
+  const latencies = rows.map((r) => r.latencyMs).sort((a, b) => a - b);
   const percentile = (sorted: number[], p: number): number => {
     const idx = Math.ceil((p / 100) * sorted.length) - 1;
     return sorted[Math.max(0, idx)]!;
@@ -356,13 +376,13 @@ export function getDeliveryLatencyStats(db: Database, opts?: { since?: string })
   // Hourly time-series (average latency per hour)
   const hourlyBuckets = new Map<string, { sum: number; count: number }>();
   for (const row of rows) {
-    const hour = row.send_time.slice(0, 13); // "YYYY-MM-DDTHH"
+    const hour = row.sendTime.slice(0, 13); // "YYYY-MM-DDTHH"
     const bucket = hourlyBuckets.get(hour);
     if (bucket) {
-      bucket.sum += row.latency_ms;
+      bucket.sum += row.latencyMs;
       bucket.count += 1;
     } else {
-      hourlyBuckets.set(hour, { sum: row.latency_ms, count: 1 });
+      hourlyBuckets.set(hour, { sum: row.latencyMs, count: 1 });
     }
   }
 

@@ -13,12 +13,9 @@ import path from "node:path";
 import fs from "node:fs";
 import { generateOpenAPIComponents } from "@warplane/domain";
 import {
-  openDb,
-  runMigrations,
-  closeDb,
+  createPostgresAdapter,
+  initSchema,
   countTraces,
-  createSqliteAdapter,
-  type Database,
   type DatabaseAdapter,
 } from "@warplane/storage";
 import {
@@ -36,8 +33,10 @@ import { registerRoutes } from "./routes/index.js";
 import type { WarplaneConfig, ChainYaml } from "./config.js";
 
 export interface AppOptions {
-  /** SQLite database path. Defaults to data/warplane.db */
-  dbPath?: string;
+  /** DATABASE_URL connection string for Postgres. */
+  databaseUrl?: string;
+  /** Pre-built DatabaseAdapter (for tests). Takes precedence over databaseUrl. */
+  adapter?: DatabaseAdapter;
   /** Enable demo-mode auto-seeding from golden fixtures (default: true) */
   demoMode?: boolean;
   /** Fastify logger config (default: true) */
@@ -48,8 +47,7 @@ export interface AppOptions {
 
 declare module "fastify" {
   interface FastifyInstance {
-    db: Database;
-    asyncDb: DatabaseAdapter;
+    db: DatabaseAdapter;
     orchestrator?: Orchestrator;
     pipeline?: Pipeline;
   }
@@ -61,33 +59,36 @@ const FIXTURES_DIR = path.resolve(
 );
 
 export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> {
-  const dbPath = opts.dbPath ?? process.env["DB_PATH"] ?? "data/warplane.db";
   const logger = opts.logger ?? true;
 
   const app = Fastify({ logger });
 
   // --- Database setup ---
-  if (dbPath !== ":memory:") {
-    const dir = path.dirname(path.resolve(dbPath));
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  }
+  const db =
+    opts.adapter ??
+    createPostgresAdapter({
+      connectionString:
+        opts.databaseUrl ?? process.env["DATABASE_URL"] ?? "postgresql://localhost/warplane",
+    });
 
-  const db = openDb({ path: dbPath });
-  runMigrations(db);
+  // Only init schema if we created the adapter ourselves (not for test-provided adapters).
+  // Test adapters are expected to have their schema already initialized.
+  if (!opts.adapter) {
+    await initSchema(db);
+  }
   app.decorate("db", db);
-  app.decorate("asyncDb", createSqliteAdapter(db));
 
   app.addHook("onClose", async () => {
     if (app.orchestrator) await app.orchestrator.stop();
     if (app.pipeline) app.pipeline.stop();
-    closeDb(db);
+    await db.close();
   });
 
   // --- Demo-mode auto-seed ---
   const demoMode = opts.demoMode ?? true;
-  if (demoMode && countTraces(db) === 0 && fs.existsSync(FIXTURES_DIR)) {
+  if (demoMode && (await countTraces(db)) === 0 && fs.existsSync(FIXTURES_DIR)) {
     app.log.info("Demo mode: seeding golden fixtures…");
-    const result = importArtifacts(db, {
+    const result = await importArtifacts(db, {
       artifactsDir: FIXTURES_DIR,
       sourceType: "demo-seed",
       log: (msg) => app.log.info(msg),
@@ -140,14 +141,12 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
   if (chainConfig.length > 0) {
     app.log.info(`Configuring ingestion for ${chainConfig.length} chain(s)…`);
 
-    const asyncDb = createSqliteAdapter(db);
-
     // Alert & delivery subsystem
-    const deliveryEngine = createDeliveryEngine(asyncDb);
+    const deliveryEngine = createDeliveryEngine(db);
     deliveryEngine.start(30_000); // process delivery queue every 30s
 
-    const alertEvaluator = createAlertEvaluator(asyncDb, deliveryEngine);
-    const staleDetector = createStaleDetector(db, asyncDb, deliveryEngine);
+    const alertEvaluator = createAlertEvaluator(db, deliveryEngine);
+    const staleDetector = createStaleDetector(db, deliveryEngine);
     staleDetector.start(60_000); // scan for stale messages every 60s
 
     // Pipeline with alert integration
@@ -185,8 +184,6 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
   }
 
   // --- Static file serving (production: serve web frontend) ---
-  // In dev/monorepo: dist is at apps/api/dist/, web is at apps/web/dist/
-  // With pnpm deploy (Docker): dist is at /app/dist/, web is at /app/apps/web/dist/
   const thisDir = import.meta.dirname ?? new URL(".", import.meta.url).pathname;
   const candidates = [
     path.resolve(thisDir, "../../web/dist"), // monorepo layout

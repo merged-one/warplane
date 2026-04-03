@@ -36,7 +36,7 @@ export function registerStatsRoutes(app: FastifyInstance): void {
     async (request) => {
       const q = request.query as { since?: string };
       const since = q.since ?? new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      const failures = getFailureClassification(app.db, { since });
+      const failures = await getFailureClassification(app.db, { since });
       return { failures };
     },
   );
@@ -78,7 +78,7 @@ export function registerStatsRoutes(app: FastifyInstance): void {
     async (request) => {
       const q = request.query as { since?: string };
       const since = q.since ?? new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      return getDeliveryLatencyStats(app.db, { since });
+      return await getDeliveryLatencyStats(app.db, { since });
     },
   );
 }

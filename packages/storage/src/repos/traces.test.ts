@@ -1,18 +1,18 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { openDb, closeDb, type Database } from "../db.js";
-import { runMigrations } from "../migrate.js";
+import { createTestAdapter, initTestSchema } from "../test-utils/index.js";
+import type { DatabaseAdapter } from "../adapter.js";
 import { upsertTrace, getFailureClassification, getDeliveryLatencyStats } from "./traces.js";
 import type { MessageTrace } from "@warplane/domain";
 
-let db: Database;
+let db: DatabaseAdapter;
 
-beforeEach(() => {
-  db = openDb({ path: ":memory:" });
-  runMigrations(db);
+beforeEach(async () => {
+  db = createTestAdapter();
+  await initTestSchema(db);
 });
 
-afterEach(() => {
-  closeDb(db);
+afterEach(async () => {
+  await db.close();
 });
 
 // ---------------------------------------------------------------------------
@@ -54,9 +54,9 @@ function makeTrace(overrides: Partial<MessageTrace> & { messageId: string }): Me
 // ---------------------------------------------------------------------------
 
 describe("getFailureClassification", () => {
-  it("returns grouped failure reasons", () => {
+  it("returns grouped failure reasons", async () => {
     // Insert traces with execution_failed events
-    upsertTrace(
+    await upsertTrace(
       db,
       makeTrace({
         messageId: "msg-1",
@@ -79,7 +79,7 @@ describe("getFailureClassification", () => {
         ],
       }),
     );
-    upsertTrace(
+    await upsertTrace(
       db,
       makeTrace({
         messageId: "msg-2",
@@ -102,7 +102,7 @@ describe("getFailureClassification", () => {
         ],
       }),
     );
-    upsertTrace(
+    await upsertTrace(
       db,
       makeTrace({
         messageId: "msg-3",
@@ -126,14 +126,14 @@ describe("getFailureClassification", () => {
       }),
     );
 
-    const result = getFailureClassification(db);
+    const result = await getFailureClassification(db);
     expect(result).toHaveLength(2);
     expect(result[0]).toEqual({ reason: "insufficient_fee", count: 2 });
     expect(result[1]).toEqual({ reason: "gas_limit", count: 1 });
   });
 
-  it("respects since filter", () => {
-    upsertTrace(
+  it("respects since filter", async () => {
+    await upsertTrace(
       db,
       makeTrace({
         messageId: "msg-old",
@@ -149,7 +149,7 @@ describe("getFailureClassification", () => {
         ],
       }),
     );
-    upsertTrace(
+    await upsertTrace(
       db,
       makeTrace({
         messageId: "msg-new",
@@ -166,13 +166,13 @@ describe("getFailureClassification", () => {
       }),
     );
 
-    const result = getFailureClassification(db, { since: "2026-03-15T00:00:00Z" });
+    const result = await getFailureClassification(db, { since: "2026-03-15T00:00:00Z" });
     expect(result).toHaveLength(1);
     expect(result[0]!.reason).toBe("new_error");
   });
 
-  it("returns empty array when no failures", () => {
-    upsertTrace(
+  it("returns empty array when no failures", async () => {
+    await upsertTrace(
       db,
       makeTrace({
         messageId: "msg-ok",
@@ -188,7 +188,7 @@ describe("getFailureClassification", () => {
       }),
     );
 
-    const result = getFailureClassification(db);
+    const result = await getFailureClassification(db);
     expect(result).toEqual([]);
   });
 });
@@ -198,13 +198,13 @@ describe("getFailureClassification", () => {
 // ---------------------------------------------------------------------------
 
 describe("getDeliveryLatencyStats", () => {
-  it("computes correct percentiles", () => {
+  it("computes correct percentiles", async () => {
     // Insert 10 completed traces with varying latencies
     for (let i = 0; i < 10; i++) {
       const sendTime = `2026-04-01T12:00:0${i}.000Z`;
       const latencySec = i + 1; // 1s to 10s
       const receiveDate = new Date(new Date(sendTime).getTime() + latencySec * 1000);
-      upsertTrace(
+      await upsertTrace(
         db,
         makeTrace({
           messageId: `msg-${i}`,
@@ -227,7 +227,7 @@ describe("getDeliveryLatencyStats", () => {
       );
     }
 
-    const stats = getDeliveryLatencyStats(db);
+    const stats = await getDeliveryLatencyStats(db);
     // julianday arithmetic has sub-ms precision loss, so use closeTo
     // p50 of [~1000, ~2000, ..., ~10000] → 5th value ≈ 5000ms
     expect(stats.p50).toBeGreaterThanOrEqual(4999);
@@ -240,9 +240,9 @@ describe("getDeliveryLatencyStats", () => {
     expect(stats.p99).toBeLessThanOrEqual(10001);
   });
 
-  it("returns time-series points", () => {
+  it("returns time-series points", async () => {
     // Two traces in same hour
-    upsertTrace(
+    await upsertTrace(
       db,
       makeTrace({
         messageId: "msg-a",
@@ -255,7 +255,7 @@ describe("getDeliveryLatencyStats", () => {
         events: [],
       }),
     );
-    upsertTrace(
+    await upsertTrace(
       db,
       makeTrace({
         messageId: "msg-b",
@@ -269,7 +269,7 @@ describe("getDeliveryLatencyStats", () => {
       }),
     );
 
-    const stats = getDeliveryLatencyStats(db);
+    const stats = await getDeliveryLatencyStats(db);
     expect(stats.timeSeries.length).toBe(1); // same hour bucket
     expect(stats.timeSeries[0]!.time).toBe("2026-04-01T12");
     // average of ~2000 + ~4000, julianday has sub-ms precision loss
@@ -277,9 +277,9 @@ describe("getDeliveryLatencyStats", () => {
     expect(stats.timeSeries[0]!.latencyMs).toBeLessThanOrEqual(3001);
   });
 
-  it("handles no completed traces", () => {
+  it("handles no completed traces", async () => {
     // Insert a pending trace (no receiveTime match)
-    upsertTrace(
+    await upsertTrace(
       db,
       makeTrace({
         messageId: "msg-pending",
@@ -293,7 +293,7 @@ describe("getDeliveryLatencyStats", () => {
       }),
     );
 
-    const stats = getDeliveryLatencyStats(db);
+    const stats = await getDeliveryLatencyStats(db);
     expect(stats.p50).toBe(0);
     expect(stats.p90).toBe(0);
     expect(stats.p99).toBe(0);

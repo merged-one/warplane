@@ -134,7 +134,7 @@ export async function updateWebhookDestination(
 
   if (sets.length === 0) return;
 
-  sets.push("updated_at = datetime('now')");
+  sets.push("updated_at = CURRENT_TIMESTAMP");
   params.push(id);
 
   await db.execute(`UPDATE webhook_destinations SET ${sets.join(", ")} WHERE id = ?`, params);
@@ -170,7 +170,7 @@ export async function markDeliveryStatus(
   await db.execute(
     `UPDATE webhook_deliveries
      SET status = ?, attempts = attempts + 1,
-         last_attempt_at = datetime('now'),
+         last_attempt_at = CURRENT_TIMESTAMP,
          response_code = ?, response_body = ?,
          next_retry_at = ?
      WHERE id = ?`,
@@ -189,7 +189,7 @@ export async function getPendingDeliveries(
             response_code, response_body, created_at
      FROM webhook_deliveries
      WHERE status IN ('pending', 'failed')
-       AND (next_retry_at IS NULL OR next_retry_at <= datetime('now'))
+       AND (next_retry_at IS NULL OR next_retry_at <= CURRENT_TIMESTAMP)
      ORDER BY created_at ASC
      LIMIT ?`,
     [limit],

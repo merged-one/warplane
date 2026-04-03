@@ -19,7 +19,7 @@ export function registerScenarioRoutes(app: FastifyInstance): void {
       },
     },
     async () => {
-      return { scenarios: listScenarioRuns(app.db) };
+      return { scenarios: await listScenarioRuns(app.db) };
     },
   );
 }

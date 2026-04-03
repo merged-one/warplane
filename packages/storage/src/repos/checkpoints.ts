@@ -1,11 +1,10 @@
 /**
  * Checkpoint repository — persistent cursor tracking for RPC pollers.
  *
- * Follows the established repo pattern: functions take `db: Database` as
- * the first argument and use prepared statements with UPSERT semantics.
+ * Async, Postgres-native. Uses DatabaseAdapter interface.
  */
 
-import type { Database } from "../db.js";
+import type { DatabaseAdapter } from "../adapter.js";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -23,38 +22,40 @@ export interface Checkpoint {
 // Repository functions
 // ---------------------------------------------------------------------------
 
-export function upsertCheckpoint(db: Database, cp: Omit<Checkpoint, "updatedAt">): void {
-  db.prepare(
+export async function upsertCheckpoint(
+  db: DatabaseAdapter,
+  cp: Omit<Checkpoint, "updatedAt">,
+): Promise<void> {
+  await db.execute(
     `INSERT INTO checkpoints (chain_id, contract_address, last_block, block_hash, updated_at)
-     VALUES (?, ?, ?, ?, datetime('now'))
+     VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
      ON CONFLICT (chain_id, contract_address)
      DO UPDATE SET last_block = excluded.last_block,
                    block_hash = excluded.block_hash,
-                   updated_at = datetime('now')`,
-  ).run(cp.chainId, cp.contractAddress, cp.lastBlock, cp.blockHash);
+                   updated_at = CURRENT_TIMESTAMP`,
+    [cp.chainId, cp.contractAddress, cp.lastBlock, cp.blockHash],
+  );
 }
 
-export function getCheckpoint(
-  db: Database,
+export async function getCheckpoint(
+  db: DatabaseAdapter,
   chainId: string,
   contractAddress: string,
-): Checkpoint | undefined {
-  const row = db
-    .prepare(
-      `SELECT chain_id, contract_address, last_block, block_hash, updated_at
-       FROM checkpoints
-       WHERE chain_id = ? AND contract_address = ?`,
-    )
-    .get(chainId, contractAddress) as
-    | {
-        chain_id: string;
-        contract_address: string;
-        last_block: number;
-        block_hash: string;
-        updated_at: string;
-      }
-    | undefined;
+): Promise<Checkpoint | undefined> {
+  const result = await db.query<{
+    chain_id: string;
+    contract_address: string;
+    last_block: number;
+    block_hash: string;
+    updated_at: string;
+  }>(
+    `SELECT chain_id, contract_address, last_block, block_hash, updated_at
+     FROM checkpoints
+     WHERE chain_id = ? AND contract_address = ?`,
+    [chainId, contractAddress],
+  );
 
+  const row = result.rows[0];
   if (!row) return undefined;
 
   return {
@@ -66,29 +67,31 @@ export function getCheckpoint(
   };
 }
 
-export function deleteCheckpoint(db: Database, chainId: string, contractAddress: string): void {
-  db.prepare(`DELETE FROM checkpoints WHERE chain_id = ? AND contract_address = ?`).run(
+export async function deleteCheckpoint(
+  db: DatabaseAdapter,
+  chainId: string,
+  contractAddress: string,
+): Promise<void> {
+  await db.execute(`DELETE FROM checkpoints WHERE chain_id = ? AND contract_address = ?`, [
     chainId,
     contractAddress,
-  );
+  ]);
 }
 
-export function listCheckpoints(db: Database): Checkpoint[] {
-  const rows = db
-    .prepare(
-      `SELECT chain_id, contract_address, last_block, block_hash, updated_at
-       FROM checkpoints
-       ORDER BY chain_id`,
-    )
-    .all() as Array<{
+export async function listCheckpoints(db: DatabaseAdapter): Promise<Checkpoint[]> {
+  const result = await db.query<{
     chain_id: string;
     contract_address: string;
     last_block: number;
     block_hash: string;
     updated_at: string;
-  }>;
+  }>(
+    `SELECT chain_id, contract_address, last_block, block_hash, updated_at
+     FROM checkpoints
+     ORDER BY chain_id`,
+  );
 
-  return rows.map((row) => ({
+  return result.rows.map((row) => ({
     chainId: row.chain_id,
     contractAddress: row.contract_address,
     lastBlock: row.last_block,

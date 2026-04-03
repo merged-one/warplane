@@ -35,14 +35,14 @@ export function registerRelayerRoutes(app: FastifyInstance): void {
     },
     async () => {
       // Get distinct relayer IDs from the health table
-      const result = await app.asyncDb.query<{ relayer_id: string }>(
+      const result = await app.db.query<{ relayer_id: string }>(
         `SELECT DISTINCT relayer_id FROM relayer_health ORDER BY relayer_id`,
       );
       const relayerIds = result.rows.map((r) => r.relayer_id);
 
       const health = [];
       for (const relayerId of relayerIds) {
-        const latest = await getLatestRelayerHealth(app.asyncDb, relayerId);
+        const latest = await getLatestRelayerHealth(app.db, relayerId);
         if (latest) health.push(latest);
       }
 
@@ -79,12 +79,12 @@ export function registerRelayerRoutes(app: FastifyInstance): void {
 
       // If no relayerId specified, get all relayers
       if (!q.relayerId) {
-        const result = await app.asyncDb.query<{ relayer_id: string }>(
+        const result = await app.db.query<{ relayer_id: string }>(
           `SELECT DISTINCT relayer_id FROM relayer_health ORDER BY relayer_id`,
         );
         const allHistory = [];
         for (const row of result.rows) {
-          const history = await listRelayerHealthHistory(app.asyncDb, row.relayer_id, {
+          const history = await listRelayerHealthHistory(app.db, row.relayer_id, {
             limit: q.limit,
             since: q.since,
           });
@@ -93,7 +93,7 @@ export function registerRelayerRoutes(app: FastifyInstance): void {
         return { history: allHistory };
       }
 
-      const history = await listRelayerHealthHistory(app.asyncDb, q.relayerId, {
+      const history = await listRelayerHealthHistory(app.db, q.relayerId, {
         limit: q.limit,
         since: q.since,
       });

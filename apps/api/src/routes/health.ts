@@ -24,7 +24,7 @@ export function registerHealthRoutes(app: FastifyInstance): void {
       return {
         status: "ok",
         uptime: process.uptime(),
-        traceCount: countTraces(app.db),
+        traceCount: await countTraces(app.db),
       };
     },
   );

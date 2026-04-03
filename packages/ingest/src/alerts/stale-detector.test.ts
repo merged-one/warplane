@@ -1,43 +1,39 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { openDb, closeDb, type Database } from "@warplane/storage";
-import { runMigrations, createSqliteAdapter } from "@warplane/storage";
-import { insertAlertRule, insertWebhookDestination } from "@warplane/storage";
+import { createTestAdapter, initTestSchema } from "@warplane/storage/test-utils";
 import type { DatabaseAdapter } from "@warplane/storage";
+import { insertAlertRule, insertWebhookDestination } from "@warplane/storage";
 import { createStaleDetector } from "./stale-detector.js";
 import { createDeliveryEngine } from "./webhook-delivery.js";
 
-let rawDb: Database;
 let db: DatabaseAdapter;
 
-beforeEach(() => {
-  rawDb = openDb({ path: ":memory:" });
-  runMigrations(rawDb);
-  db = createSqliteAdapter(rawDb);
+beforeEach(async () => {
+  db = createTestAdapter();
+  await initTestSchema(db);
 });
 
-afterEach(() => {
-  closeDb(rawDb);
+afterEach(async () => {
+  await db.close();
   vi.restoreAllMocks();
 });
 
 /** Insert a minimal trace row directly for testing (avoids full MessageTrace validation). */
-function insertTraceRow(
-  rawDb: Database,
+async function insertTraceRow(
+  db: DatabaseAdapter,
   opts: { messageId: string; execution: string; sendTimeAge: number },
-): void {
+): Promise<void> {
   const sendTime = new Date(Date.now() - opts.sendTimeAge).toISOString();
-  rawDb
-    .prepare(
-      `INSERT INTO traces (message_id, scenario, execution, send_time, trace_json)
-       VALUES (?, 'basic_send_receive', ?, ?, '{}')`,
-    )
-    .run(opts.messageId, opts.execution, sendTime);
+  await db.execute(
+    `INSERT INTO traces (message_id, scenario, execution, send_time, trace_json)
+     VALUES (?, 'basic_send_receive', ?, ?, '{}')`,
+    [opts.messageId, opts.execution, sendTime],
+  );
 }
 
 describe("StaleDetector", () => {
   it("detects pending message exceeding timeout", async () => {
     // Insert a pending trace that is 10 minutes old
-    insertTraceRow(rawDb, {
+    await insertTraceRow(db, {
       messageId: "stale-msg-001",
       execution: "pending",
       sendTimeAge: 600_000,
@@ -56,7 +52,7 @@ describe("StaleDetector", () => {
     const engine = createDeliveryEngine(db);
     const enqueueSpy = vi.spyOn(engine, "enqueue");
 
-    const detector = createStaleDetector(rawDb, db, engine, {
+    const detector = createStaleDetector(db, engine, {
       pendingTimeoutMs: 300_000,
     });
 
@@ -72,7 +68,7 @@ describe("StaleDetector", () => {
 
   it("ignores delivered/completed messages", async () => {
     // Insert a delivered trace
-    insertTraceRow(rawDb, {
+    await insertTraceRow(db, {
       messageId: "delivered-msg-001",
       execution: "delivered",
       sendTimeAge: 600_000,
@@ -91,7 +87,7 @@ describe("StaleDetector", () => {
     const engine = createDeliveryEngine(db);
     const enqueueSpy = vi.spyOn(engine, "enqueue");
 
-    const detector = createStaleDetector(rawDb, db, engine);
+    const detector = createStaleDetector(db, engine);
     await detector.scan();
 
     expect(enqueueSpy).not.toHaveBeenCalled();
@@ -99,7 +95,7 @@ describe("StaleDetector", () => {
   });
 
   it("does not re-alert already-alerted messages within TTL", async () => {
-    insertTraceRow(rawDb, {
+    await insertTraceRow(db, {
       messageId: "stale-msg-002",
       execution: "pending",
       sendTimeAge: 600_000,
@@ -118,7 +114,7 @@ describe("StaleDetector", () => {
     const engine = createDeliveryEngine(db);
     const enqueueSpy = vi.spyOn(engine, "enqueue");
 
-    const detector = createStaleDetector(rawDb, db, engine);
+    const detector = createStaleDetector(db, engine);
 
     // First scan — should alert
     await detector.scan();
@@ -133,7 +129,7 @@ describe("StaleDetector", () => {
 
   it("respects configurable timeout values", async () => {
     // Insert a pending trace that is 2 minutes old
-    insertTraceRow(rawDb, {
+    await insertTraceRow(db, {
       messageId: "recent-msg-001",
       execution: "pending",
       sendTimeAge: 120_000,
@@ -152,7 +148,7 @@ describe("StaleDetector", () => {
     const engine = createDeliveryEngine(db);
     const enqueueSpy = vi.spyOn(engine, "enqueue");
 
-    const detector = createStaleDetector(rawDb, db, engine, {
+    const detector = createStaleDetector(db, engine, {
       pendingTimeoutMs: 60_000, // 1 min
     });
 

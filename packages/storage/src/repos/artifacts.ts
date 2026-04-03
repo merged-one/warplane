@@ -1,8 +1,10 @@
 /**
  * Repository functions for artifact references.
+ *
+ * Async, Postgres-native. Uses DatabaseAdapter interface.
  */
 
-import type { Database } from "better-sqlite3";
+import type { DatabaseAdapter } from "../adapter.js";
 
 export interface Artifact {
   id: number;
@@ -14,8 +16,8 @@ export interface Artifact {
   createdAt: string;
 }
 
-export function upsertArtifact(
-  db: Database,
+export async function upsertArtifact(
+  db: DatabaseAdapter,
   artifact: {
     type: string;
     path: string;
@@ -23,31 +25,31 @@ export function upsertArtifact(
     traceId?: number;
     importId?: number;
   },
-): number {
-  const stmt = db.prepare(`
-    INSERT INTO artifacts (type, path, description, trace_id, import_id)
-    VALUES (?, ?, ?, ?, ?)
-    ON CONFLICT(path) DO UPDATE SET
-      type = excluded.type,
-      description = excluded.description,
-      trace_id = excluded.trace_id,
-      import_id = excluded.import_id
-    RETURNING id
-  `);
-  const row = stmt.get(
-    artifact.type,
-    artifact.path,
-    artifact.description ?? null,
-    artifact.traceId ?? null,
-    artifact.importId ?? null,
-  ) as { id: number };
-  return row.id;
+): Promise<number> {
+  const result = await db.query<{ id: number }>(
+    `INSERT INTO artifacts (type, path, description, trace_id, import_id)
+     VALUES (?, ?, ?, ?, ?)
+     ON CONFLICT(path) DO UPDATE SET
+       type = excluded.type,
+       description = excluded.description,
+       trace_id = excluded.trace_id,
+       import_id = excluded.import_id
+     RETURNING id`,
+    [
+      artifact.type,
+      artifact.path,
+      artifact.description ?? null,
+      artifact.traceId ?? null,
+      artifact.importId ?? null,
+    ],
+  );
+  return result.rows[0]!.id;
 }
 
-export function listArtifacts(
-  db: Database,
+export async function listArtifacts(
+  db: DatabaseAdapter,
   filter?: { type?: string; traceId?: number },
-): Artifact[] {
+): Promise<Artifact[]> {
   const conditions: string[] = [];
   const params: unknown[] = [];
 
@@ -62,13 +64,12 @@ export function listArtifacts(
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
-  return (
-    db
-      .prepare(
-        `SELECT id, type, path, description, trace_id, import_id, created_at FROM artifacts ${where} ORDER BY created_at DESC`,
-      )
-      .all(...params) as Array<Record<string, unknown>>
-  ).map((r) => ({
+  const result = await db.query<Record<string, unknown>>(
+    `SELECT id, type, path, description, trace_id, import_id, created_at FROM artifacts ${where} ORDER BY created_at DESC`,
+    params,
+  );
+
+  return result.rows.map((r) => ({
     id: r.id as number,
     type: r.type as string,
     path: r.path as string,

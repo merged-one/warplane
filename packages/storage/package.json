@@ -1,26 +1,30 @@
 {
   "name": "@warplane/storage",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "Local SQLite persistence layer for traces, networks, chains, scenarios, and artifacts",
+  "description": "Postgres-native persistence layer for traces, networks, chains, scenarios, and artifacts",
   "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./test-utils": {
+      "types": "./dist/test-utils/index.d.ts",
+      "default": "./dist/test-utils/index.js"
     }
   },
   "scripts": {
     "build": "tsc -b",
     "clean": "rm -rf dist *.tsbuildinfo",
-    "db:migrate": "node --import tsx src/cli-migrate.ts"
+    "db:init": "node --import tsx src/cli-migrate.ts"
   },
   "dependencies": {
     "@warplane/domain": "workspace:*",
-    "better-sqlite3": "^12.8.0",
     "postgres": "^3.4.8"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.13"
+    "@types/better-sqlite3": "^7.6.13",
+    "better-sqlite3": "^12.8.0"
   }
 }

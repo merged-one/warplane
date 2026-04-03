@@ -68,12 +68,12 @@ export function registerTraceRoutes(app: FastifyInstance): void {
       // The storage layer ANDs source and dest, so only set one if generic chain filter
       if (q.chain && !q.sourceBlockchainId && !q.destinationBlockchainId) {
         // Query twice and merge (source OR dest)
-        const fromSource = listTraces(app.db, {
+        const fromSource = await listTraces(app.db, {
           ...filter,
           sourceChain: q.chain,
           destChain: undefined,
         });
-        const fromDest = listTraces(app.db, {
+        const fromDest = await listTraces(app.db, {
           ...filter,
           sourceChain: undefined,
           destChain: q.chain,
@@ -90,8 +90,8 @@ export function registerTraceRoutes(app: FastifyInstance): void {
         return { traces: merged, total: merged.length, page, pageSize };
       }
 
-      const traces = listTraces(app.db, filter);
-      const total = countTraces(app.db, { scenario: q.scenario, execution: q.status });
+      const traces = await listTraces(app.db, filter);
+      const total = await countTraces(app.db, { scenario: q.scenario, execution: q.status });
 
       return { traces, total, page, pageSize };
     },
@@ -128,7 +128,7 @@ export function registerTraceRoutes(app: FastifyInstance): void {
     async (request, reply) => {
       const { messageId } = request.params as { messageId: string };
       const { scenario } = request.query as { scenario?: string };
-      const trace = getTrace(app.db, messageId, scenario);
+      const trace = await getTrace(app.db, messageId, scenario);
 
       if (!trace) {
         return reply.status(404).send({ error: `Trace not found: ${messageId}` });
@@ -168,11 +168,11 @@ export function registerTraceRoutes(app: FastifyInstance): void {
     },
     async (request, reply) => {
       const { messageId } = request.params as { messageId: string };
-      const events = getTraceEvents(app.db, messageId);
+      const events = await getTraceEvents(app.db, messageId);
 
       if (events.length === 0) {
         // Check if trace exists at all
-        const trace = getTrace(app.db, messageId);
+        const trace = await getTrace(app.db, messageId);
         if (!trace) {
           return reply.status(404).send({ error: `Trace not found: ${messageId}` });
         }
@@ -205,7 +205,7 @@ export function registerTraceRoutes(app: FastifyInstance): void {
     },
     async (request, reply) => {
       const { messageId } = request.params as { messageId: string };
-      const trace = getTrace(app.db, messageId);
+      const trace = await getTrace(app.db, messageId);
 
       if (!trace) {
         return reply.status(404).send({ error: `Trace not found: ${messageId}` });

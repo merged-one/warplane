@@ -23,7 +23,7 @@ export function registerPipelineRoutes(app: FastifyInstance): void {
       },
     },
     async () => {
-      const traceCount = countTraces(app.db);
+      const traceCount = await countTraces(app.db);
       const uptime = process.uptime();
 
       if (app.orchestrator) {

@@ -116,7 +116,7 @@ export async function updateAlertRule(
 
   if (sets.length === 0) return;
 
-  sets.push("updated_at = datetime('now')");
+  sets.push("updated_at = CURRENT_TIMESTAMP");
   params.push(id);
 
   await db.execute(`UPDATE alert_rules SET ${sets.join(", ")} WHERE id = ?`, params);
@@ -128,7 +128,7 @@ export async function deleteAlertRule(db: DatabaseAdapter, id: string): Promise<
 
 export async function markAlertRuleFired(db: DatabaseAdapter, id: string): Promise<void> {
   await db.execute(
-    `UPDATE alert_rules SET last_fired_at = datetime('now'), updated_at = datetime('now') WHERE id = ?`,
+    `UPDATE alert_rules SET last_fired_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
     [id],
   );
 }

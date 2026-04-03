@@ -11,6 +11,7 @@ import { promisify } from "node:util";
 import fs from "node:fs";
 import path from "node:path";
 import { buildApp } from "../../../apps/api/src/app.js";
+import { createTestAdapter, initTestSchema } from "@warplane/storage/test-utils";
 import type { FastifyInstance } from "fastify";
 
 const execAsync = promisify(exec);
@@ -46,8 +47,10 @@ beforeAll(async () => {
     throw new Error(`CLI not built at ${CLI}. Run "pnpm -F @warplane/cli build" first.`);
   }
 
+  const adapter = createTestAdapter();
+  await initTestSchema(adapter);
   app = await buildApp({
-    dbPath: ":memory:",
+    adapter,
     demoMode: true,
     logger: false,
   });

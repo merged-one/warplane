@@ -6,7 +6,9 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { openDb, closeDb, runMigrations, type Database, getTrace } from "@warplane/storage";
+import { createTestAdapter, initTestSchema } from "@warplane/storage/test-utils";
+import type { DatabaseAdapter } from "@warplane/storage";
+import { getTrace } from "@warplane/storage";
 import { createPipeline } from "./coordinator.js";
 import type { TeleporterEvent } from "../rpc/decoder.js";
 
@@ -122,15 +124,15 @@ function feeEvent(msgId: string, block: bigint): TeleporterEvent {
 // Setup
 // ---------------------------------------------------------------------------
 
-let db: Database;
+let db: DatabaseAdapter;
 
-beforeEach(() => {
-  db = openDb({ path: ":memory:" });
-  runMigrations(db);
+beforeEach(async () => {
+  db = createTestAdapter();
+  await initTestSchema(db);
 });
 
-afterEach(() => {
-  closeDb(db);
+afterEach(async () => {
+  await db.close();
 });
 
 // ---------------------------------------------------------------------------
@@ -144,9 +146,9 @@ describe("Golden Scenarios", () => {
     await pipeline.handleEvents("chain-a", [sendEvent(MSG_1, 10n)]);
     await pipeline.handleEvents("chain-b", [receiveEvent(MSG_1, 20n)]);
     await pipeline.handleEvents("chain-a", [receiptEvent(MSG_1, 30n)]);
-    pipeline.flush();
+    await pipeline.flush();
 
-    const trace = getTrace(db, MSG_1);
+    const trace = await getTrace(db, MSG_1);
     expect(trace).toBeDefined();
     expect(trace!.execution).toBe("success");
     expect(trace!.receiptDelivered).toBe(true);
@@ -162,9 +164,9 @@ describe("Golden Scenarios", () => {
     // MessageExecuted as retry_succeeded when state is failed
     await pipeline.handleEvents("chain-b", [retryEvent(MSG_1, 25n)]);
     await pipeline.handleEvents("chain-a", [receiptEvent(MSG_1, 30n)]);
-    pipeline.flush();
+    await pipeline.flush();
 
-    const trace = getTrace(db, MSG_1);
+    const trace = await getTrace(db, MSG_1);
     expect(trace).toBeDefined();
     // After failed → retry_succeeded → receipted (via receipt)
     // receipted maps to "success" execution; the retry path is recorded in events
@@ -178,9 +180,9 @@ describe("Golden Scenarios", () => {
     await pipeline.handleEvents("chain-a", [sendEvent(MSG_1, 10n)]);
     await pipeline.handleEvents("chain-a", [feeEvent(MSG_1, 15n)]);
     await pipeline.handleEvents("chain-b", [receiveEvent(MSG_1, 20n)]);
-    pipeline.flush();
+    await pipeline.flush();
 
-    const trace = getTrace(db, MSG_1);
+    const trace = await getTrace(db, MSG_1);
     expect(trace).toBeDefined();
     expect(trace!.fee).toBeDefined();
     expect(trace!.fee!.feeTokenAddress).toBe("0xFee");
@@ -193,9 +195,9 @@ describe("Golden Scenarios", () => {
     await pipeline.handleEvents("chain-a", [sendEvent(MSG_1, 10n)]);
     // execution_failed transitions from pending → failed
     await pipeline.handleEvents("chain-b", [failEvent(MSG_1, 20n)]);
-    pipeline.flush();
+    await pipeline.flush();
 
-    const trace = getTrace(db, MSG_1);
+    const trace = await getTrace(db, MSG_1);
     expect(trace).toBeDefined();
     expect(trace!.execution).toBe("failed");
   });
@@ -205,17 +207,17 @@ describe("Golden Scenarios", () => {
 
     // Delivery arrives first (destination chain backfill completes first)
     await pipeline.handleEvents("chain-b", [receiveEvent(MSG_1, 20n)]);
-    pipeline.flush();
+    await pipeline.flush();
 
-    let trace = getTrace(db, MSG_1);
+    let trace = await getTrace(db, MSG_1);
     expect(trace).toBeDefined();
     expect(trace!.execution).toBe("success");
 
     // Then source chain backfill delivers the send event
     await pipeline.handleEvents("chain-a", [sendEvent(MSG_1, 10n)]);
-    pipeline.flush();
+    await pipeline.flush();
 
-    trace = getTrace(db, MSG_1);
+    trace = await getTrace(db, MSG_1);
     expect(trace!.sender).toBe("0xSender");
     expect(trace!.recipient).toBe("0xRecipient");
     expect(trace!.events).toHaveLength(2);
@@ -226,10 +228,10 @@ describe("Golden Scenarios", () => {
 
     await pipeline.handleEvents("chain-a", [sendEvent(MSG_1, 10n), sendEvent(MSG_2, 11n)]);
     await pipeline.handleEvents("chain-b", [receiveEvent(MSG_1, 20n)]);
-    pipeline.flush();
+    await pipeline.flush();
 
-    const trace1 = getTrace(db, MSG_1);
-    const trace2 = getTrace(db, MSG_2);
+    const trace1 = await getTrace(db, MSG_1);
+    const trace2 = await getTrace(db, MSG_2);
 
     expect(trace1).toBeDefined();
     expect(trace2).toBeDefined();
@@ -244,9 +246,9 @@ describe("Golden Scenarios", () => {
 
     await pipeline.handleEvents("chain-a", [sendEvent(MSG_1, 10n), feeEvent(MSG_1, 11n)]);
     await pipeline.handleEvents("chain-b", [receiveEvent(MSG_1, 20n)]);
-    pipeline.flush();
+    await pipeline.flush();
 
-    const trace = getTrace(db, MSG_1);
+    const trace = await getTrace(db, MSG_1);
     expect(trace).toBeDefined();
     expect(trace!.events).toHaveLength(3);
     expect(trace!.fee).toBeDefined();
@@ -264,7 +266,7 @@ describe("Golden Scenarios", () => {
     // The normalizer should still produce an event; the pipeline doesn't
     // special-case removed=true (reorg handling is the orchestrator's job).
     await pipeline.handleEvents("chain-a", [reorgedEvent]);
-    pipeline.flush();
+    await pipeline.flush();
 
     const stats = pipeline.stats();
     expect(stats.eventsReceived).toBe(1);

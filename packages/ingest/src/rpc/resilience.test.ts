@@ -4,16 +4,9 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import {
-  openDb,
-  closeDb,
-  runMigrations,
-  type Database,
-  getCheckpoint,
-  upsertCheckpoint,
-  getTrace,
-  listTraces,
-} from "@warplane/storage";
+import { createTestAdapter, initTestSchema } from "@warplane/storage/test-utils";
+import type { DatabaseAdapter } from "@warplane/storage";
+import { getCheckpoint, upsertCheckpoint, getTrace, listTraces } from "@warplane/storage";
 import { createOrchestrator } from "./orchestrator.js";
 import type { RpcClient } from "./client.js";
 import type { TeleporterEvent } from "./decoder.js";
@@ -102,15 +95,15 @@ function createMockClient(opts: {
 // Setup
 // ---------------------------------------------------------------------------
 
-let db: Database;
+let db: DatabaseAdapter;
 
-beforeEach(() => {
-  db = openDb({ path: ":memory:" });
-  runMigrations(db);
+beforeEach(async () => {
+  db = createTestAdapter();
+  await initTestSchema(db);
 });
 
-afterEach(() => {
-  closeDb(db);
+afterEach(async () => {
+  await db.close();
 });
 
 // ---------------------------------------------------------------------------
@@ -146,14 +139,14 @@ describe("Resilience", () => {
     expect(status[0]!.error).toContain("RPC connection lost");
 
     // First batch should have processed and checkpointed
-    const cp = getCheckpoint(db, CHAIN_ID, CONTRACT);
+    const cp = await getCheckpoint(db, CHAIN_ID, CONTRACT);
     expect(cp).toBeDefined();
     expect(cp!.lastBlock).toBe(10000); // First batch: 0 → 10000
   });
 
   it("resumes from checkpoint on restart", async () => {
     // Pre-seed a checkpoint at block 5000
-    upsertCheckpoint(db, {
+    await upsertCheckpoint(db, {
       chainId: CHAIN_ID,
       contractAddress: CONTRACT,
       lastBlock: 5000,
@@ -193,11 +186,11 @@ describe("Resilience", () => {
     // Process same event twice
     await pipeline.handleEvents(CHAIN_ID, [sendEvent]);
     await pipeline.handleEvents(CHAIN_ID, [sendEvent]);
-    pipeline.flush();
+    await pipeline.flush();
 
     // Should still have only one trace (correlator may add event twice
     // but the trace identity is preserved — no duplicate traces)
-    const traces = listTraces(db);
+    const traces = await listTraces(db);
     expect(traces.length).toBe(1);
     // State should remain consistent regardless of duplicate processing
     expect(traces[0]!.execution).toBe("pending");
@@ -218,10 +211,10 @@ describe("Resilience", () => {
     // This should NOT throw even though evaluator fails
     // The pipeline catches or the evaluate is non-blocking
     await pipeline.handleEvents(CHAIN_ID, [makeSendEvent(5n)]);
-    pipeline.flush();
+    await pipeline.flush();
 
     // Pipeline should have still processed the event
-    const trace = getTrace(db, MSG_ID);
+    const trace = await getTrace(db, MSG_ID);
     expect(trace).toBeDefined();
   });
 
@@ -289,7 +282,7 @@ describe("Resilience", () => {
     // Don't call flush() — auto-flush should have triggered
 
     // Both traces should be in storage thanks to auto-flush
-    expect(getTrace(db, MSG_ID)).toBeDefined();
-    expect(getTrace(db, msg2)).toBeDefined();
+    expect(await getTrace(db, MSG_ID)).toBeDefined();
+    expect(await getTrace(db, msg2)).toBeDefined();
   });
 });

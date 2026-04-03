@@ -50,7 +50,7 @@ export function registerWebhookRoutes(app: FastifyInstance): void {
         enabled?: boolean;
         events?: string[];
       };
-      const id = await insertWebhookDestination(app.asyncDb, body);
+      const id = await insertWebhookDestination(app.db, body);
       return reply.code(201).send({ id });
     },
   );
@@ -75,7 +75,7 @@ export function registerWebhookRoutes(app: FastifyInstance): void {
       },
     },
     async () => {
-      const destinations = await listWebhookDestinations(app.asyncDb);
+      const destinations = await listWebhookDestinations(app.db);
       return { destinations };
     },
   );
@@ -112,7 +112,7 @@ export function registerWebhookRoutes(app: FastifyInstance): void {
     },
     async (request, reply) => {
       const { id } = request.params as { id: number };
-      const existing = await getWebhookDestination(app.asyncDb, id);
+      const existing = await getWebhookDestination(app.db, id);
       if (!existing) return reply.code(404).send({ error: "Not found" });
 
       const body = request.body as Partial<{
@@ -122,7 +122,7 @@ export function registerWebhookRoutes(app: FastifyInstance): void {
         enabled: boolean;
         events: string[];
       }>;
-      await updateWebhookDestination(app.asyncDb, id, body);
+      await updateWebhookDestination(app.db, id, body);
       return { ok: true };
     },
   );
@@ -149,10 +149,10 @@ export function registerWebhookRoutes(app: FastifyInstance): void {
     },
     async (request, reply) => {
       const { id } = request.params as { id: number };
-      const existing = await getWebhookDestination(app.asyncDb, id);
+      const existing = await getWebhookDestination(app.db, id);
       if (!existing) return reply.code(404).send({ error: "Not found" });
 
-      await deleteWebhookDestination(app.asyncDb, id);
+      await deleteWebhookDestination(app.db, id);
       return { ok: true };
     },
   );
@@ -186,10 +186,10 @@ export function registerWebhookRoutes(app: FastifyInstance): void {
     },
     async (request, reply) => {
       const { id } = request.params as { id: number };
-      const dest = await getWebhookDestination(app.asyncDb, id);
+      const dest = await getWebhookDestination(app.db, id);
       if (!dest) return reply.code(404).send({ error: "Not found" });
 
-      const engine = createDeliveryEngine(app.asyncDb);
+      const engine = createDeliveryEngine(app.db);
       const payload = {
         id: crypto.randomUUID(),
         timestamp: new Date().toISOString(),
@@ -242,11 +242,11 @@ export function registerWebhookRoutes(app: FastifyInstance): void {
     },
     async (request, reply) => {
       const { id } = request.params as { id: number };
-      const dest = await getWebhookDestination(app.asyncDb, id);
+      const dest = await getWebhookDestination(app.db, id);
       if (!dest) return reply.code(404).send({ error: "Not found" });
 
       const q = request.query as { limit?: number };
-      const deliveries = await getDeliveriesForDestination(app.asyncDb, id, {
+      const deliveries = await getDeliveriesForDestination(app.db, id, {
         limit: q.limit,
       });
       return { deliveries };

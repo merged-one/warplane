@@ -118,6 +118,9 @@ importers:
       '@types/node':
         specifier: ^25.5.0
         version: 25.5.0
+      '@warplane/storage':
+        specifier: workspace:*
+        version: link:../storage
 
   packages/docs-mcp:
     dependencies:
@@ -151,9 +154,6 @@ importers:
       '@warplane/domain':
         specifier: workspace:*
         version: link:../domain
-      better-sqlite3:
-        specifier: ^12.8.0
-        version: 12.8.0
       postgres:
         specifier: ^3.4.8
         version: 3.4.8
@@ -161,6 +161,9 @@ importers:
       '@types/better-sqlite3':
         specifier: ^7.6.13
         version: 7.6.13
+      better-sqlite3:
+        specifier: ^12.8.0
+        version: 12.8.0
 
 packages:
 

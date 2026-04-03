@@ -7,7 +7,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import type { Database } from "@warplane/storage";
+import type { DatabaseAdapter } from "@warplane/storage";
 import { importArtifacts, type ImportResult } from "./importer.js";
 
 export interface WatchOptions {
@@ -25,7 +25,10 @@ export interface WatchOptions {
  * Start polling the artifacts directory for changes.
  * Returns a stop function.
  */
-export function startWatcher(db: Database, opts: WatchOptions): { stop: () => void } {
+export async function startWatcher(
+  db: DatabaseAdapter,
+  opts: WatchOptions,
+): Promise<{ stop: () => void }> {
   const log = opts.log ?? console.log;
   const intervalMs = opts.intervalMs ?? 5000;
   const artifactsDir = path.resolve(opts.artifactsDir);
@@ -68,7 +71,7 @@ export function startWatcher(db: Database, opts: WatchOptions): { stop: () => vo
         const currentMtime = getMaxMtime();
         if (currentMtime > lastMtime) {
           log(`Change detected (mtime ${new Date(currentMtime).toISOString()}), re-importing...`);
-          const result = importArtifacts(db, {
+          const result = await importArtifacts(db, {
             artifactsDir,
             sourceType: "live",
             log,
@@ -86,7 +89,7 @@ export function startWatcher(db: Database, opts: WatchOptions): { stop: () => vo
 
   // Initial import
   lastMtime = getMaxMtime();
-  const initialResult = importArtifacts(db, {
+  const initialResult = await importArtifacts(db, {
     artifactsDir,
     sourceType: "fixture",
     log,
