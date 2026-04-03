@@ -1,0 +1,32 @@
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="faviconTitle">
+  <title id="faviconTitle">Merged.One favicon</title>
+  <defs>
+    <linearGradient id="fv_panel" x1="8" y1="6" x2="58" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#12203A"/>
+      <stop offset="1" stop-color="#09101A"/>
+    </linearGradient>
+    <linearGradient id="fv_lane" x1="18" y1="16" x2="50" y2="42" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6FE1FF"/>
+      <stop offset="1" stop-color="#8B96FF"/>
+    </linearGradient>
+    <filter id="fv_glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2.2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect x="6" y="6" width="52" height="52" rx="17" fill="url(#fv_panel)" stroke="rgba(184,203,233,0.18)"/>
+  <path d="M18 18C27 18 30 18 34 22C36.5 24.5 39.5 28.5 42 32" stroke="rgba(149,167,197,0.46)" stroke-width="2.8" stroke-linecap="round"/>
+  <path d="M18 26.5H33C37.5 26.5 40 27.5 44 32" stroke="rgba(149,167,197,0.52)" stroke-width="2.8" stroke-linecap="round"/>
+  <path d="M18 37H33C37.5 37 40 37 44 32" stroke="url(#fv_lane)" stroke-width="3.4" stroke-linecap="round" filter="url(#fv_glow)"/>
+  <path d="M18 46C27 46 30 46 34 42C36.5 39.5 39.5 35.5 42 32" stroke="rgba(149,167,197,0.46)" stroke-width="2.8" stroke-linecap="round"/>
+  <path d="M44 32H48" stroke="url(#fv_lane)" stroke-width="3.4" stroke-linecap="round" filter="url(#fv_glow)"/>
+  <circle cx="18" cy="18" r="2.6" fill="rgba(166,184,214,0.82)"/>
+  <circle cx="18" cy="26.5" r="2.6" fill="rgba(166,184,214,0.82)"/>
+  <circle cx="18" cy="37" r="3.3" fill="#DDF8FF"/>
+  <circle cx="18" cy="46" r="2.6" fill="rgba(166,184,214,0.82)"/>
+  <circle cx="44" cy="32" r="4.6" fill="#DDF8FF" filter="url(#fv_glow)"/>
+  <circle cx="48" cy="32" r="3.2" fill="#A0A7FF" filter="url(#fv_glow)"/>
+</svg>

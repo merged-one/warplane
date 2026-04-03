@@ -64,7 +64,7 @@ export function Layout() {
     <div className="layout">
       <header className="topbar">
         <a href="/" className="topbar-brand">
-          Warplane
+          <img src="/warplane-logo.svg" alt="Warplane" className="topbar-logo" />
         </a>
         <nav className="topbar-nav">
           {NAV_ITEMS.map((item) => (
@@ -158,6 +158,17 @@ export function Layout() {
       <main className="content">
         <Outlet />
       </main>
+      <footer className="site-footer">
+        <span className="footer-brand">
+          <img src="/logo-icon.svg" alt="" className="footer-icon" />
+          Built by{" "}
+          <a href="https://merged.one" target="_blank" rel="noopener noreferrer">
+            Merged.One
+          </a>
+        </span>
+        <span className="footer-sep" />
+        <span className="footer-avalanche">Powered by Avalanche</span>
+      </footer>
     </div>
   );
 }

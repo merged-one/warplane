@@ -174,7 +174,7 @@ function renderPage(path: string) {
 describe("Layout", () => {
   it("renders nav links", async () => {
     renderPage("/docs");
-    expect(screen.getByText("Warplane")).toBeInTheDocument();
+    expect(screen.getByAltText("Warplane")).toBeInTheDocument();
     expect(screen.getAllByText("Traces").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Failures").length).toBeGreaterThan(0);
   });
