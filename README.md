@@ -31,7 +31,7 @@
 Prerequisites: Node >= 20, pnpm >= 10.
 
 ```bash
-git clone <repo-url> && cd warplane
+git clone https://github.com/merged-one/warplane.git && cd warplane
 pnpm install
 pnpm demo:seed
 ```
