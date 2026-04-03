@@ -21,7 +21,7 @@ import type { AlertEvaluator } from "../alerts/alert-evaluator.js";
 export interface PipelineConfig {
   /** Number of trace upserts to batch before auto-flushing (default: 50). */
   writeBatchSize?: number;
-  /** Max time (ms) between automatic flushes for pending traces (default: 10_000). */
+  /** Max time (ms) between automatic flushes for pending traces (default: 1_000). */
   flushIntervalMs?: number;
   /** Optional alert evaluator — when provided, state changes trigger alert evaluation. */
   alertEvaluator?: AlertEvaluator;
@@ -50,7 +50,7 @@ export interface Pipeline {
 
 export function createPipeline(db: DatabaseAdapter, config?: PipelineConfig): Pipeline {
   const writeBatchSize = config?.writeBatchSize ?? 50;
-  const flushIntervalMs = config?.flushIntervalMs ?? 10_000;
+  const flushIntervalMs = config?.flushIntervalMs ?? 1_000;
   const alertEvaluator = config?.alertEvaluator;
   const correlator: Correlator = createCorrelator();
   let stopped = false;
