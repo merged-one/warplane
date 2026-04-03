@@ -36,19 +36,13 @@ func skipIfNoBinary(t *testing.T) {
 }
 
 // startTestServer starts a Warplane API server with DEMO_MODE and waits for
-// it to become healthy. The artifacts directory is set to the local artifacts/
-// dir so the demo seeder can find the golden fixtures.
+// it to become healthy. The server process lives until t.Cleanup runs.
 func startTestServer(t *testing.T) *harness.WarplaneInstance {
 	t.Helper()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
-	defer cancel()
-
-	// Resolve the artifacts directory path for the API to find golden fixtures.
-	artifactsDir, err := filepath.Abs("artifacts")
-	if err != nil {
-		t.Fatalf("cannot resolve artifacts dir: %v", err)
-	}
+	// Use a long-lived context for the server process — it must survive
+	// beyond this function's return. t.Cleanup will stop the server.
+	ctx := context.Background()
 
 	inst, err := harness.StartWarplane(ctx, harness.WarplaneOpts{
 		DemoMode: true,
@@ -57,10 +51,11 @@ func startTestServer(t *testing.T) *harness.WarplaneInstance {
 		t.Fatalf("failed to start warplane: %v", err)
 	}
 
-	// Set WARPLANE_ARTIFACTS_DIR so the API finds our golden fixtures
-	_ = artifactsDir
+	// Use a separate timeout context for the health check only.
+	healthCtx, healthCancel := context.WithTimeout(ctx, 30*time.Second)
+	defer healthCancel()
 
-	if err := inst.WaitHealthy(ctx); err != nil {
+	if err := inst.WaitHealthy(healthCtx); err != nil {
 		inst.Stop()
 		t.Fatalf("warplane did not become healthy: %v", err)
 	}

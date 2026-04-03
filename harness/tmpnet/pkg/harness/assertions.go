@@ -79,21 +79,34 @@ func (w *WarplaneInstance) WaitForTrace(ctx context.Context, messageId string, t
 			return nil, fmt.Errorf("trace %s did not appear within %s", messageId, timeout)
 		}
 
-		resp, err := client.Get(url)
-		if err == nil {
-			defer resp.Body.Close()
-			if resp.StatusCode == 200 {
-				body, err := io.ReadAll(resp.Body)
-				if err != nil {
-					return nil, fmt.Errorf("reading response body: %w", err)
-				}
-				var trace TraceResponse
-				if err := json.Unmarshal(body, &trace); err != nil {
-					return nil, fmt.Errorf("unmarshalling trace response: %w", err)
-				}
-				return &trace, nil
+		trace, done, err := func() (*TraceResponse, bool, error) {
+			resp, err := client.Get(url)
+			if err != nil {
+				return nil, false, nil // transient error, retry
 			}
-			resp.Body.Close()
+			defer resp.Body.Close()
+
+			if resp.StatusCode != 200 {
+				// Drain body to allow connection reuse
+				_, _ = io.Copy(io.Discard, resp.Body)
+				return nil, false, nil // not found yet, retry
+			}
+
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return nil, true, fmt.Errorf("reading response body: %w", err)
+			}
+			var t TraceResponse
+			if err := json.Unmarshal(body, &t); err != nil {
+				return nil, true, fmt.Errorf("unmarshalling trace response: %w", err)
+			}
+			return &t, true, nil
+		}()
+		if err != nil {
+			return nil, err
+		}
+		if done {
+			return trace, nil
 		}
 
 		select {
