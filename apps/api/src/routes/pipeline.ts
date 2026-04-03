@@ -15,8 +15,19 @@ export function registerPipelineRoutes(app: FastifyInstance): void {
               status: { type: "string" },
               traceCount: { type: "integer" },
               uptime: { type: "number" },
-              chains: { type: "array", items: { type: "object" } },
-              stats: { type: "object" },
+              chains: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    chainId: { type: "string" },
+                    mode: { type: "string" },
+                    lastBlock: { type: "integer" },
+                    error: { type: ["string", "null"] },
+                  },
+                },
+              },
+              stats: { type: "object", additionalProperties: true },
             },
           },
         },

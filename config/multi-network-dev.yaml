@@ -16,7 +16,7 @@ chains:
     rpcUrl: "https://api.avax.network/ext/bc/C/rpc"
     wsUrl: "wss://api.avax.network/ext/bc/C/ws"
     teleporterAddress: "0x253b2784c75e510dD0fF1da844684a1aC0aa5fcf"
-    startBlock: 82030500
+    startBlock: 82032800
 
   # ── Fuji Testnet ─────────────────────────────────────────────────────
   - name: "Fuji C-Chain"
@@ -25,6 +25,6 @@ chains:
     rpcUrl: "https://api.avax-test.network/ext/bc/C/rpc"
     wsUrl: "wss://api.avax-test.network/ext/bc/C/ws"
     teleporterAddress: "0x253b2784c75e510dD0fF1da844684a1aC0aa5fcf"
-    startBlock: 53594500
+    startBlock: 53596200
 
 logLevel: "debug"
