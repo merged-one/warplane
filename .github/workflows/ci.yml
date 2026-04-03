@@ -58,20 +58,20 @@ jobs:
 
           # Wait for API to be ready
           for i in $(seq 1 30); do
-            if curl -sf http://localhost:3100/healthz > /dev/null 2>&1; then
+            if curl -sf http://localhost:3000/healthz > /dev/null 2>&1; then
               break
             fi
             sleep 1
           done
 
           echo "=== /healthz ==="
-          curl -sf http://localhost:3100/healthz | jq .
+          curl -sf http://localhost:3000/healthz | jq .
 
           echo "=== /api/v1/chains ==="
-          curl -sf http://localhost:3100/api/v1/chains | jq .
+          curl -sf http://localhost:3000/api/v1/chains | jq .
 
           echo "=== /api/v1/traces ==="
-          TRACES=$(curl -sf http://localhost:3100/api/v1/traces)
+          TRACES=$(curl -sf http://localhost:3000/api/v1/traces)
           echo "$TRACES" | jq .
           COUNT=$(echo "$TRACES" | jq '.total')
           if [ "$COUNT" -lt 1 ]; then
@@ -82,13 +82,13 @@ jobs:
           echo "Found $COUNT traces ✓"
 
           echo "=== /api/v1/scenarios ==="
-          curl -sf http://localhost:3100/api/v1/scenarios | jq .
+          curl -sf http://localhost:3000/api/v1/scenarios | jq .
 
           echo "=== /api/v1/network ==="
-          curl -sf http://localhost:3100/api/v1/network | jq .
+          curl -sf http://localhost:3000/api/v1/network | jq .
 
           echo "=== /openapi.json ==="
-          curl -sf http://localhost:3100/openapi.json | jq '.info.title'
+          curl -sf http://localhost:3000/openapi.json | jq '.info.title'
 
           kill $API_PID 2>/dev/null || true
           echo "API integration tests passed ✓"
