@@ -958,6 +958,7 @@ using [Structured MADR](https://adr.github.io/madr/) format.
 | [0006](0006-event-model-contract-alignment.md)        | Event model aligned to TeleporterMessenger contracts | Accepted |
 | [0007](0007-four-milestone-grant-delivery.md)         | Four-milestone grant delivery structure              | Accepted |
 | [0008](0008-prometheus-offchain-event-correlation.md) | Prometheus-based off-chain event correlation         | Accepted |
+| [0009](0009-dual-mode-storage-postgres-adapter.md)    | Dual-mode storage with Postgres adapter              | Accepted |
 
 ## Creating a new ADR
 
@@ -1411,6 +1412,45 @@ export {
   listCheckpoints,
   type Checkpoint,
 } from "./repos/checkpoints.js";
+
+// Database adapter (async interface for new repos)
+export { type DatabaseAdapter, type QueryResult } from "./adapter.js";
+export { createSqliteAdapter } from "./sqlite-adapter.js";
+
+// Health snapshot repositories (async, use DatabaseAdapter)
+export {
+  insertRelayerHealth,
+  getLatestRelayerHealth,
+  listRelayerHealthHistory,
+  type RelayerHealthRow,
+  type InsertRelayerHealth,
+} from "./repos/relayer-health.js";
+
+export {
+  insertSigAggHealth,
+  getLatestSigAggHealth,
+  listSigAggHealthHistory,
+  type SigAggHealthRow,
+  type InsertSigAggHealth,
+} from "./repos/sigagg-health.js";
+
+// Webhook repositories (async, use DatabaseAdapter)
+export {
+  insertWebhookDestination,
+  getWebhookDestination,
+  listWebhookDestinations,
+  updateWebhookDestination,
+  deleteWebhookDestination,
+  insertWebhookDelivery,
+  markDeliveryStatus,
+  getPendingDeliveries,
+  getDeliveriesForMessage,
+  type WebhookDestination,
+  type InsertWebhookDestination,
+  type WebhookDelivery,
+  type InsertWebhookDelivery,
+  type DeliveryStatus,
+} from "./repos/webhooks.js";
 
 ---
 ## File: packages/ingest/src/index.ts
