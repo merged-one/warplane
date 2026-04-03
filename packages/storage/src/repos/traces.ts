@@ -276,7 +276,7 @@ export async function countTraces(
     `SELECT COUNT(*) as count FROM traces ${where}`,
     params,
   );
-  return result.rows[0]?.count ?? 0;
+  return Number(result.rows[0]?.count ?? 0);
 }
 
 // ---------------------------------------------------------------------------
@@ -314,7 +314,7 @@ export async function getFailureClassification(
     params,
   );
 
-  return result.rows;
+  return result.rows.map((r) => ({ ...r, count: Number(r.count) }));
 }
 
 export interface LatencyStats {
