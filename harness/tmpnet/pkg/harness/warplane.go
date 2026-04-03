@@ -26,17 +26,17 @@ type WarplaneOpts struct {
 	// DemoMode enables golden fixture seeding on startup.
 	DemoMode bool
 
-	// DBPath overrides the database file location. Empty = temp file.
-	DBPath string
+	// DatabaseURL overrides the Postgres connection string.
+	// Empty = inherit DATABASE_URL from environment.
+	DatabaseURL string
 }
 
 // WarplaneInstance represents a running Warplane API server process.
 type WarplaneInstance struct {
-	Cmd     *exec.Cmd
-	BaseURL string
-	Port    int
-	DBPath  string
-	tmpDir  string
+	Cmd         *exec.Cmd
+	BaseURL     string
+	Port        int
+	DatabaseURL string
 }
 
 // StartWarplane starts a Warplane API server as a child process.
@@ -67,20 +67,18 @@ func StartWarplane(ctx context.Context, opts WarplaneOpts) (*WarplaneInstance, e
 		}
 	}
 
-	dbPath := opts.DBPath
-	tmpDir := ""
-	if dbPath == "" {
-		tmpDir, err = os.MkdirTemp("", "warplane-test-*")
-		if err != nil {
-			return nil, fmt.Errorf("create temp dir: %w", err)
-		}
-		dbPath = filepath.Join(tmpDir, "test.db")
+	dbURL := opts.DatabaseURL
+	if dbURL == "" {
+		dbURL = os.Getenv("DATABASE_URL")
+	}
+	if dbURL == "" {
+		return nil, fmt.Errorf("DATABASE_URL is required (set via WarplaneOpts.DatabaseURL or environment)")
 	}
 
 	cmd := exec.CommandContext(ctx, "node", absPath)
 	cmd.Env = append(os.Environ(),
 		fmt.Sprintf("PORT=%d", port),
-		fmt.Sprintf("DB_PATH=%s", dbPath),
+		fmt.Sprintf("DATABASE_URL=%s", dbURL),
 		"HOST=127.0.0.1",
 		"LOG_LEVEL=warn",
 	)
@@ -91,18 +89,14 @@ func StartWarplane(ctx context.Context, opts WarplaneOpts) (*WarplaneInstance, e
 	cmd.Stderr = os.Stderr
 
 	if err := cmd.Start(); err != nil {
-		if tmpDir != "" {
-			os.RemoveAll(tmpDir)
-		}
 		return nil, fmt.Errorf("start warplane: %w", err)
 	}
 
 	return &WarplaneInstance{
-		Cmd:     cmd,
-		BaseURL: fmt.Sprintf("http://127.0.0.1:%d", port),
-		Port:    port,
-		DBPath:  dbPath,
-		tmpDir:  tmpDir,
+		Cmd:         cmd,
+		BaseURL:     fmt.Sprintf("http://127.0.0.1:%d", port),
+		Port:        port,
+		DatabaseURL: dbURL,
 	}, nil
 }
 
@@ -142,7 +136,6 @@ func (w *WarplaneInstance) WaitHealthy(ctx context.Context) error {
 }
 
 // Stop sends SIGTERM to the Warplane process and waits for it to exit.
-// Cleans up temporary directories if created.
 func (w *WarplaneInstance) Stop() error {
 	if w.Cmd.Process != nil {
 		_ = w.Cmd.Process.Signal(os.Interrupt)
@@ -157,9 +150,6 @@ func (w *WarplaneInstance) Stop() error {
 		}
 	}
 
-	if w.tmpDir != "" {
-		os.RemoveAll(w.tmpDir)
-	}
 	return nil
 }
 

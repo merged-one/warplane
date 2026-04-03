@@ -22,6 +22,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: warplane
+          POSTGRES_USER: warplane
+          POSTGRES_PASSWORD: warplane-ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U warplane"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v4
 
@@ -52,6 +67,8 @@ jobs:
 
       # ── API integration smoke test ──
       - name: API integration test
+        env:
+          DATABASE_URL: postgresql://warplane:warplane-ci@localhost:5432/warplane
         run: |
           # Start API in background with demo seeding
           DEMO_MODE=true node --import tsx apps/api/src/index.ts &
@@ -201,6 +218,21 @@ jobs:
     timeout-minutes: 15
     needs: [ci]
 
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: warplane
+          POSTGRES_USER: warplane
+          POSTGRES_PASSWORD: warplane-ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U warplane"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v4
 
@@ -227,6 +259,7 @@ jobs:
         run: go test -v -run TestIngestion -timeout 2m ./...
         env:
           WARPLANE_BIN: ../../apps/api/dist/index.js
+          DATABASE_URL: postgresql://warplane:warplane-ci@localhost:5432/warplane
 
   # ── E2E tests (manual / tag trigger) ──────────────────────────────
   e2e:
@@ -234,6 +267,21 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: warplane
+          POSTGRES_USER: warplane
+          POSTGRES_PASSWORD: warplane-ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U warplane"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
 
     steps:
       - uses: actions/checkout@v4
@@ -262,3 +310,4 @@ jobs:
         env:
           RUN_E2E: "1"
           WARPLANE_BIN: ../../apps/api/dist/index.js
+          DATABASE_URL: postgresql://warplane:warplane-ci@localhost:5432/warplane
