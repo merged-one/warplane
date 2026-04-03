@@ -6,6 +6,7 @@ import { TraceDetailPage } from "./pages/TraceDetailPage.js";
 import { FailuresPage } from "./pages/FailuresPage.js";
 import { ScenariosPage } from "./pages/ScenariosPage.js";
 import { DocsPage } from "./pages/DocsPage.js";
+import { RelayerOpsPage } from "./pages/RelayerOpsPage.js";
 
 export function App() {
   return (
@@ -16,6 +17,7 @@ export function App() {
           <Route path="traces" element={<TracesPage />} />
           <Route path="traces/:messageId" element={<TraceDetailPage />} />
           <Route path="failures" element={<FailuresPage />} />
+          <Route path="relayer" element={<RelayerOpsPage />} />
           <Route path="scenarios" element={<ScenariosPage />} />
           <Route path="docs" element={<DocsPage />} />
         </Route>

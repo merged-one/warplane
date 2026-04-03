@@ -269,6 +269,97 @@ describe("GET /api/v1/imports", () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// Relayer health endpoints
+// ---------------------------------------------------------------------------
+
+describe("GET /api/v1/relayer/health", () => {
+  it("returns health array (may be empty in demo mode)", async () => {
+    const res = await app.inject({ method: "GET", url: "/api/v1/relayer/health" });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.health).toBeInstanceOf(Array);
+  });
+});
+
+describe("GET /api/v1/relayer/health/history", () => {
+  it("returns history array with optional filtering", async () => {
+    const res = await app.inject({
+      method: "GET",
+      url: "/api/v1/relayer/health/history?limit=10",
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.history).toBeInstanceOf(Array);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Sig-agg health endpoints
+// ---------------------------------------------------------------------------
+
+describe("GET /api/v1/sigagg/health", () => {
+  it("returns health object or null", async () => {
+    const res = await app.inject({ method: "GET", url: "/api/v1/sigagg/health" });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body).toHaveProperty("health");
+  });
+});
+
+describe("GET /api/v1/sigagg/health/history", () => {
+  it("returns history array", async () => {
+    const res = await app.inject({ method: "GET", url: "/api/v1/sigagg/health/history" });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.history).toBeInstanceOf(Array);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Stats endpoints
+// ---------------------------------------------------------------------------
+
+describe("GET /api/v1/stats/failures", () => {
+  it("returns failure classification array", async () => {
+    const res = await app.inject({ method: "GET", url: "/api/v1/stats/failures" });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.failures).toBeInstanceOf(Array);
+  });
+});
+
+describe("GET /api/v1/stats/latency", () => {
+  it("returns p50, p90, p99 numbers and timeSeries", async () => {
+    const res = await app.inject({ method: "GET", url: "/api/v1/stats/latency" });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(typeof body.p50).toBe("number");
+    expect(typeof body.p90).toBe("number");
+    expect(typeof body.p99).toBe("number");
+    expect(body.timeSeries).toBeInstanceOf(Array);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Pipeline status endpoint
+// ---------------------------------------------------------------------------
+
+describe("GET /api/v1/pipeline/status", () => {
+  it("returns pipeline status object", async () => {
+    const res = await app.inject({ method: "GET", url: "/api/v1/pipeline/status" });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.status).toBe("idle");
+    expect(typeof body.traceCount).toBe("number");
+    expect(typeof body.uptime).toBe("number");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// OpenAPI
+// ---------------------------------------------------------------------------
+
 describe("GET /openapi.json", () => {
   it("returns a valid OpenAPI spec", async () => {
     const res = await app.inject({ method: "GET", url: "/openapi.json" });

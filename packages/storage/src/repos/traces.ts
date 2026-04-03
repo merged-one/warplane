@@ -264,3 +264,117 @@ export function countTraces(
   };
   return row.count;
 }
+
+// ---------------------------------------------------------------------------
+// Aggregate queries for dashboard
+// ---------------------------------------------------------------------------
+
+export interface FailureClassificationEntry {
+  reason: string;
+  count: number;
+}
+
+/**
+ * Group execution_failed events by their details field.
+ * Returns failure reasons sorted by count descending.
+ */
+export function getFailureClassification(
+  db: Database,
+  opts?: { since?: string },
+): FailureClassificationEntry[] {
+  const conditions = ["e.kind = 'execution_failed'"];
+  const params: unknown[] = [];
+
+  if (opts?.since) {
+    conditions.push("e.timestamp >= ?");
+    params.push(opts.since);
+  }
+
+  const where = conditions.join(" AND ");
+  const rows = db
+    .prepare(
+      `SELECT COALESCE(e.details, 'unknown') as reason, COUNT(*) as count
+       FROM events e
+       WHERE ${where}
+       GROUP BY reason
+       ORDER BY count DESC`,
+    )
+    .all(...params) as Array<{ reason: string; count: number }>;
+
+  return rows;
+}
+
+export interface LatencyStats {
+  p50: number;
+  p90: number;
+  p99: number;
+  timeSeries: Array<{ time: string; latencyMs: number }>;
+}
+
+/**
+ * Compute delivery latency percentiles from completed traces.
+ * Returns p50/p90/p99 in milliseconds and hourly time-series data.
+ */
+export function getDeliveryLatencyStats(db: Database, opts?: { since?: string }): LatencyStats {
+  const conditions = [
+    "execution = 'success'",
+    "send_time IS NOT NULL",
+    "receive_time IS NOT NULL",
+    "receive_time != send_time",
+  ];
+  const params: unknown[] = [];
+
+  if (opts?.since) {
+    conditions.push("send_time >= ?");
+    params.push(opts.since);
+  }
+
+  const where = conditions.join(" AND ");
+
+  // Get all latencies in ms
+  const rows = db
+    .prepare(
+      `SELECT send_time, receive_time,
+              CAST((julianday(receive_time) - julianday(send_time)) * 86400000 AS INTEGER) as latency_ms
+       FROM traces
+       WHERE ${where}
+       ORDER BY send_time ASC`,
+    )
+    .all(...params) as Array<{ send_time: string; receive_time: string; latency_ms: number }>;
+
+  if (rows.length === 0) {
+    return { p50: 0, p90: 0, p99: 0, timeSeries: [] };
+  }
+
+  // Compute percentiles
+  const latencies = rows.map((r) => r.latency_ms).sort((a, b) => a - b);
+  const percentile = (sorted: number[], p: number): number => {
+    const idx = Math.ceil((p / 100) * sorted.length) - 1;
+    return sorted[Math.max(0, idx)]!;
+  };
+
+  // Hourly time-series (average latency per hour)
+  const hourlyBuckets = new Map<string, { sum: number; count: number }>();
+  for (const row of rows) {
+    const hour = row.send_time.slice(0, 13); // "YYYY-MM-DDTHH"
+    const bucket = hourlyBuckets.get(hour);
+    if (bucket) {
+      bucket.sum += row.latency_ms;
+      bucket.count += 1;
+    } else {
+      hourlyBuckets.set(hour, { sum: row.latency_ms, count: 1 });
+    }
+  }
+
+  const timeSeries = Array.from(hourlyBuckets.entries()).map(([time, { sum, count }]) => ({
+    time,
+    latencyMs: Math.round(sum / count),
+  }));
+
+  return {
+    p50: percentile(latencies, 50),
+    p90: percentile(latencies, 90),
+    p99: percentile(latencies, 99),
+    timeSeries,
+  };
+}

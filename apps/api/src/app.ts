@@ -11,7 +11,15 @@ import fastifySwaggerUI from "@fastify/swagger-ui";
 import path from "node:path";
 import fs from "node:fs";
 import { generateOpenAPIComponents } from "@warplane/domain";
-import { openDb, runMigrations, closeDb, countTraces, type Database } from "@warplane/storage";
+import {
+  openDb,
+  runMigrations,
+  closeDb,
+  countTraces,
+  createSqliteAdapter,
+  type Database,
+  type DatabaseAdapter,
+} from "@warplane/storage";
 import { importArtifacts } from "@warplane/ingest";
 import { registerRoutes } from "./routes/index.js";
 
@@ -27,6 +35,7 @@ export interface AppOptions {
 declare module "fastify" {
   interface FastifyInstance {
     db: Database;
+    asyncDb: DatabaseAdapter;
   }
 }
 
@@ -50,6 +59,7 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
   const db = openDb({ path: dbPath });
   runMigrations(db);
   app.decorate("db", db);
+  app.decorate("asyncDb", createSqliteAdapter(db));
 
   app.addHook("onClose", () => {
     closeDb(db);

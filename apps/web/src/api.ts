@@ -213,3 +213,81 @@ export function search(q: string, limit?: number): Promise<SearchResponse> {
   if (limit) qs.set("limit", String(limit));
   return fetchJson(`${BASE}/search?${qs}`);
 }
+
+// ---- Relayer Health ----
+
+export type HealthStatus = "healthy" | "degraded" | "unhealthy";
+
+export interface RelayerHealth {
+  relayerId: string;
+  status: HealthStatus;
+  successRate: number | null;
+  latencyMs: number | null;
+  lagBlocks: number | null;
+  pendingMessages: number | null;
+  topFailures: Array<{ reason: string; count: number }>;
+  createdAt: string;
+}
+
+export function getRelayerHealth(): Promise<{ health: RelayerHealth[] }> {
+  return fetchJson(`${BASE}/relayer/health`);
+}
+
+export function getRelayerHealthHistory(relayerId?: string): Promise<{ history: RelayerHealth[] }> {
+  const qs = new URLSearchParams();
+  if (relayerId) qs.set("relayerId", relayerId);
+  const q = qs.toString();
+  return fetchJson(`${BASE}/relayer/health/history${q ? `?${q}` : ""}`);
+}
+
+// ---- Sig-Agg Health ----
+
+export interface SigAggHealth {
+  status: HealthStatus;
+  aggregationLatency: number | null;
+  connectedStake: Record<string, number>;
+  cacheHitRate: number | null;
+  createdAt: string;
+}
+
+export function getSigAggHealth(): Promise<{ health: SigAggHealth | null }> {
+  return fetchJson(`${BASE}/sigagg/health`);
+}
+
+export function getSigAggHealthHistory(): Promise<{ history: SigAggHealth[] }> {
+  return fetchJson(`${BASE}/sigagg/health/history`);
+}
+
+// ---- Stats ----
+
+export interface FailureClassification {
+  reason: string;
+  count: number;
+}
+
+export function getFailureClassification(): Promise<{ failures: FailureClassification[] }> {
+  return fetchJson(`${BASE}/stats/failures`);
+}
+
+export interface LatencyStats {
+  p50: number;
+  p90: number;
+  p99: number;
+  timeSeries: Array<{ time: string; latencyMs: number }>;
+}
+
+export function getLatencyStats(): Promise<LatencyStats> {
+  return fetchJson(`${BASE}/stats/latency`);
+}
+
+// ---- Pipeline ----
+
+export interface PipelineStatus {
+  status: string;
+  traceCount: number;
+  uptime: number;
+}
+
+export function getPipelineStatus(): Promise<PipelineStatus> {
+  return fetchJson(`${BASE}/pipeline/status`);
+}

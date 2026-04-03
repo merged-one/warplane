@@ -1179,14 +1179,14 @@ GET  /api/v1/pipeline/status             # Ingestion pipeline stats (per-chain s
 
 ### 5.4 Acceptance Criteria
 
-- [ ] Per-message timeline renders all 11 event kinds with correct visual treatment
-- [ ] On-chain vs off-chain events visually distinguished
-- [ ] Auto-refresh for in-progress traces
-- [ ] Relayer ops panel shows health status, failure classification, latency percentiles
-- [ ] Sig-agg panel shows connected stake weight per subnet
-- [ ] All components handle empty states (no data, metrics unavailable)
-- [ ] Responsive layout for 1024px+ screens
-- [ ] Explorer links open correct chain explorer for each event
+- [x] Per-message timeline renders all 11 event kinds with correct visual treatment
+- [x] On-chain vs off-chain events visually distinguished
+- [x] Auto-refresh for in-progress traces
+- [x] Relayer ops panel shows health status, failure classification, latency percentiles
+- [x] Sig-agg panel shows connected stake weight per subnet
+- [x] All components handle empty states (no data, metrics unavailable)
+- [x] Responsive layout for 1024px+ screens
+- [x] Explorer links open correct chain explorer for each event
 
 ### 5.5 Files
 

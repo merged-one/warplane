@@ -11,6 +11,7 @@ import { TraceDetailPage } from "./pages/TraceDetailPage.js";
 import { FailuresPage } from "./pages/FailuresPage.js";
 import { ScenariosPage } from "./pages/ScenariosPage.js";
 import { DocsPage } from "./pages/DocsPage.js";
+import { RelayerOpsPage } from "./pages/RelayerOpsPage.js";
 
 // ---- Mock data ----
 
@@ -96,6 +97,27 @@ function mockFetch(url: string) {
       ],
     });
   }
+  if (u.includes("/stats/failures")) {
+    return json({ failures: [] });
+  }
+  if (u.includes("/stats/latency")) {
+    return json({ p50: 0, p90: 0, p99: 0, timeSeries: [] });
+  }
+  if (u.includes("/relayer/health/history")) {
+    return json({ history: [] });
+  }
+  if (u.includes("/relayer/health")) {
+    return json({ health: [] });
+  }
+  if (u.includes("/sigagg/health/history")) {
+    return json({ history: [] });
+  }
+  if (u.includes("/sigagg/health")) {
+    return json({ health: null });
+  }
+  if (u.includes("/pipeline/status")) {
+    return json({ status: "idle", traceCount: 8, uptime: 1000 });
+  }
   if (u.includes("/failures")) {
     return json({ failures: [mockFailedTrace] });
   }
@@ -138,6 +160,7 @@ function renderPage(path: string) {
               <Route path="traces" element={<TracesPage />} />
               <Route path="traces/:messageId" element={<TraceDetailPage />} />
               <Route path="failures" element={<FailuresPage />} />
+              <Route path="relayer" element={<RelayerOpsPage />} />
               <Route path="scenarios" element={<ScenariosPage />} />
               <Route path="docs" element={<DocsPage />} />
             </Route>
@@ -215,5 +238,35 @@ describe("DocsPage", () => {
     expect(screen.getAllByText("Docs & Quickstart").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Getting Started").length).toBeGreaterThan(0);
     expect(screen.getAllByText("API Endpoints").length).toBeGreaterThan(0);
+  });
+});
+
+describe("RelayerOpsPage", () => {
+  it("renders the relayer operations page", async () => {
+    renderPage("/relayer");
+    await waitFor(() => {
+      expect(screen.getByText("Relayer Operations")).toBeInTheDocument();
+    });
+    expect(screen.getByText("Health Overview")).toBeInTheDocument();
+    expect(screen.getByText("Failure Classification (Last 24h)")).toBeInTheDocument();
+    expect(screen.getByText("Delivery Latency (Last 24h)")).toBeInTheDocument();
+  });
+});
+
+describe("Navigation", () => {
+  it("shows Relayer nav link", () => {
+    renderPage("/docs");
+    expect(screen.getAllByText("Relayer").length).toBeGreaterThan(0);
+  });
+});
+
+describe("TraceDetailPage enhanced", () => {
+  it("shows on-chain and off-chain tags in timeline", async () => {
+    renderPage(`/traces/${mockTrace.messageId}`);
+    await waitFor(() => {
+      expect(screen.getByText("Trace Detail")).toBeInTheDocument();
+    });
+    // Both events are on-chain (2 events × 2 renders from auto-refresh = 4)
+    expect(screen.getAllByText("on-chain").length).toBeGreaterThanOrEqual(2);
   });
 });

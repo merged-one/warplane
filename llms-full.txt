@@ -1391,7 +1391,11 @@ export {
   getTraceEvents,
   getTimeline,
   countTraces,
+  getFailureClassification,
+  getDeliveryLatencyStats,
   type TraceFilter,
+  type FailureClassificationEntry,
+  type LatencyStats,
 } from "./repos/traces.js";
 
 export { upsertArtifact, listArtifacts, type Artifact } from "./repos/artifacts.js";

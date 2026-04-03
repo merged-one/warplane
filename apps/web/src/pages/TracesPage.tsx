@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { useFetch, useFormatTime } from "../hooks.js";
-import { getTraces, getScenarios } from "../api.js";
+import { getTraces, getScenarios, getChains } from "../api.js";
 import type { ExecutionStatus } from "../api.js";
 import { StatusBadge } from "../components/StatusBadge.js";
 import { Loading } from "../components/Loading.js";
@@ -9,18 +9,21 @@ import { ErrorBox } from "../components/ErrorBox.js";
 
 const PAGE_SIZE = 50;
 
-const STATUSES: ExecutionStatus[] = [
-  "success",
-  "retry_success",
-  "failed",
-  "replay_blocked",
-  "pending",
+const STATUS_CHIPS: Array<{ value: ExecutionStatus | ""; label: string }> = [
+  { value: "", label: "All" },
+  { value: "pending", label: "Pending" },
+  { value: "success", label: "Delivered" },
+  { value: "failed", label: "Failed" },
+  { value: "retry_success", label: "Retrying" },
+  { value: "replay_blocked", label: "Blocked" },
 ];
 
 export function TracesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const scenario = searchParams.get("scenario") ?? "";
   const status = searchParams.get("status") ?? "";
+  const chain = searchParams.get("chain") ?? "";
   const page = Number(searchParams.get("page") ?? "1");
   const [filterMsgId, setFilterMsgId] = useState("");
   const fmt = useFormatTime();
@@ -30,15 +33,22 @@ export function TracesPage() {
       getTraces({
         scenario: scenario || undefined,
         status: status || undefined,
+        chain: chain || undefined,
         messageId: filterMsgId || undefined,
         page,
         pageSize: PAGE_SIZE,
       }),
-    [scenario, status, filterMsgId, page],
+    [scenario, status, chain, filterMsgId, page],
   );
 
   const scenariosRes = useFetch(() => getScenarios());
   const scenarioNames = (scenariosRes.data?.scenarios ?? []).map((s) => s.scenario);
+
+  const chainsRes = useFetch(() => getChains());
+  const chainOptions = (chainsRes.data?.chains ?? []).map((c) => ({
+    id: c.blockchainId,
+    name: c.name,
+  }));
 
   const totalPages = data ? Math.max(1, Math.ceil(data.total / PAGE_SIZE)) : 1;
 
@@ -57,9 +67,28 @@ export function TracesPage() {
     setSearchParams(next);
   }
 
+  function computeLatency(sendTime: string, receiveTime: string): string {
+    const ms = new Date(receiveTime).getTime() - new Date(sendTime).getTime();
+    if (ms <= 0) return "—";
+    return `${(ms / 1000).toFixed(1)}s`;
+  }
+
   return (
     <div>
       <h1>Traces</h1>
+
+      {/* Status filter chips */}
+      <div className="filter-chips" style={{ marginBottom: 12 }}>
+        {STATUS_CHIPS.map((chip) => (
+          <button
+            key={chip.value}
+            className={`chip${status === chip.value ? " chip-active" : ""}`}
+            onClick={() => updateParam("status", chip.value)}
+          >
+            {chip.label}
+          </button>
+        ))}
+      </div>
 
       <div className="filters">
         <label>
@@ -74,12 +103,12 @@ export function TracesPage() {
           </select>
         </label>
         <label>
-          Status:{" "}
-          <select value={status} onChange={(e) => updateParam("status", e.target.value)}>
-            <option value="">All</option>
-            {STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {s}
+          Chain:{" "}
+          <select value={chain} onChange={(e) => updateParam("chain", e.target.value)}>
+            <option value="">All chains</option>
+            {chainOptions.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
               </option>
             ))}
           </select>
@@ -116,16 +145,31 @@ export function TracesPage() {
                 <th>Source</th>
                 <th>Dest</th>
                 <th>Events</th>
+                <th>Latency</th>
                 <th>Send Time</th>
               </tr>
             </thead>
             <tbody>
               {data.traces.map((t) => (
-                <tr key={t.messageId}>
+                <tr
+                  key={t.messageId}
+                  onClick={() => navigate(`/traces/${t.messageId}`)}
+                  style={{ cursor: "pointer" }}
+                >
                   <td>
-                    <Link to={`/traces/${t.messageId}`} className="mono">
+                    <Link
+                      to={`/traces/${t.messageId}`}
+                      className="mono"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       {t.messageId.slice(0, 12)}...
                     </Link>
+                    {t.execution === "pending" && (
+                      <>
+                        {" "}
+                        <span className="live-dot" title="In progress" />
+                      </>
+                    )}
                   </td>
                   <td>{t.scenario}</td>
                   <td>
@@ -134,12 +178,13 @@ export function TracesPage() {
                   <td>{t.source.name}</td>
                   <td>{t.destination.name}</td>
                   <td>{t.events.length}</td>
+                  <td>{computeLatency(t.timestamps.sendTime, t.timestamps.receiveTime)}</td>
                   <td>{fmt(t.timestamps.sendTime)}</td>
                 </tr>
               ))}
               {data.traces.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="muted">
+                  <td colSpan={8} className="muted">
                     No traces match the current filters.
                   </td>
                 </tr>

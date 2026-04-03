@@ -11,6 +11,10 @@ import { registerImportRoutes } from "./import.js";
 import { registerTraceRoutes } from "./traces.js";
 import { registerFailureRoutes } from "./failures.js";
 import { registerSearchRoutes } from "./search.js";
+import { registerRelayerRoutes } from "./relayer.js";
+import { registerSigAggRoutes } from "./sigagg.js";
+import { registerStatsRoutes } from "./stats.js";
+import { registerPipelineRoutes } from "./pipeline.js";
 
 export function registerRoutes(app: FastifyInstance): void {
   registerHealthRoutes(app);
@@ -21,4 +25,8 @@ export function registerRoutes(app: FastifyInstance): void {
   registerTraceRoutes(app);
   registerFailureRoutes(app);
   registerSearchRoutes(app);
+  registerRelayerRoutes(app);
+  registerSigAggRoutes(app);
+  registerStatsRoutes(app);
+  registerPipelineRoutes(app);
 }
