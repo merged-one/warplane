@@ -1,0 +1,56 @@
+# ---------------------------------------------------------------------------
+# Warplane — Local Development Compose
+#
+# Runs Postgres + Warplane API locally with hot-reload for development.
+# Choose your network config via WARPLANE_CONFIG env var.
+#
+# Usage:
+#   docker compose -f docker-compose.dev.yml up postgres     # DB only (for pnpm dev)
+#   docker compose -f docker-compose.dev.yml up              # Full stack
+#
+# Networks:
+#   WARPLANE_CONFIG=config/fuji-example.yaml          docker compose -f docker-compose.dev.yml up
+#   WARPLANE_CONFIG=config/mainnet-example.yaml       docker compose -f docker-compose.dev.yml up
+#   WARPLANE_CONFIG=config/multi-network-example.yaml docker compose -f docker-compose.dev.yml up
+# ---------------------------------------------------------------------------
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: warplane
+      POSTGRES_USER: warplane
+      POSTGRES_PASSWORD: warplane-dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg-dev-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U warplane"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  warplane:
+    build: .
+    ports:
+      - "${WARPLANE_PORT:-3000}:3000"
+    environment:
+      - PORT=3000
+      - DATABASE_URL=postgresql://warplane:warplane-dev@postgres:5432/warplane
+      - WARPLANE_CONFIG=${WARPLANE_CONFIG:-/app/config/multi-network-example.yaml}
+      - WARPLANE_LOG_LEVEL=${WARPLANE_LOG_LEVEL:-debug}
+      - DEMO_MODE=${DEMO_MODE:-true}
+    volumes:
+      - ./config:/app/config:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  pg-dev-data:

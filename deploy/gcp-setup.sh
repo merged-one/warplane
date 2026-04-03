@@ -70,11 +70,20 @@ echo -n "${CONNECTION_STRING}" | \
   echo -n "${CONNECTION_STRING}" | \
   gcloud secrets versions add database-url --data-file=-
 
-# Config secret (from fuji-example.yaml as starting point)
+# Config secret — choose network config
+# NETWORK: fuji (default), mainnet, or multi
+NETWORK=${NETWORK:-fuji}
+case "$NETWORK" in
+  mainnet) CONFIG_FILE=config/mainnet-example.yaml ;;
+  multi)   CONFIG_FILE=config/multi-network-example.yaml ;;
+  *)       CONFIG_FILE=config/fuji-example.yaml ;;
+esac
+
 if gcloud secrets describe warplane-config &>/dev/null; then
-  echo "  warplane-config secret already exists"
+  echo "  Updating warplane-config secret (${NETWORK})…"
+  gcloud secrets versions add warplane-config --data-file="${CONFIG_FILE}"
 else
-  gcloud secrets create warplane-config --data-file=config/fuji-example.yaml
+  gcloud secrets create warplane-config --data-file="${CONFIG_FILE}"
 fi
 
 echo ""
