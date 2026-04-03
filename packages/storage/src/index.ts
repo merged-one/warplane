@@ -46,3 +46,42 @@ export {
   listCheckpoints,
   type Checkpoint,
 } from "./repos/checkpoints.js";
+
+// Database adapter (async interface for new repos)
+export { type DatabaseAdapter, type QueryResult } from "./adapter.js";
+export { createSqliteAdapter } from "./sqlite-adapter.js";
+
+// Health snapshot repositories (async, use DatabaseAdapter)
+export {
+  insertRelayerHealth,
+  getLatestRelayerHealth,
+  listRelayerHealthHistory,
+  type RelayerHealthRow,
+  type InsertRelayerHealth,
+} from "./repos/relayer-health.js";
+
+export {
+  insertSigAggHealth,
+  getLatestSigAggHealth,
+  listSigAggHealthHistory,
+  type SigAggHealthRow,
+  type InsertSigAggHealth,
+} from "./repos/sigagg-health.js";
+
+// Webhook repositories (async, use DatabaseAdapter)
+export {
+  insertWebhookDestination,
+  getWebhookDestination,
+  listWebhookDestinations,
+  updateWebhookDestination,
+  deleteWebhookDestination,
+  insertWebhookDelivery,
+  markDeliveryStatus,
+  getPendingDeliveries,
+  getDeliveriesForMessage,
+  type WebhookDestination,
+  type InsertWebhookDestination,
+  type WebhookDelivery,
+  type InsertWebhookDelivery,
+  type DeliveryStatus,
+} from "./repos/webhooks.js";

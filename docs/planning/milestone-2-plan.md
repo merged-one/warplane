@@ -1008,12 +1008,12 @@ interface DatabaseAdapter {
 
 ### 4.3 Acceptance Criteria
 
-- [ ] Migration 002 applies cleanly on fresh and existing databases
-- [ ] All existing repository functions work against Postgres
-- [ ] All existing tests pass against both SQLite and Postgres
-- [ ] `DATABASE_URL` env var switches between backends automatically
-- [ ] Postgres uses BRIN indexes on time-ordered columns
-- [ ] Connection pooling configured with sensible defaults
+- [x] Migration 003 applies cleanly on fresh and existing databases
+- [x] All existing repository functions work against Postgres
+- [x] All existing tests pass against both SQLite and Postgres
+- [x] `DATABASE_URL` env var switches between backends automatically
+- [x] Postgres uses BRIN indexes on time-ordered columns
+- [x] Connection pooling configured with sensible defaults
 
 ### 4.4 Files
 

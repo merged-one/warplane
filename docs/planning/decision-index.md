@@ -13,6 +13,7 @@ Full records are in [`docs/decisions/`](../decisions/README.md).
 | [0006](../decisions/0006-event-model-contract-alignment.md)        | Event model aligned to TeleporterMessenger contracts | Accepted | 2026-04-02 |
 | [0007](../decisions/0007-four-milestone-grant-delivery.md)         | Four-milestone grant delivery structure              | Accepted | 2026-04-02 |
 | [0008](../decisions/0008-prometheus-offchain-event-correlation.md) | Prometheus-based off-chain event correlation         | Accepted | 2026-04-02 |
+| [0009](../decisions/0009-dual-mode-storage-postgres-adapter.md)    | Dual-mode storage with Postgres adapter              | Accepted | 2026-04-02 |
 
 ## How to add a new decision
 

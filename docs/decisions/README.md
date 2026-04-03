@@ -15,6 +15,7 @@ using [Structured MADR](https://adr.github.io/madr/) format.
 | [0006](0006-event-model-contract-alignment.md)        | Event model aligned to TeleporterMessenger contracts | Accepted |
 | [0007](0007-four-milestone-grant-delivery.md)         | Four-milestone grant delivery structure              | Accepted |
 | [0008](0008-prometheus-offchain-event-correlation.md) | Prometheus-based off-chain event correlation         | Accepted |
+| [0009](0009-dual-mode-storage-postgres-adapter.md)    | Dual-mode storage with Postgres adapter              | Accepted |
 
 ## Creating a new ADR
 
