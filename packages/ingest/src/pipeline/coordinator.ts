@@ -84,7 +84,12 @@ export function createPipeline(db: Database, config?: PipelineConfig): Pipeline 
       }
 
       if (result.isStateChange && alertEvaluator) {
-        await alertEvaluator.evaluate(result);
+        try {
+          await alertEvaluator.evaluate(result);
+        } catch {
+          // Alert evaluation failures must not disrupt pipeline processing.
+          // The event has already been correlated and will be persisted.
+        }
       }
     }
 

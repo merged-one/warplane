@@ -354,6 +354,22 @@ describe("GET /api/v1/pipeline/status", () => {
     expect(typeof body.traceCount).toBe("number");
     expect(typeof body.uptime).toBe("number");
   });
+
+  it("returns complete schema with chains and stats when idle", async () => {
+    const res = await app.inject({ method: "GET", url: "/api/v1/pipeline/status" });
+    const body = res.json();
+    expect(body).toHaveProperty("chains");
+    expect(body).toHaveProperty("stats");
+    expect(Array.isArray(body.chains)).toBe(true);
+    expect(body.chains.length).toBe(0); // No orchestrator = no chains
+  });
+
+  it("includes seeded trace count from database", async () => {
+    const res = await app.inject({ method: "GET", url: "/api/v1/pipeline/status" });
+    const body = res.json();
+    // Demo mode seeds 9 traces, so count should reflect DB state
+    expect(body.traceCount).toBeGreaterThan(0);
+  });
 });
 
 // ---------------------------------------------------------------------------
