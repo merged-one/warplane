@@ -51,11 +51,12 @@ gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
 echo "==> Creating Cloud SQL Postgres instance (db-f1-micro)"
 gcloud sql instances create "${INSTANCE}" \
   --database-version=POSTGRES_16 \
+  --edition=enterprise \
   --tier=db-f1-micro \
   --region="${REGION}" \
   --storage-size=10 \
   --storage-type=HDD \
-  --no-assign-ip \
+  --assign-ip \
   2>/dev/null || echo "  (instance already exists)"
 
 echo "==> Creating database and setting password"
@@ -76,6 +77,7 @@ NETWORK=${NETWORK:-fuji}
 case "$NETWORK" in
   mainnet) CONFIG_FILE=config/mainnet-example.yaml ;;
   multi)   CONFIG_FILE=config/multi-network-example.yaml ;;
+  prod)    CONFIG_FILE=config/multi-network-prod.yaml ;;
   *)       CONFIG_FILE=config/fuji-example.yaml ;;
 esac
 

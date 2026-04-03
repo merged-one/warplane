@@ -20,12 +20,33 @@ export interface PostgresAdapterConfig {
  * Create a Postgres-backed DatabaseAdapter.
  */
 export function createPostgresAdapter(config: PostgresAdapterConfig): DatabaseAdapter {
-  const sql = postgres(config.connectionString, {
+  // Cloud SQL connection strings use ?host=/cloudsql/... which Node's URL parser
+  // rejects (no hostname between @ and /). Parse manually for the postgres driver.
+  const connStr = config.connectionString;
+  const hostMatch = connStr.match(/[?&]host=([^&]+)/);
+  const isCloudSql = hostMatch && hostMatch[1]?.startsWith("/cloudsql/");
+
+  let sqlOpts: Record<string, unknown> = {
     max: config.poolSize ?? 10,
     idle_timeout: config.idleTimeout ?? 30,
     ssl: config.ssl ? { rejectUnauthorized: false } : undefined,
     transform: { undefined: null },
-  });
+  };
+
+  if (isCloudSql) {
+    // Extract parts: postgresql://user:pass@/dbname?host=/cloudsql/...
+    const userPassMatch = connStr.match(/postgresql:\/\/([^:]+):([^@]+)@/);
+    const dbMatch = connStr.match(/@\/([^?]+)/);
+    sqlOpts = {
+      ...sqlOpts,
+      host: hostMatch![1],
+      username: userPassMatch?.[1] ?? "postgres",
+      password: decodeURIComponent(userPassMatch?.[2] ?? ""),
+      database: dbMatch?.[1] ?? "warplane",
+    };
+  }
+
+  const sql = isCloudSql ? postgres(sqlOpts as never) : postgres(connStr, sqlOpts as never);
 
   const adapter: DatabaseAdapter = {
     dialect: "postgres" as const,

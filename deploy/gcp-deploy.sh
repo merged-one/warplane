@@ -39,7 +39,7 @@ gcloud run deploy "${SERVICE}" \
   --min-instances=0 \
   --max-instances=3 \
   --port=3000 \
-  --set-env-vars="NODE_ENV=production,WARPLANE_LOG_LEVEL=info,DEMO_MODE=true,HOST=0.0.0.0" \
+  --set-env-vars="NODE_ENV=production,WARPLANE_LOG_LEVEL=info,DEMO_MODE=false,HOST=0.0.0.0,WARPLANE_CONFIG=/secrets/config/warplane.yaml" \
   --set-secrets="DATABASE_URL=database-url:latest" \
   --set-secrets="/secrets/config/warplane.yaml=warplane-config:latest" \
   --add-cloudsql-instances="${PROJECT}:${REGION}:${INSTANCE}" \

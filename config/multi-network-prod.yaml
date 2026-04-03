@@ -1,0 +1,30 @@
+# Warplane — Multi-Network Production Config (Mainnet + Fuji)
+#
+# Monitors both Avalanche Mainnet and Fuji Testnet simultaneously.
+# Uses recent startBlocks so the initial backfill completes in minutes.
+#
+# To update startBlocks to current tip:
+#   ./scripts/get-tip-block.sh https://api.avax.network/ext/bc/C/rpc
+#   ./scripts/get-tip-block.sh https://api.avax-test.network/ext/bc/C/rpc
+# Subtract ~1000 blocks for ~30 minutes of history.
+
+chains:
+  # ── Mainnet ──────────────────────────────────────────────────────────
+  - name: "Mainnet C-Chain"
+    blockchainId: "2q9e4r6Mu3U68nU1fYjgbR6JvwrRx36CohpAX5UQxse55x1Q5"
+    evmChainId: 43114
+    rpcUrl: "https://api.avax.network/ext/bc/C/rpc"
+    wsUrl: "wss://api.avax.network/ext/bc/C/ws"
+    teleporterAddress: "0x253b2784c75e510dD0fF1da844684a1aC0aa5fcf"
+    startBlock: 82037900
+
+  # ── Fuji Testnet ─────────────────────────────────────────────────────
+  - name: "Fuji C-Chain"
+    blockchainId: "yH8D7ThNJkxmtkuv2jgBa4P1Rn3Qpr4pPr7QYNfcdoS6k6HWp"
+    evmChainId: 43113
+    rpcUrl: "https://api.avax-test.network/ext/bc/C/rpc"
+    wsUrl: "wss://api.avax-test.network/ext/bc/C/ws"
+    teleporterAddress: "0x253b2784c75e510dD0fF1da844684a1aC0aa5fcf"
+    startBlock: 53598000
+
+logLevel: "info"
