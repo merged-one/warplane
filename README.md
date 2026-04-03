@@ -1,8 +1,20 @@
-# Warplane
+<p align="center">
+  <img src="docs/assets/header.svg" alt="Warplane — Interchain Control Plane" width="900"/>
+</p>
 
-**Interchain Control Plane for Avalanche L1s**
+<p align="center">
+  <strong>Unified observability and cross-chain message tracing for Avalanche L1 subnet operators.</strong><br/>
+  Captures the full lifecycle of Teleporter messages — from send through relay, delivery, retry, and replay protection — and surfaces them through a REST API, web dashboard, and CLI.
+</p>
 
-Warplane provides unified observability and cross-chain message tracing for Avalanche L1 subnet operators. It captures the full lifecycle of Teleporter messages — from send through relay, delivery, retry, and replay protection — and surfaces them through a REST API, web dashboard, and CLI.
+<p align="center">
+  <a href="docs/planning/roadmap.md">Roadmap</a> &middot;
+  <a href="docs/runbooks/api.md">API Docs</a> &middot;
+  <a href="CONTRIBUTING.md">Contributing</a> &middot;
+  <a href="docs/decisions/README.md">ADRs</a>
+</p>
+
+---
 
 ## What Warplane Does
 
@@ -33,7 +45,7 @@ This builds all packages, seeds the database with 8 golden Teleporter traces acr
 | API          | http://localhost:3100              |
 | Swagger UI   | http://localhost:3100/docs         |
 | OpenAPI spec | http://localhost:3100/openapi.json |
-| Health check | http://localhost:3100/healthz      |
+| Health check | http://localhost:3100/health       |
 
 Try the CLI (in a separate terminal):
 
