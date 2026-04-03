@@ -4,7 +4,7 @@
 
 | Field             | Value                        |
 | ----------------- | ---------------------------- |
-| Status            | Stage 1 Complete (code)      |
+| Status            | Stages 1–5 Complete          |
 | Target completion | August 31, 2026              |
 | Budget            | $40,000                      |
 | Author            | Generated from SOTA research |

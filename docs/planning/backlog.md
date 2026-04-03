@@ -6,25 +6,25 @@ and [work-items.yaml](work-items.yaml) for machine-readable tracking.
 
 ## Milestone 2 (Fuji Alpha -- target Aug 31, 2026)
 
-### P0 -- Critical path
+### P0 -- Critical path (all complete)
 
-- **RPC polling ingestion** (WP-101): `eth_getLogs` for all 8 TeleporterMessenger events + WebSocket for block headers
-- **Event normalization pipeline** (WP-104): Convert raw logs + metrics into canonical 11-event MessageEvent objects
-- **Per-message tracing UI** (WP-105): Lifecycle timeline with real-time updates
+- ~~**RPC polling ingestion** (WP-101)~~: Done — Stage 1
+- ~~**Event normalization pipeline** (WP-104)~~: Done — Stage 2
+- ~~**Per-message tracing UI** (WP-105)~~: Done — Stage 5
 
-### P1 -- High value
+### P1 -- High value (5/7 complete)
 
-- **Relayer Prometheus metrics** (WP-102): 15 metrics from port 9090 (relay success/failure counts, latency, checkpoints)
-- **Sig-agg Prometheus metrics** (WP-103): 11 metrics from port 8081 (aggregation latency, validator timeouts, stake weight)
-- **Relayer operations panel** (WP-106): Health, lag, failure classification dashboard
-- **Webhook alerting** (WP-107): Push notifications for failed/delayed cross-chain flows
-- **Docker Compose** (WP-108): Self-hosted deployment with API + web + ingest worker
-- **Fuji deployment guide** (WP-109): Step-by-step for connecting to Fuji testnet
-- **E2E test wiring** (WP-110): Real tmpnet integration for `make e2e`
+- ~~**Relayer Prometheus metrics** (WP-102)~~: Done — Stage 3
+- ~~**Sig-agg Prometheus metrics** (WP-103)~~: Done — Stage 3
+- ~~**Relayer operations panel** (WP-106)~~: Done — Stage 5
+- **Webhook alerting** (WP-107): Planned — Stage 6
+- **Docker Compose** (WP-108): Planned — Stage 7
+- **Fuji deployment guide** (WP-109): Planned — Stage 7
+- **E2E test wiring** (WP-110): Planned — Stage 8
 
-### P2 -- Nice to have
+### P2 -- Nice to have (complete)
 
-- **Postgres adapter** (WP-111): Production-ready persistence option alongside SQLite
+- ~~**Postgres adapter** (WP-111)~~: Done — Stage 4
 
 ## Milestone 3 (Policy Engine -- target Nov 15, 2026)
 

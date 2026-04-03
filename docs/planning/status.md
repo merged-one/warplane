@@ -1,6 +1,6 @@
-# Milestone 1 -- Status
+# Milestone Status
 
-Last updated: 2026-04-01
+Last updated: 2026-04-02
 
 ## Summary
 
@@ -122,14 +122,108 @@ Milestone 1 is complete. All planned deliverables have been implemented, tested,
 - [x] MCP docs server with resources, prompts, and tools
 - [x] `docs/ai/context-map.json` machine-readable file index
 
-## Backlog (deferred to M2+)
+## Backlog (deferred to later M2 stages)
 
 See [`backlog.md`](backlog.md) and [`work-items.yaml`](work-items.yaml) for full details.
 
-- Real Avalanche RPC polling
-- Docker Compose
-- Full E2E test wiring with live tmpnet
-- Postgres storage adapter option
+- ~~Real Avalanche RPC polling~~ → Done (Stage 1)
+- Docker Compose → Planned (Stage 7)
+- ~~Full E2E test wiring with live tmpnet~~ → Partially done (Stage 8)
+- ~~Postgres storage adapter option~~ → Done (Stage 4)
+
+---
+
+## Milestone 2 -- Status (In Progress)
+
+### Summary
+
+Milestone 2 Stages 1–5 of 8 are complete. The ingestion pipeline, event normalization,
+Prometheus metrics integration, storage evolution, and tracing UI / relayer ops dashboard
+are all shipped. Remaining work: webhooks, Docker Compose, Fuji deployment, and E2E hardening.
+
+### Stage 1: RPC Ingestion Engine (Complete)
+
+- [x] `eth_getLogs` polling with configurable block range and backfill
+- [x] WebSocket `newHeads` subscription for real-time block tracking
+- [x] Block tracker with reorg-aware cursor management
+- [x] Log fetcher with rate limiting and retry logic
+- [x] Event decoder for all 8 TeleporterMessenger contract events
+- [x] Orchestrator coordinating block tracker, fetcher, and decoder
+- [x] Checkpoint persistence for ingestion state recovery
+- [x] 113 tests passing
+
+### Stage 2: Event Normalization & Correlation (Complete)
+
+- [x] Normalizer: raw EVM logs → canonical 11-kind MessageEvent objects
+- [x] Correlator: cross-chain message state machine (source + destination matching)
+- [x] Scenario classifier: auto-detect scenario type from event sequences
+- [x] Pipeline coordinator: connects ingest stages with storage writes
+- [x] ADR-0006 event model alignment verified
+
+### Stage 3: Prometheus Metrics Integration (Complete)
+
+- [x] Generic Prometheus scraper with configurable endpoints
+- [x] Prometheus text format parser (counters, gauges, histograms, summaries)
+- [x] Relayer metrics: 15 metrics → RelayerHealthSnapshot (success rate, latency, lag, failures)
+- [x] Sig-agg metrics: 11 metrics → SigAggHealthSnapshot (aggregation latency, stake weight, cache hit rate)
+- [x] ADR-0008 Prometheus-based off-chain event correlation
+
+### Stage 4: Storage Evolution & Postgres (Complete)
+
+- [x] Async `DatabaseAdapter` interface for storage abstraction
+- [x] `createSqliteAdapter` wrapping sync better-sqlite3 calls
+- [x] Health snapshot repos: `relayer-health.ts`, `sigagg-health.ts`
+- [x] Webhook repos: `webhooks.ts` with delivery tracking
+- [x] Checkpoint repos: `checkpoints.ts` for ingestion cursors
+- [x] New migration: `003_health_snapshots.sql` (4 new tables)
+- [x] ADR-0009 dual-mode storage with Postgres adapter
+
+### Stage 5: Tracing UI & Relayer Ops Dashboard (Complete)
+
+- [x] Per-message lifecycle timeline with on-chain (●) vs off-chain (○) distinction
+- [x] Enhanced trace list with status filter chips, chain filter, latency column
+- [x] Relayer ops dashboard: health overview, failure chart, latency percentiles, sparkline
+- [x] Signature aggregator panel with stake weight bars per subnet
+- [x] API endpoints: relayer health, sig-agg health, stats/failures, stats/latency, pipeline status
+- [x] Pure CSS/SVG charting (zero external dependencies)
+- [x] Auto-refresh for pending traces (5s interval)
+- [x] 413 total tests passing (403 backend + 10 web)
+
+### Stage 6: Alerting & Webhooks (Planned)
+
+- [ ] Webhook subscription management API
+- [ ] At-least-once delivery with HMAC verification
+- [ ] Exponential backoff and dead-letter queue
+- [ ] Alert rules for failed, delayed, and stuck messages
+
+### Stage 7: Docker Compose & Fuji Deployment (Planned)
+
+- [ ] Docker Compose for self-hosted deployment
+- [ ] Fuji-compatible deployment guide and configuration
+
+### Stage 8: E2E Testing & Hardening (Planned)
+
+- [ ] Real tmpnet E2E integration wiring
+- [ ] Load testing and performance benchmarks
+
+### Test counts
+
+| Package   | Tests   |
+| --------- | ------- |
+| domain    | 31      |
+| storage   | 85      |
+| ingest    | 277     |
+| api       | 10      |
+| web       | 10      |
+| **Total** | **413** |
+
+### Architecture Decisions (M2)
+
+- [x] ADR-0005: RPC-first multi-source ingestion
+- [x] ADR-0006: Event model aligned to TeleporterMessenger contracts
+- [x] ADR-0007: Four-milestone grant delivery
+- [x] ADR-0008: Prometheus-based off-chain event correlation
+- [x] ADR-0009: Dual-mode storage with Postgres adapter
 
 ## Links
 
@@ -139,3 +233,4 @@ See [`backlog.md`](backlog.md) and [`work-items.yaml`](work-items.yaml) for full
 - [Decision log](../decisions/README.md)
 - [Product one-pager](../product/one-pager.md)
 - [Milestone 1 report](milestone-1-report.md)
+- [Milestone 2 plan](milestone-2-plan.md)

@@ -14,7 +14,9 @@ Warplane provides unified observability and cross-chain message tracing for Aval
 ## What Warplane Does
 
 - **Trace Teleporter messages** across L1 chains with a canonical 11-event lifecycle model
-- **Visualize cross-chain activity** through an interactive web dashboard
+- **Visualize cross-chain activity** through an interactive web dashboard with per-message lifecycle timelines
+- **Monitor relayer health** with real-time health status, failure classification, and delivery latency percentiles
+- **Ingest live chain data** via RPC polling, WebSocket subscriptions, and Prometheus metrics scraping
 - **Query traces programmatically** via REST API with OpenAPI 3.1 documentation
 - **Run deterministic test scenarios** covering success, failure, retry, fee addition, and replay protection
 - **Validate message flows** against typed Zod schemas with generated JSON Schema and OpenAPI specs
@@ -31,13 +33,14 @@ pnpm demo:seed
 
 This builds all packages, seeds the database with 8 golden Teleporter traces across 5 scenarios, and starts both the API and web dashboard:
 
-| Service      | URL                                |
-| ------------ | ---------------------------------- |
-| Dashboard    | http://localhost:5173              |
-| API          | http://localhost:3100              |
-| Swagger UI   | http://localhost:3100/docs         |
-| OpenAPI spec | http://localhost:3100/openapi.json |
-| Health check | http://localhost:3100/healthz      |
+| Service        | URL                                |
+| -------------- | ---------------------------------- |
+| Dashboard      | http://localhost:5173              |
+| Relayer Ops    | http://localhost:5173/relayer      |
+| API            | http://localhost:3100              |
+| Swagger UI     | http://localhost:3100/docs         |
+| OpenAPI spec   | http://localhost:3100/openapi.json |
+| Health check   | http://localhost:3100/healthz      |
 
 Try the CLI (in a separate terminal):
 
@@ -74,12 +77,12 @@ The golden fixture dataset covers five deterministic Teleporter scenarios:
 ```
 apps/
   api/          Fastify REST API server (@warplane/api)
-  web/          React + Vite dashboard (@warplane/web)
+  web/          React + Vite dashboard with relayer ops (@warplane/web)
   docs/         VitePress documentation site (@warplane/docs-site)
 packages/
   domain/       Core types and Zod schemas (@warplane/domain)
-  storage/      SQLite persistence layer (@warplane/storage)
-  ingest/       Artifact ingestion pipeline (@warplane/ingest)
+  storage/      SQLite + Postgres persistence layer (@warplane/storage)
+  ingest/       RPC, WebSocket, and Prometheus ingestion pipeline (@warplane/ingest)
   cli/          CLI tool (@warplane/cli)
   docs-mcp/     MCP server for docs (@warplane/docs-mcp)
 harness/
@@ -128,7 +131,22 @@ CI runs automatically on push to `main` and on pull requests:
 | [Trace model](docs/runbooks/trace-model.md)        | Teleporter event lifecycle  |
 | [Full E2E guide](docs/runbooks/full-e2e.md)        | Running with live Avalanche |
 | [Storage runbook](docs/runbooks/storage.md)        | Database and ingestion      |
+| [API runbook](docs/runbooks/api.md)                | API endpoints and usage     |
+| [Milestone 2 plan](docs/planning/milestone-2-plan.md) | M2 implementation stages |
 | [Contributing](CONTRIBUTING.md)                    | How to contribute           |
+
+## Current Status
+
+**Milestone 1** is complete (monorepo, domain model, storage, API, web dashboard, CLI, harness, CI).
+
+**Milestone 2** is in progress — Stages 1–5 of 8 complete:
+- Stage 1: RPC ingestion engine with block tracking and log decoding
+- Stage 2: Event normalization pipeline with cross-chain message correlation
+- Stage 3: Prometheus metrics integration (relayer + signature aggregator health)
+- Stage 4: Storage evolution with async DatabaseAdapter and Postgres compatibility
+- Stage 5: Per-message tracing UI, relayer ops dashboard, and stats API
+
+Remaining: Stage 6 (webhooks), Stage 7 (Docker Compose + Fuji deployment), Stage 8 (E2E hardening).
 
 ## License
 
@@ -153,9 +171,9 @@ apps/
   web/          React + Vite dashboard (@warplane/web)
   docs/         VitePress documentation site (@warplane/docs-site)
 packages/
-  domain/       Core types: ChainId, Subnet, HealthStatus, ChainStatus (@warplane/domain)
-  storage/      Persistence interfaces (@warplane/storage)
-  ingest/       Data ingestion pipeline (@warplane/ingest)
+  domain/       Core types: ChainId, Subnet, HealthStatus, ChainStatus, MessageTrace (@warplane/domain)
+  storage/      SQLite + Postgres persistence with DatabaseAdapter (@warplane/storage)
+  ingest/       RPC, WebSocket, and Prometheus ingestion pipeline (@warplane/ingest)
   cli/          CLI tool (@warplane/cli)
   docs-mcp/     MCP server for docs (@warplane/docs-mcp)
 harness/
@@ -294,9 +312,51 @@ See `packages/docs-mcp/README.md` for resources, prompts, and tools.
 ## Current State
 
 - **Milestone 1** is complete (monorepo skeleton, domain types, API, web dashboard, CLI, docs, Go harness, CI)
-- Data is fixture-based (no real Avalanche RPC calls yet — seeded golden traces)
+- **Milestone 2** Stages 1–5 of 8 are complete:
+  - Stage 1: RPC ingestion engine (block tracker, log fetcher, event decoder, orchestrator)
+  - Stage 2: Event normalization pipeline (normalizer, correlator, state machine per message)
+  - Stage 3: Prometheus metrics integration (relayer health, sig-agg health, scraper)
+  - Stage 4: Storage evolution (async DatabaseAdapter, Postgres adapter, health/webhook repos)
+  - Stage 5: Tracing UI (lifecycle timeline, relayer ops dashboard, stats API endpoints)
+- Remaining M2 work: Stage 6 (webhooks), Stage 7 (Docker + Fuji), Stage 8 (E2E hardening)
 - CI pipeline runs on push to main and PRs
 - See `docs/planning/status.md` for full details
+
+## Architecture Patterns (M2)
+
+### Sync/Async Database Bridge
+
+The API server uses both patterns:
+- **Sync `app.db`** (better-sqlite3 `Database`) — traces, chains, scenarios, search
+- **Async `app.asyncDb`** (`DatabaseAdapter` via `createSqliteAdapter`) — health repos, webhooks
+
+Both wrap the same underlying SQLite connection. New async repos (`relayer-health.ts`, `sigagg-health.ts`, `webhooks.ts`) use `DatabaseAdapter` for Postgres compatibility.
+
+### Ingestion Pipeline
+
+```
+RPC Provider → BlockTracker → LogFetcher → EventDecoder → Normalizer → Correlator → Storage
+                                                                        ↑
+Prometheus Scraper → RelayerMetrics / SigAggMetrics ─────────────────────┘
+```
+
+### Web Dashboard Pages
+
+| Route             | Component          | Data Sources                       |
+| ----------------- | ------------------ | ---------------------------------- |
+| `/`               | OverviewPage       | Health, traces, scenarios          |
+| `/traces`         | TracesPage         | Traces (filtered, paginated)       |
+| `/traces/:id`     | TraceDetailPage    | Single trace + events timeline     |
+| `/failures`       | FailuresPage       | Failed/blocked traces              |
+| `/scenarios`      | ScenariosPage      | Scenario runs                      |
+| `/relayer`        | RelayerOpsPage     | Relayer health, failure stats, latency |
+| `/docs`           | DocsPage           | Embedded documentation             |
+
+### UI Component Patterns
+
+- **No charting library** — pure CSS bars + inline SVG sparklines (zero external deps)
+- **On-chain vs off-chain events** — classified by event kind; visual distinction via filled (●) vs hollow (○) dots
+- **Auto-refresh** — `useFetch` hook with interval for pending traces (5s) and dashboard panels
 
 ---
 ## File: docs/product/one-pager.md
@@ -437,7 +497,7 @@ See [milestone-1-report.md](milestone-1-report.md) for full details.
 
 ## Milestone 2 -- Fuji Alpha for Observability, Relayer Ops, and Eventing
 
-**Status:** Planned
+**Status:** In Progress (Stages 1–5 of 8 Complete)
 **Target completion:** August 31, 2026
 **Amount:** $40,000
 
@@ -448,20 +508,20 @@ for interchain applications and operational visibility into relayer health and d
 
 ### Deliverables
 
-| #   | Deliverable                                          | Package(s)         | Priority |
-| --- | ---------------------------------------------------- | ------------------ | -------- |
-| 1   | RPC polling ingestion for TeleporterMessenger events | `packages/ingest`  | P0       |
-| 2   | WebSocket subscription for real-time block headers   | `packages/ingest`  | P0       |
-| 3   | Relayer Prometheus metrics integration               | `packages/ingest`  | P1       |
-| 4   | Signature aggregator metrics integration             | `packages/ingest`  | P1       |
-| 5   | Event normalization pipeline (8+ event types)        | `packages/ingest`  | P0       |
-| 6   | Per-message tracing UI with lifecycle timeline       | `apps/web`         | P0       |
-| 7   | Relayer operations panel (health, lag, failures)     | `apps/web`         | P1       |
-| 8   | Webhook alerting for failed/delayed flows            | `apps/api`         | P1       |
-| 9   | Docker Compose for self-hosted deployment            | root               | P1       |
-| 10  | Fuji-compatible deployment guide                     | `apps/docs`        | P1       |
-| 11  | E2E test wiring with real tmpnet                     | `harness/tmpnet`   | P1       |
-| 12  | Postgres storage adapter                             | `packages/storage` | P2       |
+| #   | Deliverable                                          | Package(s)         | Priority | Status      |
+| --- | ---------------------------------------------------- | ------------------ | -------- | ----------- |
+| 1   | RPC polling ingestion for TeleporterMessenger events | `packages/ingest`  | P0       | Done (S1)   |
+| 2   | WebSocket subscription for real-time block headers   | `packages/ingest`  | P0       | Done (S1)   |
+| 3   | Relayer Prometheus metrics integration               | `packages/ingest`  | P1       | Done (S3)   |
+| 4   | Signature aggregator metrics integration             | `packages/ingest`  | P1       | Done (S3)   |
+| 5   | Event normalization pipeline (8+ event types)        | `packages/ingest`  | P0       | Done (S2)   |
+| 6   | Per-message tracing UI with lifecycle timeline       | `apps/web`         | P0       | Done (S5)   |
+| 7   | Relayer operations panel (health, lag, failures)     | `apps/web`         | P1       | Done (S5)   |
+| 8   | Webhook alerting for failed/delayed flows            | `apps/api`         | P1       | Planned (S6)|
+| 9   | Docker Compose for self-hosted deployment            | root               | P1       | Planned (S7)|
+| 10  | Fuji-compatible deployment guide                     | `apps/docs`        | P1       | Planned (S7)|
+| 11  | E2E test wiring with real tmpnet                     | `harness/tmpnet`   | P1       | Planned (S8)|
+| 12  | Postgres storage adapter                             | `packages/storage` | P2       | Done (S4)   |
 
 ### KPIs
 
@@ -476,6 +536,10 @@ for interchain applications and operational visibility into relayer health and d
   Prometheus metrics supplementary
 - [ADR-0006](../decisions/0006-event-model-contract-alignment.md): 11-event model aligned
   to 8 contract events + 3 off-chain derived states
+- [ADR-0008](../decisions/0008-prometheus-offchain-event-correlation.md): Prometheus-based
+  off-chain event correlation for relayer/sig-agg metrics
+- [ADR-0009](../decisions/0009-dual-mode-storage-postgres-adapter.md): Dual-mode storage
+  with async DatabaseAdapter for Postgres compatibility
 
 ### Why This Scope
 
@@ -610,9 +674,9 @@ trigger remediation.
 ---
 ## File: docs/planning/status.md
 
-# Milestone 1 -- Status
+# Milestone Status
 
-Last updated: 2026-04-01
+Last updated: 2026-04-02
 
 ## Summary
 
@@ -734,14 +798,108 @@ Milestone 1 is complete. All planned deliverables have been implemented, tested,
 - [x] MCP docs server with resources, prompts, and tools
 - [x] `docs/ai/context-map.json` machine-readable file index
 
-## Backlog (deferred to M2+)
+## Backlog (deferred to later M2 stages)
 
 See [`backlog.md`](backlog.md) and [`work-items.yaml`](work-items.yaml) for full details.
 
-- Real Avalanche RPC polling
-- Docker Compose
-- Full E2E test wiring with live tmpnet
-- Postgres storage adapter option
+- ~~Real Avalanche RPC polling~~ → Done (Stage 1)
+- Docker Compose → Planned (Stage 7)
+- ~~Full E2E test wiring with live tmpnet~~ → Partially done (Stage 8)
+- ~~Postgres storage adapter option~~ → Done (Stage 4)
+
+---
+
+## Milestone 2 -- Status (In Progress)
+
+### Summary
+
+Milestone 2 Stages 1–5 of 8 are complete. The ingestion pipeline, event normalization,
+Prometheus metrics integration, storage evolution, and tracing UI / relayer ops dashboard
+are all shipped. Remaining work: webhooks, Docker Compose, Fuji deployment, and E2E hardening.
+
+### Stage 1: RPC Ingestion Engine (Complete)
+
+- [x] `eth_getLogs` polling with configurable block range and backfill
+- [x] WebSocket `newHeads` subscription for real-time block tracking
+- [x] Block tracker with reorg-aware cursor management
+- [x] Log fetcher with rate limiting and retry logic
+- [x] Event decoder for all 8 TeleporterMessenger contract events
+- [x] Orchestrator coordinating block tracker, fetcher, and decoder
+- [x] Checkpoint persistence for ingestion state recovery
+- [x] 113 tests passing
+
+### Stage 2: Event Normalization & Correlation (Complete)
+
+- [x] Normalizer: raw EVM logs → canonical 11-kind MessageEvent objects
+- [x] Correlator: cross-chain message state machine (source + destination matching)
+- [x] Scenario classifier: auto-detect scenario type from event sequences
+- [x] Pipeline coordinator: connects ingest stages with storage writes
+- [x] ADR-0006 event model alignment verified
+
+### Stage 3: Prometheus Metrics Integration (Complete)
+
+- [x] Generic Prometheus scraper with configurable endpoints
+- [x] Prometheus text format parser (counters, gauges, histograms, summaries)
+- [x] Relayer metrics: 15 metrics → RelayerHealthSnapshot (success rate, latency, lag, failures)
+- [x] Sig-agg metrics: 11 metrics → SigAggHealthSnapshot (aggregation latency, stake weight, cache hit rate)
+- [x] ADR-0008 Prometheus-based off-chain event correlation
+
+### Stage 4: Storage Evolution & Postgres (Complete)
+
+- [x] Async `DatabaseAdapter` interface for storage abstraction
+- [x] `createSqliteAdapter` wrapping sync better-sqlite3 calls
+- [x] Health snapshot repos: `relayer-health.ts`, `sigagg-health.ts`
+- [x] Webhook repos: `webhooks.ts` with delivery tracking
+- [x] Checkpoint repos: `checkpoints.ts` for ingestion cursors
+- [x] New migration: `003_health_snapshots.sql` (4 new tables)
+- [x] ADR-0009 dual-mode storage with Postgres adapter
+
+### Stage 5: Tracing UI & Relayer Ops Dashboard (Complete)
+
+- [x] Per-message lifecycle timeline with on-chain (●) vs off-chain (○) distinction
+- [x] Enhanced trace list with status filter chips, chain filter, latency column
+- [x] Relayer ops dashboard: health overview, failure chart, latency percentiles, sparkline
+- [x] Signature aggregator panel with stake weight bars per subnet
+- [x] API endpoints: relayer health, sig-agg health, stats/failures, stats/latency, pipeline status
+- [x] Pure CSS/SVG charting (zero external dependencies)
+- [x] Auto-refresh for pending traces (5s interval)
+- [x] 413 total tests passing (403 backend + 10 web)
+
+### Stage 6: Alerting & Webhooks (Planned)
+
+- [ ] Webhook subscription management API
+- [ ] At-least-once delivery with HMAC verification
+- [ ] Exponential backoff and dead-letter queue
+- [ ] Alert rules for failed, delayed, and stuck messages
+
+### Stage 7: Docker Compose & Fuji Deployment (Planned)
+
+- [ ] Docker Compose for self-hosted deployment
+- [ ] Fuji-compatible deployment guide and configuration
+
+### Stage 8: E2E Testing & Hardening (Planned)
+
+- [ ] Real tmpnet E2E integration wiring
+- [ ] Load testing and performance benchmarks
+
+### Test counts
+
+| Package   | Tests |
+| --------- | ----- |
+| domain    | 31    |
+| storage   | 85    |
+| ingest    | 277   |
+| api       | 10    |
+| web       | 10    |
+| **Total** | **413** |
+
+### Architecture Decisions (M2)
+
+- [x] ADR-0005: RPC-first multi-source ingestion
+- [x] ADR-0006: Event model aligned to TeleporterMessenger contracts
+- [x] ADR-0007: Four-milestone grant delivery
+- [x] ADR-0008: Prometheus-based off-chain event correlation
+- [x] ADR-0009: Dual-mode storage with Postgres adapter
 
 ## Links
 
@@ -751,6 +909,7 @@ See [`backlog.md`](backlog.md) and [`work-items.yaml`](work-items.yaml) for full
 - [Decision log](../decisions/README.md)
 - [Product one-pager](../product/one-pager.md)
 - [Milestone 1 report](milestone-1-report.md)
+- [Milestone 2 plan](milestone-2-plan.md)
 
 ---
 ## File: docs/planning/working-agreement.md
@@ -853,25 +1012,25 @@ and [work-items.yaml](work-items.yaml) for machine-readable tracking.
 
 ## Milestone 2 (Fuji Alpha -- target Aug 31, 2026)
 
-### P0 -- Critical path
+### P0 -- Critical path (all complete)
 
-- **RPC polling ingestion** (WP-101): `eth_getLogs` for all 8 TeleporterMessenger events + WebSocket for block headers
-- **Event normalization pipeline** (WP-104): Convert raw logs + metrics into canonical 11-event MessageEvent objects
-- **Per-message tracing UI** (WP-105): Lifecycle timeline with real-time updates
+- ~~**RPC polling ingestion** (WP-101)~~: Done — Stage 1
+- ~~**Event normalization pipeline** (WP-104)~~: Done — Stage 2
+- ~~**Per-message tracing UI** (WP-105)~~: Done — Stage 5
 
-### P1 -- High value
+### P1 -- High value (5/7 complete)
 
-- **Relayer Prometheus metrics** (WP-102): 15 metrics from port 9090 (relay success/failure counts, latency, checkpoints)
-- **Sig-agg Prometheus metrics** (WP-103): 11 metrics from port 8081 (aggregation latency, validator timeouts, stake weight)
-- **Relayer operations panel** (WP-106): Health, lag, failure classification dashboard
-- **Webhook alerting** (WP-107): Push notifications for failed/delayed cross-chain flows
-- **Docker Compose** (WP-108): Self-hosted deployment with API + web + ingest worker
-- **Fuji deployment guide** (WP-109): Step-by-step for connecting to Fuji testnet
-- **E2E test wiring** (WP-110): Real tmpnet integration for `make e2e`
+- ~~**Relayer Prometheus metrics** (WP-102)~~: Done — Stage 3
+- ~~**Sig-agg Prometheus metrics** (WP-103)~~: Done — Stage 3
+- ~~**Relayer operations panel** (WP-106)~~: Done — Stage 5
+- **Webhook alerting** (WP-107): Planned — Stage 6
+- **Docker Compose** (WP-108): Planned — Stage 7
+- **Fuji deployment guide** (WP-109): Planned — Stage 7
+- **E2E test wiring** (WP-110): Planned — Stage 8
 
-### P2 -- Nice to have
+### P2 -- Nice to have (complete)
 
-- **Postgres adapter** (WP-111): Production-ready persistence option alongside SQLite
+- ~~**Postgres adapter** (WP-111)~~: Done — Stage 4
 
 ## Milestone 3 (Policy Engine -- target Nov 15, 2026)
 
@@ -1762,17 +1921,48 @@ Machine-friendly map of the Warplane repository structure.
 
 ### apps/api — @warplane/api
 
-- **Role:** Fastify REST API server
+- **Role:** Fastify REST API server with OpenAPI 3.1
 - **Entry:** `src/index.ts`
-- **Endpoints:** `/healthz`, `/api/v1/chains`
-- **Depends on:** `@warplane/domain`
+- **App builder:** `src/app.ts` (creates Fastify instance, decorates with `db` and `asyncDb`)
+- **Routes:**
+  - `src/routes/traces.ts` — `/api/v1/traces`, `/api/v1/traces/:id`, `/api/v1/traces/:id/timeline`, `/api/v1/traces/:id/raw`
+  - `src/routes/chains.ts` — `/api/v1/chains`
+  - `src/routes/network.ts` — `/api/v1/network`
+  - `src/routes/scenarios.ts` — `/api/v1/scenarios`
+  - `src/routes/failures.ts` — `/api/v1/failures`
+  - `src/routes/search.ts` — `/api/v1/search`
+  - `src/routes/import.ts` — `/api/v1/import`, `/api/v1/imports`
+  - `src/routes/relayer.ts` — `/api/v1/relayer/health`, `/api/v1/relayer/health/history`
+  - `src/routes/sigagg.ts` — `/api/v1/sigagg/health`, `/api/v1/sigagg/health/history`
+  - `src/routes/stats.ts` — `/api/v1/stats/failures`, `/api/v1/stats/latency`
+  - `src/routes/pipeline.ts` — `/api/v1/pipeline/status`
+- **Depends on:** `@warplane/domain`, `@warplane/storage`, `@warplane/ingest`
 - **Test:** `src/index.test.ts`
 
 ### apps/web — @warplane/web
 
-- **Role:** React + Vite dashboard shell
+- **Role:** React + Vite dashboard with relayer ops
 - **Entry:** `src/main.tsx`
-- **Component:** `src/App.tsx`
+- **Router:** `src/App.tsx` (React Router with layout)
+- **Pages:**
+  - `src/pages/OverviewPage.tsx` — Dashboard overview
+  - `src/pages/TracesPage.tsx` — Trace list with status filter chips, chain filter, latency column
+  - `src/pages/TraceDetailPage.tsx` — Per-message lifecycle timeline with auto-refresh
+  - `src/pages/FailuresPage.tsx` — Failed/blocked traces
+  - `src/pages/ScenariosPage.tsx` — Scenario runs
+  - `src/pages/RelayerOpsPage.tsx` — Relayer health, failure classification, delivery latency
+  - `src/pages/DocsPage.tsx` — Embedded documentation
+- **Key components:**
+  - `src/components/EventTimeline.tsx` — Vertical timeline with on-chain/off-chain distinction
+  - `src/components/HealthBadge.tsx` — Health status indicator (healthy/degraded/unhealthy)
+  - `src/components/FailureChart.tsx` — Pure CSS horizontal bar chart
+  - `src/components/LatencySparkline.tsx` — Inline SVG polyline sparkline
+  - `src/components/StakeWeightBar.tsx` — Percentage bar for stake weight
+  - `src/components/StatusBadge.tsx` — Execution status badge
+  - `src/components/EventBadge.tsx` — Event kind badge
+  - `src/components/Layout.tsx` — Navigation layout with sidebar
+- **API client:** `src/api.ts` — typed fetch functions for all endpoints
+- **Hooks:** `src/hooks.tsx` — `useFetch` (data fetching + auto-refresh), `useFormatTime`
 - **Build:** Vite (not tsc)
 
 ### apps/docs — @warplane/docs-site
@@ -1784,30 +1974,54 @@ Machine-friendly map of the Warplane repository structure.
 
 ### packages/domain — @warplane/domain
 
-- **Role:** Core domain types and validation
+- **Role:** Core domain types and Zod validation schemas
 - **Entry:** `src/index.ts`
-- **Exports:** `ChainId`, `Subnet`, `HealthStatus`, `ChainStatus`, `chainId()`
+- **Exports:** `MessageTrace`, `MessageEvent`, `NetworkManifest`, `ScenarioRun`, `ChainRegistryEntry`, event kind discriminated union (11 kinds)
+- **Generated:** `generated/*.schema.json`, `generated/openapi-components.json`
 - **Test:** `src/index.test.ts`
 
 ### packages/storage — @warplane/storage
 
-- **Role:** Persistence interfaces
+- **Role:** SQLite + async DatabaseAdapter persistence layer
 - **Entry:** `src/index.ts`
-- **Exports:** `ChainStatusReader`, `ChainStatusWriter`, `ChainStatusStore`
+- **Key modules:**
+  - `src/db.ts` — SQLite connection management (better-sqlite3)
+  - `src/migrate.ts` — Migration runner
+  - `src/adapter.ts` — `DatabaseAdapter` interface + `createSqliteAdapter`
+  - `src/repos/traces.ts` — Trace CRUD + `getFailureClassification`, `getDeliveryLatencyStats`
+  - `src/repos/relayer-health.ts` — Relayer health snapshots (async)
+  - `src/repos/sigagg-health.ts` — Sig-agg health snapshots (async)
+  - `src/repos/webhooks.ts` — Webhook subscriptions and delivery (async)
+  - `src/repos/checkpoints.ts` — Ingestion cursor checkpoints (async)
+- **Migrations:** `src/migrations/001_initial.sql`, `002_import_history.sql`, `003_health_snapshots.sql`
 - **Depends on:** `@warplane/domain`
+- **Tests:** `src/storage.test.ts`, `src/adapter.test.ts`, `src/repos/*.test.ts`
 
 ### packages/ingest — @warplane/ingest
 
-- **Role:** Data ingestion pipeline (fixture data in M1)
+- **Role:** Multi-source data ingestion pipeline
 - **Entry:** `src/index.ts`
-- **Exports:** `pollChainHealth()`
-- **Depends on:** `@warplane/domain`
+- **Key modules:**
+  - `src/rpc/block-tracker.ts` — WebSocket + polling block head tracking
+  - `src/rpc/fetcher.ts` — `eth_getLogs` with rate limiting and retries
+  - `src/rpc/decoder.ts` — ABI decoding for 8 TeleporterMessenger events
+  - `src/rpc/orchestrator.ts` — Coordinates tracker → fetcher → decoder pipeline
+  - `src/pipeline/normalizer.ts` — Raw EVM logs → canonical MessageEvent
+  - `src/pipeline/correlator.ts` — Cross-chain message state machine
+  - `src/pipeline/scenarios.ts` — Auto-detect scenario type from event sequences
+  - `src/pipeline/coordinator.ts` — End-to-end pipeline → storage integration
+  - `src/metrics/prometheus-scraper.ts` — Generic Prometheus endpoint scraper
+  - `src/metrics/prometheus-parser.ts` — Prometheus text format parser
+  - `src/metrics/relayer-metrics.ts` — 15 relayer metrics → RelayerHealthSnapshot
+  - `src/metrics/sigagg-metrics.ts` — 11 sig-agg metrics → SigAggHealthSnapshot
+- **Depends on:** `@warplane/domain`, `@warplane/storage`
+- **Tests:** `src/rpc/*.test.ts`, `src/pipeline/*.test.ts`, `src/metrics/*.test.ts`
 
 ### packages/cli — @warplane/cli
 
-- **Role:** Command-line tool
+- **Role:** Command-line tool for trace inspection and ops
 - **Entry:** `src/index.ts`
-- **Commands:** `ping`
+- **Commands:** `doctor`, `demo`, `traces`, `failures`, `scenarios`, `registry`, `import`, `docs`
 - **Depends on:** `@warplane/domain`
 
 ### packages/docs-mcp — @warplane/docs-mcp
@@ -1829,13 +2043,15 @@ Machine-friendly map of the Warplane repository structure.
 | Path                                 | Content                        |
 | ------------------------------------ | ------------------------------ |
 | `docs/planning/roadmap.md`           | Milestone breakdown            |
-| `docs/planning/status.md`            | Current progress               |
+| `docs/planning/status.md`            | Current progress (M1 + M2)     |
+| `docs/planning/milestone-2-plan.md`  | M2 staged implementation plan  |
 | `docs/planning/work-items.yaml`      | Machine-readable tasks         |
 | `docs/planning/backlog.md`           | Deferred items                 |
 | `docs/planning/risk-register.md`     | Known risks                    |
 | `docs/planning/working-agreement.md` | Coding standards               |
 | `docs/decisions/*.md`                | Architecture Decision Records  |
 | `docs/product/one-pager.md`          | Product vision                 |
+| `docs/runbooks/`                     | Operational guides (API, CLI, storage, trace model) |
 | `docs/ai/`                           | AI-facing docs and context map |
 
 ## Config Files

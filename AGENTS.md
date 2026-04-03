@@ -14,9 +14,9 @@ apps/
   web/          React + Vite dashboard (@warplane/web)
   docs/         VitePress documentation site (@warplane/docs-site)
 packages/
-  domain/       Core types: ChainId, Subnet, HealthStatus, ChainStatus (@warplane/domain)
-  storage/      Persistence interfaces (@warplane/storage)
-  ingest/       Data ingestion pipeline (@warplane/ingest)
+  domain/       Core types: ChainId, Subnet, HealthStatus, ChainStatus, MessageTrace (@warplane/domain)
+  storage/      SQLite + Postgres persistence with DatabaseAdapter (@warplane/storage)
+  ingest/       RPC, WebSocket, and Prometheus ingestion pipeline (@warplane/ingest)
   cli/          CLI tool (@warplane/cli)
   docs-mcp/     MCP server for docs (@warplane/docs-mcp)
 harness/
@@ -155,6 +155,49 @@ See `packages/docs-mcp/README.md` for resources, prompts, and tools.
 ## Current State
 
 - **Milestone 1** is complete (monorepo skeleton, domain types, API, web dashboard, CLI, docs, Go harness, CI)
-- Data is fixture-based (no real Avalanche RPC calls yet — seeded golden traces)
+- **Milestone 2** Stages 1–5 of 8 are complete:
+  - Stage 1: RPC ingestion engine (block tracker, log fetcher, event decoder, orchestrator)
+  - Stage 2: Event normalization pipeline (normalizer, correlator, state machine per message)
+  - Stage 3: Prometheus metrics integration (relayer health, sig-agg health, scraper)
+  - Stage 4: Storage evolution (async DatabaseAdapter, Postgres adapter, health/webhook repos)
+  - Stage 5: Tracing UI (lifecycle timeline, relayer ops dashboard, stats API endpoints)
+- Remaining M2 work: Stage 6 (webhooks), Stage 7 (Docker + Fuji), Stage 8 (E2E hardening)
 - CI pipeline runs on push to main and PRs
 - See `docs/planning/status.md` for full details
+
+## Architecture Patterns (M2)
+
+### Sync/Async Database Bridge
+
+The API server uses both patterns:
+
+- **Sync `app.db`** (better-sqlite3 `Database`) — traces, chains, scenarios, search
+- **Async `app.asyncDb`** (`DatabaseAdapter` via `createSqliteAdapter`) — health repos, webhooks
+
+Both wrap the same underlying SQLite connection. New async repos (`relayer-health.ts`, `sigagg-health.ts`, `webhooks.ts`) use `DatabaseAdapter` for Postgres compatibility.
+
+### Ingestion Pipeline
+
+```
+RPC Provider → BlockTracker → LogFetcher → EventDecoder → Normalizer → Correlator → Storage
+                                                                        ↑
+Prometheus Scraper → RelayerMetrics / SigAggMetrics ─────────────────────┘
+```
+
+### Web Dashboard Pages
+
+| Route         | Component       | Data Sources                           |
+| ------------- | --------------- | -------------------------------------- |
+| `/`           | OverviewPage    | Health, traces, scenarios              |
+| `/traces`     | TracesPage      | Traces (filtered, paginated)           |
+| `/traces/:id` | TraceDetailPage | Single trace + events timeline         |
+| `/failures`   | FailuresPage    | Failed/blocked traces                  |
+| `/scenarios`  | ScenariosPage   | Scenario runs                          |
+| `/relayer`    | RelayerOpsPage  | Relayer health, failure stats, latency |
+| `/docs`       | DocsPage        | Embedded documentation                 |
+
+### UI Component Patterns
+
+- **No charting library** — pure CSS bars + inline SVG sparklines (zero external deps)
+- **On-chain vs off-chain events** — classified by event kind; visual distinction via filled (●) vs hollow (○) dots
+- **Auto-refresh** — `useFetch` hook with interval for pending traces (5s) and dashboard panels

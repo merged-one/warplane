@@ -44,7 +44,7 @@ See [milestone-1-report.md](milestone-1-report.md) for full details.
 
 ## Milestone 2 -- Fuji Alpha for Observability, Relayer Ops, and Eventing
 
-**Status:** Planned
+**Status:** In Progress (Stages 1–5 of 8 Complete)
 **Target completion:** August 31, 2026
 **Amount:** $40,000
 
@@ -55,20 +55,20 @@ for interchain applications and operational visibility into relayer health and d
 
 ### Deliverables
 
-| #   | Deliverable                                          | Package(s)         | Priority |
-| --- | ---------------------------------------------------- | ------------------ | -------- |
-| 1   | RPC polling ingestion for TeleporterMessenger events | `packages/ingest`  | P0       |
-| 2   | WebSocket subscription for real-time block headers   | `packages/ingest`  | P0       |
-| 3   | Relayer Prometheus metrics integration               | `packages/ingest`  | P1       |
-| 4   | Signature aggregator metrics integration             | `packages/ingest`  | P1       |
-| 5   | Event normalization pipeline (8+ event types)        | `packages/ingest`  | P0       |
-| 6   | Per-message tracing UI with lifecycle timeline       | `apps/web`         | P0       |
-| 7   | Relayer operations panel (health, lag, failures)     | `apps/web`         | P1       |
-| 8   | Webhook alerting for failed/delayed flows            | `apps/api`         | P1       |
-| 9   | Docker Compose for self-hosted deployment            | root               | P1       |
-| 10  | Fuji-compatible deployment guide                     | `apps/docs`        | P1       |
-| 11  | E2E test wiring with real tmpnet                     | `harness/tmpnet`   | P1       |
-| 12  | Postgres storage adapter                             | `packages/storage` | P2       |
+| #   | Deliverable                                          | Package(s)         | Priority | Status       |
+| --- | ---------------------------------------------------- | ------------------ | -------- | ------------ |
+| 1   | RPC polling ingestion for TeleporterMessenger events | `packages/ingest`  | P0       | Done (S1)    |
+| 2   | WebSocket subscription for real-time block headers   | `packages/ingest`  | P0       | Done (S1)    |
+| 3   | Relayer Prometheus metrics integration               | `packages/ingest`  | P1       | Done (S3)    |
+| 4   | Signature aggregator metrics integration             | `packages/ingest`  | P1       | Done (S3)    |
+| 5   | Event normalization pipeline (8+ event types)        | `packages/ingest`  | P0       | Done (S2)    |
+| 6   | Per-message tracing UI with lifecycle timeline       | `apps/web`         | P0       | Done (S5)    |
+| 7   | Relayer operations panel (health, lag, failures)     | `apps/web`         | P1       | Done (S5)    |
+| 8   | Webhook alerting for failed/delayed flows            | `apps/api`         | P1       | Planned (S6) |
+| 9   | Docker Compose for self-hosted deployment            | root               | P1       | Planned (S7) |
+| 10  | Fuji-compatible deployment guide                     | `apps/docs`        | P1       | Planned (S7) |
+| 11  | E2E test wiring with real tmpnet                     | `harness/tmpnet`   | P1       | Planned (S8) |
+| 12  | Postgres storage adapter                             | `packages/storage` | P2       | Done (S4)    |
 
 ### KPIs
 
@@ -83,6 +83,10 @@ for interchain applications and operational visibility into relayer health and d
   Prometheus metrics supplementary
 - [ADR-0006](../decisions/0006-event-model-contract-alignment.md): 11-event model aligned
   to 8 contract events + 3 off-chain derived states
+- [ADR-0008](../decisions/0008-prometheus-offchain-event-correlation.md): Prometheus-based
+  off-chain event correlation for relayer/sig-agg metrics
+- [ADR-0009](../decisions/0009-dual-mode-storage-postgres-adapter.md): Dual-mode storage
+  with async DatabaseAdapter for Postgres compatibility
 
 ### Why This Scope
 

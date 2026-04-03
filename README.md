@@ -7,7 +7,9 @@ Warplane provides unified observability and cross-chain message tracing for Aval
 ## What Warplane Does
 
 - **Trace Teleporter messages** across L1 chains with a canonical 11-event lifecycle model
-- **Visualize cross-chain activity** through an interactive web dashboard
+- **Visualize cross-chain activity** through an interactive web dashboard with per-message lifecycle timelines
+- **Monitor relayer health** with real-time health status, failure classification, and delivery latency percentiles
+- **Ingest live chain data** via RPC polling, WebSocket subscriptions, and Prometheus metrics scraping
 - **Query traces programmatically** via REST API with OpenAPI 3.1 documentation
 - **Run deterministic test scenarios** covering success, failure, retry, fee addition, and replay protection
 - **Validate message flows** against typed Zod schemas with generated JSON Schema and OpenAPI specs
@@ -27,6 +29,7 @@ This builds all packages, seeds the database with 8 golden Teleporter traces acr
 | Service      | URL                                |
 | ------------ | ---------------------------------- |
 | Dashboard    | http://localhost:5173              |
+| Relayer Ops  | http://localhost:5173/relayer      |
 | API          | http://localhost:3100              |
 | Swagger UI   | http://localhost:3100/docs         |
 | OpenAPI spec | http://localhost:3100/openapi.json |
@@ -67,12 +70,12 @@ The golden fixture dataset covers five deterministic Teleporter scenarios:
 ```
 apps/
   api/          Fastify REST API server (@warplane/api)
-  web/          React + Vite dashboard (@warplane/web)
+  web/          React + Vite dashboard with relayer ops (@warplane/web)
   docs/         VitePress documentation site (@warplane/docs-site)
 packages/
   domain/       Core types and Zod schemas (@warplane/domain)
-  storage/      SQLite persistence layer (@warplane/storage)
-  ingest/       Artifact ingestion pipeline (@warplane/ingest)
+  storage/      SQLite + Postgres persistence layer (@warplane/storage)
+  ingest/       RPC, WebSocket, and Prometheus ingestion pipeline (@warplane/ingest)
   cli/          CLI tool (@warplane/cli)
   docs-mcp/     MCP server for docs (@warplane/docs-mcp)
 harness/
@@ -113,15 +116,31 @@ CI runs automatically on push to `main` and on pull requests:
 
 ## Documentation
 
-| Resource                                           | Description                 |
-| -------------------------------------------------- | --------------------------- |
-| [Product overview](docs/product/one-pager.md)      | What Warplane is and why    |
-| [Roadmap](docs/planning/roadmap.md)                | Milestone breakdown         |
-| [Architecture decisions](docs/decisions/README.md) | ADR log                     |
-| [Trace model](docs/runbooks/trace-model.md)        | Teleporter event lifecycle  |
-| [Full E2E guide](docs/runbooks/full-e2e.md)        | Running with live Avalanche |
-| [Storage runbook](docs/runbooks/storage.md)        | Database and ingestion      |
-| [Contributing](CONTRIBUTING.md)                    | How to contribute           |
+| Resource                                              | Description                 |
+| ----------------------------------------------------- | --------------------------- |
+| [Product overview](docs/product/one-pager.md)         | What Warplane is and why    |
+| [Roadmap](docs/planning/roadmap.md)                   | Milestone breakdown         |
+| [Architecture decisions](docs/decisions/README.md)    | ADR log                     |
+| [Trace model](docs/runbooks/trace-model.md)           | Teleporter event lifecycle  |
+| [Full E2E guide](docs/runbooks/full-e2e.md)           | Running with live Avalanche |
+| [Storage runbook](docs/runbooks/storage.md)           | Database and ingestion      |
+| [API runbook](docs/runbooks/api.md)                   | API endpoints and usage     |
+| [Milestone 2 plan](docs/planning/milestone-2-plan.md) | M2 implementation stages    |
+| [Contributing](CONTRIBUTING.md)                       | How to contribute           |
+
+## Current Status
+
+**Milestone 1** is complete (monorepo, domain model, storage, API, web dashboard, CLI, harness, CI).
+
+**Milestone 2** is in progress — Stages 1–5 of 8 complete:
+
+- Stage 1: RPC ingestion engine with block tracking and log decoding
+- Stage 2: Event normalization pipeline with cross-chain message correlation
+- Stage 3: Prometheus metrics integration (relayer + signature aggregator health)
+- Stage 4: Storage evolution with async DatabaseAdapter and Postgres compatibility
+- Stage 5: Per-message tracing UI, relayer ops dashboard, and stats API
+
+Remaining: Stage 6 (webhooks), Stage 7 (Docker Compose + Fuji deployment), Stage 8 (E2E hardening).
 
 ## License
 

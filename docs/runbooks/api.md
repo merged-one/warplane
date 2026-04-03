@@ -117,6 +117,44 @@ curl -X POST http://localhost:3100/api/v1/import \
 curl http://localhost:3100/api/v1/imports
 ```
 
+### Relayer Health (M2)
+
+```bash
+# Latest relayer health snapshots
+curl http://localhost:3100/api/v1/relayer/health
+
+# Relayer health time-series (with optional filters)
+curl 'http://localhost:3100/api/v1/relayer/health/history'
+curl 'http://localhost:3100/api/v1/relayer/health/history?relayerId=default&limit=50'
+```
+
+### Signature Aggregator Health (M2)
+
+```bash
+# Latest sig-agg health snapshot
+curl http://localhost:3100/api/v1/sigagg/health
+
+# Sig-agg health time-series
+curl http://localhost:3100/api/v1/sigagg/health/history
+```
+
+### Statistics (M2)
+
+```bash
+# Failure classification (grouped by reason, last 24h by default)
+curl http://localhost:3100/api/v1/stats/failures
+
+# Delivery latency percentiles (p50/p90/p99) + hourly time-series
+curl http://localhost:3100/api/v1/stats/latency
+```
+
+### Pipeline Status (M2)
+
+```bash
+# Ingestion pipeline stats
+curl http://localhost:3100/api/v1/pipeline/status
+```
+
 ## Demo Mode
 
 When `DEMO_MODE=true` (default) and the database has zero traces, the server

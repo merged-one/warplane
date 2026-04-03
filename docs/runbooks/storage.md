@@ -1,6 +1,6 @@
 # Storage & Ingestion Runbook
 
-Local persistence layer and artifact ingestion pipeline for the Warplane control plane.
+Persistence layer and multi-source ingestion pipeline for the Warplane control plane.
 
 ## Architecture
 
@@ -23,16 +23,21 @@ Default database file: `warplane.db` in the project root.
 
 ### Schema
 
-| Table            | Purpose                                                |
-| ---------------- | ------------------------------------------------------ |
-| `networks`       | Network manifests (full JSON + indexed fields)         |
-| `chains`         | Chain registry entries (one row per blockchain ID)     |
-| `traces`         | Message traces with denormalized fields for filtering  |
-| `events`         | Timeline events, ordered by sequence within each trace |
-| `scenario_runs`  | Test scenario execution records                        |
-| `artifacts`      | Raw file path references for all imported artifacts    |
-| `import_history` | Import run tracking with counts and status             |
-| `migrations`     | Applied migration tracking                             |
+| Table                   | Purpose                                                | Added |
+| ----------------------- | ------------------------------------------------------ | ----- |
+| `networks`              | Network manifests (full JSON + indexed fields)         | M1    |
+| `chains`                | Chain registry entries (one row per blockchain ID)     | M1    |
+| `traces`                | Message traces with denormalized fields for filtering  | M1    |
+| `events`                | Timeline events, ordered by sequence within each trace | M1    |
+| `scenario_runs`         | Test scenario execution records                        | M1    |
+| `artifacts`             | Raw file path references for all imported artifacts    | M1    |
+| `import_history`        | Import run tracking with counts and status             | M1    |
+| `migrations`            | Applied migration tracking                             | M1    |
+| `checkpoints`           | Ingestion cursor state per chain for RPC polling       | M2-S4 |
+| `relayer_health`        | Relayer health snapshots from Prometheus metrics       | M2-S4 |
+| `sigagg_health`         | Signature aggregator health snapshots                  | M2-S4 |
+| `webhook_subscriptions` | Webhook endpoint subscriptions with filters            | M2-S4 |
+| `webhook_deliveries`    | Webhook delivery attempts and status tracking          | M2-S4 |
 
 ### Key design decisions
 
@@ -40,6 +45,23 @@ Default database file: `warplane.db` in the project root.
 - **Events are separate rows** to enable cross-trace timeline queries ordered by timestamp.
 - **Idempotent upserts** use `ON CONFLICT ... DO UPDATE` — re-importing the same data is a no-op.
 - **Import history** records every import run for auditability.
+- **Dual access patterns** — sync `Database` (better-sqlite3) for M1 repos; async `DatabaseAdapter` for M2 repos (health, webhooks, checkpoints) to support future Postgres.
+- **Health snapshots are time-series** — one row per scrape interval, queried with `since`/`limit` for dashboards.
+
+### DatabaseAdapter (M2)
+
+The `DatabaseAdapter` interface abstracts over sync SQLite and async Postgres:
+
+```typescript
+import { createSqliteAdapter } from "@warplane/storage";
+
+const adapter = createSqliteAdapter(db);
+// adapter.run(sql, params) → Promise<{ changes: number }>
+// adapter.get(sql, params) → Promise<T | undefined>
+// adapter.all(sql, params) → Promise<T[]>
+```
+
+Used by: `relayer-health.ts`, `sigagg-health.ts`, `webhooks.ts`, `checkpoints.ts`.
 
 ## Commands
 
@@ -134,6 +156,42 @@ const failures = listTraces(db, { execution: "failed" });
 
 // Cross-trace timeline
 const timeline = getTimeline(db, { scenario: "basic_send_receive" });
+```
+
+### Aggregate Queries (M2)
+
+```typescript
+import {
+  openDb,
+  runMigrations,
+  getFailureClassification,
+  getDeliveryLatencyStats,
+} from "@warplane/storage";
+
+const db = openDb({ path: "warplane.db" });
+
+// Failure classification — groups execution_failed events by reason
+const failures = getFailureClassification(db, { since: "2026-04-01T00:00:00Z" });
+// → [{ reason: "insufficient_fee", count: 5 }, { reason: "gas_limit", count: 2 }]
+
+// Delivery latency percentiles + hourly time-series
+const latency = getDeliveryLatencyStats(db);
+// → { p50: 3200, p90: 8500, p99: 12000, timeSeries: [{ time: "2026-04-01T12", latencyMs: 4500 }, ...] }
+```
+
+### Health Snapshot Queries (M2, async)
+
+```typescript
+import { createSqliteAdapter } from "@warplane/storage";
+import { getLatestRelayerHealth, getLatestSigAggHealth } from "@warplane/storage";
+
+const adapter = createSqliteAdapter(db);
+
+// Latest relayer health per relayer ID
+const relayerHealth = await getLatestRelayerHealth(adapter);
+
+// Latest sig-agg health snapshot
+const sigAggHealth = await getLatestSigAggHealth(adapter);
 ```
 
 ## Testing
