@@ -4,7 +4,9 @@ package harness
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -29,6 +31,10 @@ type WarplaneOpts struct {
 	// DatabaseURL overrides the Postgres connection string.
 	// Empty = inherit DATABASE_URL from environment.
 	DatabaseURL string
+
+	// ConfigPath is the path to a warplane YAML config file.
+	// Sets WARPLANE_CONFIG env var. Empty = no config override.
+	ConfigPath string
 }
 
 // WarplaneInstance represents a running Warplane API server process.
@@ -84,6 +90,13 @@ func StartWarplane(ctx context.Context, opts WarplaneOpts) (*WarplaneInstance, e
 	)
 	if opts.DemoMode {
 		cmd.Env = append(cmd.Env, "DEMO_MODE=true")
+	}
+	if opts.ConfigPath != "" {
+		absConfig, err := filepath.Abs(opts.ConfigPath)
+		if err != nil {
+			return nil, fmt.Errorf("resolve config path: %w", err)
+		}
+		cmd.Env = append(cmd.Env, fmt.Sprintf("WARPLANE_CONFIG=%s", absConfig))
 	}
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -151,6 +164,43 @@ func (w *WarplaneInstance) Stop() error {
 	}
 
 	return nil
+}
+
+// PipelineChainStatus describes the status of a single chain in the pipeline.
+type PipelineChainStatus struct {
+	ChainID   int    `json:"chainId"`
+	Name      string `json:"name"`
+	Mode      string `json:"mode"`
+	LastBlock int64  `json:"lastBlock"`
+	Error     string `json:"error,omitempty"`
+}
+
+// PipelineStatus is the response from GET /api/v1/pipeline/status.
+type PipelineStatus struct {
+	Status     string                `json:"status"`
+	TraceCount int                   `json:"traceCount"`
+	Uptime     float64               `json:"uptime"`
+	Chains     []PipelineChainStatus `json:"chains"`
+}
+
+// GetPipelineStatus calls GET /api/v1/pipeline/status and returns parsed status.
+func (w *WarplaneInstance) GetPipelineStatus() (*PipelineStatus, error) {
+	resp, err := http.Get(w.BaseURL + "/api/v1/pipeline/status")
+	if err != nil {
+		return nil, fmt.Errorf("GET pipeline status: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("pipeline status returned %d: %s", resp.StatusCode, string(body))
+	}
+
+	var status PipelineStatus
+	if err := json.NewDecoder(resp.Body).Decode(&status); err != nil {
+		return nil, fmt.Errorf("decode pipeline status: %w", err)
+	}
+	return &status, nil
 }
 
 // freePort finds an available TCP port on localhost.

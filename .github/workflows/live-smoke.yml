@@ -1,0 +1,93 @@
+# ---------------------------------------------------------------------------
+# Live-Network Smoke Tests
+#
+# Runs Warplane against real Avalanche RPC endpoints (Fuji + Mainnet).
+# Separate from the main CI workflow — does NOT block PRs.
+#
+# Triggers:
+#   - Manual dispatch from GitHub Actions UI
+#   - Weekly on Monday at 6:17 AM UTC
+# ---------------------------------------------------------------------------
+
+name: Live Smoke Tests
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 6 * * 1"
+
+concurrency:
+  group: live-smoke
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "20"
+  GO_VERSION: "1.22"
+
+jobs:
+  # ── TypeScript smoke tests ────────────────────────────────────────────
+  ts-live-smoke:
+    name: TypeScript Live Smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+      - name: Run TypeScript live smoke tests
+        run: pnpm vitest run packages/ingest/src/rpc/live-smoke.test.ts
+        env:
+          RUN_LIVE_SMOKE: "1"
+          FUJI_RPC_URL: ${{ secrets.FUJI_RPC_URL || 'https://api.avax-test.network/ext/bc/C/rpc' }}
+          MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL || 'https://api.avax.network/ext/bc/C/rpc' }}
+
+  # ── Go smoke tests (full API pipeline) ────────────────────────────────
+  go-live-smoke:
+    name: Go Live Smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: warplane
+          POSTGRES_USER: warplane
+          POSTGRES_PASSWORD: warplane-ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U warplane"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+      - name: Run Go live smoke tests
+        working-directory: harness/tmpnet
+        run: go test -v -run TestLiveSmoke -timeout 5m ./...
+        env:
+          RUN_LIVE_SMOKE: "1"
+          DATABASE_URL: postgresql://warplane:warplane-ci@localhost:5432/warplane
+          WARPLANE_BIN: ../../apps/api/dist/index.js

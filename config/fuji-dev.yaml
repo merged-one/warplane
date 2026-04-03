@@ -1,0 +1,19 @@
+# Warplane — Fuji Testnet Development Config
+#
+# Uses a recent startBlock for fast dev startup (no long backfill).
+# Update startBlock to a recent value before use:
+#
+#   ./scripts/get-tip-block.sh https://api.avax-test.network/ext/bc/C/rpc
+#
+# Subtract ~1000 blocks for ~30 minutes of history.
+
+chains:
+  - name: "Fuji C-Chain"
+    blockchainId: "yH8D7ThNJkxmtkuv2jgBa4P1Rn3Qpr4pPr7QYNfcdoS6k6HWp"
+    evmChainId: 43113
+    rpcUrl: "https://api.avax-test.network/ext/bc/C/rpc"
+    wsUrl: "wss://api.avax-test.network/ext/bc/C/ws"
+    teleporterAddress: "0x253b2784c75e510dD0fF1da844684a1aC0aa5fcf"
+    startBlock: 53594500
+
+logLevel: "debug"
