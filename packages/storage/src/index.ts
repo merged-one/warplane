@@ -83,9 +83,23 @@ export {
   markDeliveryStatus,
   getPendingDeliveries,
   getDeliveriesForMessage,
+  getDeliveriesForDestination,
   type WebhookDestination,
   type InsertWebhookDestination,
   type WebhookDelivery,
   type InsertWebhookDelivery,
   type DeliveryStatus,
 } from "./repos/webhooks.js";
+
+// Alert rule repositories (async, use DatabaseAdapter)
+export {
+  insertAlertRule,
+  getAlertRule,
+  listAlertRules,
+  updateAlertRule,
+  deleteAlertRule,
+  markAlertRuleFired,
+  type AlertRule,
+  type InsertAlertRule,
+  type AlertCondition,
+} from "./repos/alert-rules.js";

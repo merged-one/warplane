@@ -1,0 +1,15 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.git/
+harness/
+coverage/
+*.db
+*.db-wal
+*.db-shm
+.env
+.env.*
+.claude/
+docs/planning/
+*.log
+.DS_Store

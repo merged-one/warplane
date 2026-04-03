@@ -15,18 +15,41 @@ export function registerPipelineRoutes(app: FastifyInstance): void {
               status: { type: "string" },
               traceCount: { type: "integer" },
               uptime: { type: "number" },
+              chains: { type: "array", items: { type: "object" } },
+              stats: { type: "object" },
             },
           },
         },
       },
     },
     async () => {
-      // Pipeline status is a stub for now — full implementation when
-      // the ingestion service runs alongside the API server.
+      const traceCount = countTraces(app.db);
+      const uptime = process.uptime();
+
+      if (app.orchestrator) {
+        const chains = app.orchestrator.status().map((c) => ({
+          chainId: c.chainId,
+          mode: c.mode,
+          lastBlock: Number(c.lastBlock),
+          error: c.error ?? null,
+        }));
+        const stats = app.pipeline?.stats() ?? {};
+
+        return {
+          status: "running",
+          traceCount,
+          uptime,
+          chains,
+          stats,
+        };
+      }
+
       return {
         status: "idle",
-        traceCount: countTraces(app.db),
-        uptime: process.uptime(),
+        traceCount,
+        uptime,
+        chains: [],
+        stats: {},
       };
     },
   );

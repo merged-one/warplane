@@ -1,0 +1,49 @@
+# ---------------------------------------------------------------------------
+# Warplane — Docker Compose
+#
+# Default:  docker compose up          (SQLite, single service)
+# Postgres: docker compose --profile postgres up
+# ---------------------------------------------------------------------------
+
+services:
+  warplane:
+    build: .
+    ports:
+      - "${WARPLANE_PORT:-3000}:3000"
+    environment:
+      - PORT=3000
+      - WARPLANE_CONFIG=/app/config/warplane.yaml
+      - DB_PATH=${DB_PATH:-/data/warplane.db}
+      - WARPLANE_LOG_LEVEL=${WARPLANE_LOG_LEVEL:-info}
+      - DEMO_MODE=${DEMO_MODE:-false}
+    volumes:
+      - warplane-data:/data
+      - ./config:/app/config:ro
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    profiles: ["postgres"]
+    environment:
+      POSTGRES_DB: warplane
+      POSTGRES_USER: warplane
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-warplane-dev}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U warplane"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  warplane-data:
+  pg-data:

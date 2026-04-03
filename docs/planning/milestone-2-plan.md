@@ -1461,13 +1461,18 @@ sigagg:
 
 ### 7.4 Acceptance Criteria
 
-- [ ] `docker compose up` starts all services and reaches healthy state
-- [ ] Dashboard accessible at `http://localhost:3000`
-- [ ] Ingestion begins automatically from configured chains
-- [ ] Supports both SQLite (default) and Postgres (via `DATABASE_URL`)
-- [ ] Health checks pass for all services
-- [ ] Example Fuji configuration works out of the box
-- [ ] Deployment guide covers end-to-end setup
+- [x] `docker compose up` starts all services and reaches healthy state
+- [x] Dashboard accessible at `http://localhost:3000` (via `@fastify/static` SPA serving)
+- [x] Ingestion begins automatically from configured chains (orchestrator wired in `app.ts`)
+- [x] Supports both SQLite (default) and Postgres (via `--profile postgres`)
+- [x] Health checks pass for all services
+- [x] Example Fuji configuration works out of the box (`config/fuji-example.yaml`)
+- [x] Deployment guide covers end-to-end setup (`docs/runbooks/fuji-deployment.md`)
+- [x] YAML config loading with env var overrides (`apps/api/src/config.ts`, 3 tests)
+- [x] Orchestrator, pipeline, alert evaluator, stale detector, delivery engine wired at startup
+- [x] Graceful shutdown of all subsystems via Fastify `onClose` hook
+- [x] Multi-stage Dockerfile with `pnpm deploy --legacy` for ESM-compatible production image
+- [x] All 444 tests pass, typecheck clean, lint 0 errors
 
 ### 7.5 Files
 

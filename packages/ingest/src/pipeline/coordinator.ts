@@ -12,6 +12,7 @@ import type { TeleporterEvent } from "../rpc/decoder.js";
 import { normalize } from "./normalizer.js";
 import { createCorrelator, type Correlator } from "./correlator.js";
 import type { NormalizedEvent, PipelineStats } from "./types.js";
+import type { AlertEvaluator } from "../alerts/alert-evaluator.js";
 
 // ---------------------------------------------------------------------------
 // Config
@@ -20,6 +21,8 @@ import type { NormalizedEvent, PipelineStats } from "./types.js";
 export interface PipelineConfig {
   /** Number of trace upserts to batch before auto-flushing (default: 50). */
   writeBatchSize?: number;
+  /** Optional alert evaluator — when provided, state changes trigger alert evaluation. */
+  alertEvaluator?: AlertEvaluator;
 }
 
 // ---------------------------------------------------------------------------
@@ -45,6 +48,7 @@ export interface Pipeline {
 
 export function createPipeline(db: Database, config?: PipelineConfig): Pipeline {
   const writeBatchSize = config?.writeBatchSize ?? 50;
+  const alertEvaluator = config?.alertEvaluator;
   const correlator: Correlator = createCorrelator();
   let stopped = false;
   let pendingFlush = new Set<string>();
@@ -57,8 +61,8 @@ export function createPipeline(db: Database, config?: PipelineConfig): Pipeline 
     tracesUpdated: 0,
   };
 
-  function handleEvents(_chainId: string, events: TeleporterEvent[]): Promise<void> {
-    if (stopped) return Promise.resolve();
+  async function handleEvents(_chainId: string, events: TeleporterEvent[]): Promise<void> {
+    if (stopped) return;
 
     for (const event of events) {
       pipelineStats.eventsReceived++;
@@ -78,13 +82,15 @@ export function createPipeline(db: Database, config?: PipelineConfig): Pipeline 
       } else if (result.isStateChange) {
         pipelineStats.tracesUpdated++;
       }
+
+      if (result.isStateChange && alertEvaluator) {
+        await alertEvaluator.evaluate(result);
+      }
     }
 
     if (pendingFlush.size >= writeBatchSize) {
       flush();
     }
-
-    return Promise.resolve();
   }
 
   function injectEvents(events: NormalizedEvent[]): void {

@@ -357,6 +357,209 @@ describe("GET /api/v1/pipeline/status", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Webhook endpoints
+// ---------------------------------------------------------------------------
+
+describe("POST /api/v1/webhooks", () => {
+  it("creates a webhook destination and returns id", async () => {
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/v1/webhooks",
+      payload: { name: "test-hook", url: "https://example.com/hook" },
+    });
+    expect(res.statusCode).toBe(201);
+    const body = res.json();
+    expect(typeof body.id).toBe("number");
+  });
+});
+
+describe("GET /api/v1/webhooks", () => {
+  it("lists webhook destinations", async () => {
+    const res = await app.inject({ method: "GET", url: "/api/v1/webhooks" });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.destinations).toBeInstanceOf(Array);
+    expect(body.destinations.length).toBeGreaterThan(0);
+  });
+});
+
+describe("PUT /api/v1/webhooks/:id", () => {
+  it("updates a webhook destination", async () => {
+    // Create one first
+    const create = await app.inject({
+      method: "POST",
+      url: "/api/v1/webhooks",
+      payload: { name: "update-me", url: "https://example.com/old" },
+    });
+    const { id } = create.json();
+
+    const res = await app.inject({
+      method: "PUT",
+      url: `/api/v1/webhooks/${id}`,
+      payload: { name: "updated-hook", url: "https://example.com/new" },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().ok).toBe(true);
+  });
+});
+
+describe("DELETE /api/v1/webhooks/:id", () => {
+  it("deletes a webhook destination", async () => {
+    const create = await app.inject({
+      method: "POST",
+      url: "/api/v1/webhooks",
+      payload: { name: "delete-me", url: "https://example.com/gone" },
+    });
+    const { id } = create.json();
+
+    const res = await app.inject({
+      method: "DELETE",
+      url: `/api/v1/webhooks/${id}`,
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().ok).toBe(true);
+  });
+});
+
+describe("POST /api/v1/webhooks/:id/test", () => {
+  it("returns test delivery result", async () => {
+    const create = await app.inject({
+      method: "POST",
+      url: "/api/v1/webhooks",
+      payload: { name: "test-dest", url: "https://example.com/test" },
+    });
+    const { id } = create.json();
+
+    const res = await app.inject({
+      method: "POST",
+      url: `/api/v1/webhooks/${id}/test`,
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(typeof body.success).toBe("boolean");
+    // Will fail since example.com isn't reachable, but should not 500
+  });
+});
+
+describe("GET /api/v1/webhooks/:id/deliveries", () => {
+  it("returns delivery history for destination", async () => {
+    const create = await app.inject({
+      method: "POST",
+      url: "/api/v1/webhooks",
+      payload: { name: "delivery-hist", url: "https://example.com/hist" },
+    });
+    const { id } = create.json();
+
+    const res = await app.inject({
+      method: "GET",
+      url: `/api/v1/webhooks/${id}/deliveries`,
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.deliveries).toBeInstanceOf(Array);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Alert rule endpoints
+// ---------------------------------------------------------------------------
+
+describe("POST /api/v1/alerts/rules", () => {
+  it("creates an alert rule and returns id", async () => {
+    // Need a destination first
+    const dest = await app.inject({
+      method: "POST",
+      url: "/api/v1/webhooks",
+      payload: { name: "alert-dest", url: "https://example.com/alert" },
+    });
+    const destId = dest.json().id;
+
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/v1/alerts/rules",
+      payload: {
+        name: "test-rule",
+        condition: { type: "state_change", toState: "failed" },
+        destinations: [destId],
+      },
+    });
+    expect(res.statusCode).toBe(201);
+    const body = res.json();
+    expect(typeof body.id).toBe("string");
+  });
+});
+
+describe("GET /api/v1/alerts/rules", () => {
+  it("lists alert rules", async () => {
+    const res = await app.inject({ method: "GET", url: "/api/v1/alerts/rules" });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.rules).toBeInstanceOf(Array);
+    expect(body.rules.length).toBeGreaterThan(0);
+  });
+});
+
+describe("PUT /api/v1/alerts/rules/:id", () => {
+  it("updates an alert rule", async () => {
+    // Create destination + rule
+    const dest = await app.inject({
+      method: "POST",
+      url: "/api/v1/webhooks",
+      payload: { name: "upd-dest", url: "https://example.com/upd" },
+    });
+    const destId = dest.json().id;
+
+    const create = await app.inject({
+      method: "POST",
+      url: "/api/v1/alerts/rules",
+      payload: {
+        name: "update-rule",
+        condition: { type: "state_change", toState: "failed" },
+        destinations: [destId],
+      },
+    });
+    const { id } = create.json();
+
+    const res = await app.inject({
+      method: "PUT",
+      url: `/api/v1/alerts/rules/${id}`,
+      payload: { name: "updated-rule", enabled: false },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().ok).toBe(true);
+  });
+});
+
+describe("DELETE /api/v1/alerts/rules/:id", () => {
+  it("deletes an alert rule", async () => {
+    const dest = await app.inject({
+      method: "POST",
+      url: "/api/v1/webhooks",
+      payload: { name: "del-dest", url: "https://example.com/del" },
+    });
+    const destId = dest.json().id;
+
+    const create = await app.inject({
+      method: "POST",
+      url: "/api/v1/alerts/rules",
+      payload: {
+        name: "delete-rule",
+        condition: { type: "state_change", toState: "failed" },
+        destinations: [destId],
+      },
+    });
+    const { id } = create.json();
+
+    const res = await app.inject({
+      method: "DELETE",
+      url: `/api/v1/alerts/rules/${id}`,
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().ok).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // OpenAPI
 // ---------------------------------------------------------------------------
 

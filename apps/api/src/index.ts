@@ -6,12 +6,15 @@
  */
 
 import { buildApp } from "./app.js";
+import { loadConfig } from "./config.js";
 
-const port = Number(process.env["PORT"] ?? 3100);
+const config = loadConfig();
+const port = Number(process.env["PORT"] ?? config.port ?? 3000);
 const host = process.env["HOST"] ?? "0.0.0.0";
 const demoMode = process.env["DEMO_MODE"] !== "false";
+const dbPath = config.database?.path ?? process.env["DB_PATH"];
 
-const app = await buildApp({ demoMode });
+const app = await buildApp({ demoMode, config, ...(dbPath ? { dbPath } : {}) });
 
 try {
   await app.listen({ port, host });

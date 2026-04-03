@@ -213,6 +213,25 @@ export async function getDeliveriesForMessage(
   return result.rows.map(mapDelivery);
 }
 
+export async function getDeliveriesForDestination(
+  db: DatabaseAdapter,
+  destinationId: number,
+  opts?: { limit?: number },
+): Promise<WebhookDelivery[]> {
+  const limit = opts?.limit ?? 50;
+  const result = await db.query<RawWebhookDelivery>(
+    `SELECT id, destination_id, message_id, event_kind, payload_json,
+            status, attempts, last_attempt_at, next_retry_at,
+            response_code, response_body, created_at
+     FROM webhook_deliveries
+     WHERE destination_id = ?
+     ORDER BY created_at DESC
+     LIMIT ?`,
+    [destinationId, limit],
+  );
+  return result.rows.map(mapDelivery);
+}
+
 // ---------------------------------------------------------------------------
 // Internal
 // ---------------------------------------------------------------------------

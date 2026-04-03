@@ -16,3 +16,6 @@ export * from "./pipeline/index.js";
 
 // Prometheus metrics scraping & health
 export * from "./metrics/index.js";
+
+// Alerting & webhook delivery
+export * from "./alerts/index.js";

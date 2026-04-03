@@ -1,0 +1,8 @@
+# Warplane — Local Development Configuration
+#
+# No chains configured — the API starts in demo mode with fixture data.
+# Use this when running the API server locally for UI development.
+
+chains: []
+
+logLevel: "debug"

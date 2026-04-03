@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { openDb, closeDb, runMigrations, type Database, getTrace } from "@warplane/storage";
 import type { TeleporterEvent } from "../rpc/decoder.js";
 import { createPipeline } from "./coordinator.js";
+import type { AlertEvaluator } from "../alerts/alert-evaluator.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -215,5 +216,43 @@ describe("Pipeline Coordinator", () => {
     const stats = pipeline.stats();
     expect(stats.eventsReceived).toBe(0);
     expect(stats.tracesCreated).toBe(0);
+  });
+
+  it("calls alertEvaluator.evaluate on state changes", async () => {
+    const mockEvaluator: AlertEvaluator = {
+      evaluate: vi.fn().mockResolvedValue(undefined),
+      refreshRules: vi.fn().mockResolvedValue(undefined),
+      stop: vi.fn(),
+    };
+
+    const pipeline = createPipeline(db, { alertEvaluator: mockEvaluator });
+
+    // Send event creates a new trace (isNew + isStateChange) — evaluate called
+    await pipeline.handleEvents(CHAIN_A, [makeSendEvent(1n)]);
+    expect(mockEvaluator.evaluate).toHaveBeenCalledTimes(1);
+
+    // Receive event triggers a state change (pending → success) — evaluate called again
+    await pipeline.handleEvents("chain-b", [makeReceiveEvent(5n)]);
+    expect(mockEvaluator.evaluate).toHaveBeenCalledTimes(2);
+
+    const lastCall = (mockEvaluator.evaluate as ReturnType<typeof vi.fn>).mock.calls[1]![0];
+    expect(lastCall.isStateChange).toBe(true);
+    expect(lastCall.newState).toBe("delivered");
+
+    pipeline.stop();
+  });
+
+  it("skips alert evaluation when no evaluator configured", async () => {
+    // No alertEvaluator in config — should not throw
+    const pipeline = createPipeline(db);
+    await pipeline.handleEvents(CHAIN_A, [makeSendEvent(1n)]);
+    await pipeline.handleEvents("chain-b", [makeReceiveEvent(5n)]);
+    pipeline.flush();
+
+    const trace = getTrace(db, MSG_ID);
+    expect(trace).toBeDefined();
+    expect(trace!.execution).toBe("success");
+
+    pipeline.stop();
   });
 });
