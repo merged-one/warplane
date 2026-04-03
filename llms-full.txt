@@ -33,14 +33,14 @@ pnpm demo:seed
 
 This builds all packages, seeds the database with 8 golden Teleporter traces across 5 scenarios, and starts both the API and web dashboard:
 
-| Service        | URL                                |
-| -------------- | ---------------------------------- |
-| Dashboard      | http://localhost:5173              |
-| Relayer Ops    | http://localhost:5173/relayer      |
-| API            | http://localhost:3100              |
-| Swagger UI     | http://localhost:3100/docs         |
-| OpenAPI spec   | http://localhost:3100/openapi.json |
-| Health check   | http://localhost:3100/healthz      |
+| Service      | URL                                |
+| ------------ | ---------------------------------- |
+| Dashboard    | http://localhost:5173              |
+| Relayer Ops  | http://localhost:5173/relayer      |
+| API          | http://localhost:3100              |
+| Swagger UI   | http://localhost:3100/docs         |
+| OpenAPI spec | http://localhost:3100/openapi.json |
+| Health check | http://localhost:3100/healthz      |
 
 Try the CLI (in a separate terminal):
 
@@ -123,23 +123,24 @@ CI runs automatically on push to `main` and on pull requests:
 
 ## Documentation
 
-| Resource                                           | Description                 |
-| -------------------------------------------------- | --------------------------- |
-| [Product overview](docs/product/one-pager.md)      | What Warplane is and why    |
-| [Roadmap](docs/planning/roadmap.md)                | Milestone breakdown         |
-| [Architecture decisions](docs/decisions/README.md) | ADR log                     |
-| [Trace model](docs/runbooks/trace-model.md)        | Teleporter event lifecycle  |
-| [Full E2E guide](docs/runbooks/full-e2e.md)        | Running with live Avalanche |
-| [Storage runbook](docs/runbooks/storage.md)        | Database and ingestion      |
-| [API runbook](docs/runbooks/api.md)                | API endpoints and usage     |
-| [Milestone 2 plan](docs/planning/milestone-2-plan.md) | M2 implementation stages |
-| [Contributing](CONTRIBUTING.md)                    | How to contribute           |
+| Resource                                              | Description                 |
+| ----------------------------------------------------- | --------------------------- |
+| [Product overview](docs/product/one-pager.md)         | What Warplane is and why    |
+| [Roadmap](docs/planning/roadmap.md)                   | Milestone breakdown         |
+| [Architecture decisions](docs/decisions/README.md)    | ADR log                     |
+| [Trace model](docs/runbooks/trace-model.md)           | Teleporter event lifecycle  |
+| [Full E2E guide](docs/runbooks/full-e2e.md)           | Running with live Avalanche |
+| [Storage runbook](docs/runbooks/storage.md)           | Database and ingestion      |
+| [API runbook](docs/runbooks/api.md)                   | API endpoints and usage     |
+| [Milestone 2 plan](docs/planning/milestone-2-plan.md) | M2 implementation stages    |
+| [Contributing](CONTRIBUTING.md)                       | How to contribute           |
 
 ## Current Status
 
 **Milestone 1** is complete (monorepo, domain model, storage, API, web dashboard, CLI, harness, CI).
 
 **Milestone 2** is in progress — Stages 1–5 of 8 complete:
+
 - Stage 1: RPC ingestion engine with block tracking and log decoding
 - Stage 2: Event normalization pipeline with cross-chain message correlation
 - Stage 3: Prometheus metrics integration (relayer + signature aggregator health)
@@ -327,6 +328,7 @@ See `packages/docs-mcp/README.md` for resources, prompts, and tools.
 ### Sync/Async Database Bridge
 
 The API server uses both patterns:
+
 - **Sync `app.db`** (better-sqlite3 `Database`) — traces, chains, scenarios, search
 - **Async `app.asyncDb`** (`DatabaseAdapter` via `createSqliteAdapter`) — health repos, webhooks
 
@@ -342,15 +344,15 @@ Prometheus Scraper → RelayerMetrics / SigAggMetrics ────────�
 
 ### Web Dashboard Pages
 
-| Route             | Component          | Data Sources                       |
-| ----------------- | ------------------ | ---------------------------------- |
-| `/`               | OverviewPage       | Health, traces, scenarios          |
-| `/traces`         | TracesPage         | Traces (filtered, paginated)       |
-| `/traces/:id`     | TraceDetailPage    | Single trace + events timeline     |
-| `/failures`       | FailuresPage       | Failed/blocked traces              |
-| `/scenarios`      | ScenariosPage      | Scenario runs                      |
-| `/relayer`        | RelayerOpsPage     | Relayer health, failure stats, latency |
-| `/docs`           | DocsPage           | Embedded documentation             |
+| Route         | Component       | Data Sources                           |
+| ------------- | --------------- | -------------------------------------- |
+| `/`           | OverviewPage    | Health, traces, scenarios              |
+| `/traces`     | TracesPage      | Traces (filtered, paginated)           |
+| `/traces/:id` | TraceDetailPage | Single trace + events timeline         |
+| `/failures`   | FailuresPage    | Failed/blocked traces                  |
+| `/scenarios`  | ScenariosPage   | Scenario runs                          |
+| `/relayer`    | RelayerOpsPage  | Relayer health, failure stats, latency |
+| `/docs`       | DocsPage        | Embedded documentation                 |
 
 ### UI Component Patterns
 
@@ -508,20 +510,20 @@ for interchain applications and operational visibility into relayer health and d
 
 ### Deliverables
 
-| #   | Deliverable                                          | Package(s)         | Priority | Status      |
-| --- | ---------------------------------------------------- | ------------------ | -------- | ----------- |
-| 1   | RPC polling ingestion for TeleporterMessenger events | `packages/ingest`  | P0       | Done (S1)   |
-| 2   | WebSocket subscription for real-time block headers   | `packages/ingest`  | P0       | Done (S1)   |
-| 3   | Relayer Prometheus metrics integration               | `packages/ingest`  | P1       | Done (S3)   |
-| 4   | Signature aggregator metrics integration             | `packages/ingest`  | P1       | Done (S3)   |
-| 5   | Event normalization pipeline (8+ event types)        | `packages/ingest`  | P0       | Done (S2)   |
-| 6   | Per-message tracing UI with lifecycle timeline       | `apps/web`         | P0       | Done (S5)   |
-| 7   | Relayer operations panel (health, lag, failures)     | `apps/web`         | P1       | Done (S5)   |
-| 8   | Webhook alerting for failed/delayed flows            | `apps/api`         | P1       | Planned (S6)|
-| 9   | Docker Compose for self-hosted deployment            | root               | P1       | Planned (S7)|
-| 10  | Fuji-compatible deployment guide                     | `apps/docs`        | P1       | Planned (S7)|
-| 11  | E2E test wiring with real tmpnet                     | `harness/tmpnet`   | P1       | Planned (S8)|
-| 12  | Postgres storage adapter                             | `packages/storage` | P2       | Done (S4)   |
+| #   | Deliverable                                          | Package(s)         | Priority | Status       |
+| --- | ---------------------------------------------------- | ------------------ | -------- | ------------ |
+| 1   | RPC polling ingestion for TeleporterMessenger events | `packages/ingest`  | P0       | Done (S1)    |
+| 2   | WebSocket subscription for real-time block headers   | `packages/ingest`  | P0       | Done (S1)    |
+| 3   | Relayer Prometheus metrics integration               | `packages/ingest`  | P1       | Done (S3)    |
+| 4   | Signature aggregator metrics integration             | `packages/ingest`  | P1       | Done (S3)    |
+| 5   | Event normalization pipeline (8+ event types)        | `packages/ingest`  | P0       | Done (S2)    |
+| 6   | Per-message tracing UI with lifecycle timeline       | `apps/web`         | P0       | Done (S5)    |
+| 7   | Relayer operations panel (health, lag, failures)     | `apps/web`         | P1       | Done (S5)    |
+| 8   | Webhook alerting for failed/delayed flows            | `apps/api`         | P1       | Planned (S6) |
+| 9   | Docker Compose for self-hosted deployment            | root               | P1       | Planned (S7) |
+| 10  | Fuji-compatible deployment guide                     | `apps/docs`        | P1       | Planned (S7) |
+| 11  | E2E test wiring with real tmpnet                     | `harness/tmpnet`   | P1       | Planned (S8) |
+| 12  | Postgres storage adapter                             | `packages/storage` | P2       | Done (S4)    |
 
 ### KPIs
 
@@ -884,13 +886,13 @@ are all shipped. Remaining work: webhooks, Docker Compose, Fuji deployment, and 
 
 ### Test counts
 
-| Package   | Tests |
-| --------- | ----- |
-| domain    | 31    |
-| storage   | 85    |
-| ingest    | 277   |
-| api       | 10    |
-| web       | 10    |
+| Package   | Tests   |
+| --------- | ------- |
+| domain    | 31      |
+| storage   | 85      |
+| ingest    | 277     |
+| api       | 10      |
+| web       | 10      |
 | **Total** | **413** |
 
 ### Architecture Decisions (M2)
@@ -2040,19 +2042,19 @@ Machine-friendly map of the Warplane repository structure.
 
 ## Documentation
 
-| Path                                 | Content                        |
-| ------------------------------------ | ------------------------------ |
-| `docs/planning/roadmap.md`           | Milestone breakdown            |
-| `docs/planning/status.md`            | Current progress (M1 + M2)     |
-| `docs/planning/milestone-2-plan.md`  | M2 staged implementation plan  |
-| `docs/planning/work-items.yaml`      | Machine-readable tasks         |
-| `docs/planning/backlog.md`           | Deferred items                 |
-| `docs/planning/risk-register.md`     | Known risks                    |
-| `docs/planning/working-agreement.md` | Coding standards               |
-| `docs/decisions/*.md`                | Architecture Decision Records  |
-| `docs/product/one-pager.md`          | Product vision                 |
+| Path                                 | Content                                             |
+| ------------------------------------ | --------------------------------------------------- |
+| `docs/planning/roadmap.md`           | Milestone breakdown                                 |
+| `docs/planning/status.md`            | Current progress (M1 + M2)                          |
+| `docs/planning/milestone-2-plan.md`  | M2 staged implementation plan                       |
+| `docs/planning/work-items.yaml`      | Machine-readable tasks                              |
+| `docs/planning/backlog.md`           | Deferred items                                      |
+| `docs/planning/risk-register.md`     | Known risks                                         |
+| `docs/planning/working-agreement.md` | Coding standards                                    |
+| `docs/decisions/*.md`                | Architecture Decision Records                       |
+| `docs/product/one-pager.md`          | Product vision                                      |
 | `docs/runbooks/`                     | Operational guides (API, CLI, storage, trace model) |
-| `docs/ai/`                           | AI-facing docs and context map |
+| `docs/ai/`                           | AI-facing docs and context map                      |
 
 ## Config Files
 
