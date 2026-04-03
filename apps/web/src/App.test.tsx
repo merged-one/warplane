@@ -66,7 +66,7 @@ const mockFailedTrace = {
 function mockFetch(url: string) {
   const u = url as string;
   if (u === "/health") {
-    return json({ status: "ok", uptime: 1000, traceCount: 8 });
+    return json({ status: "ok", uptime: 1000, traceCount: 8, demoMode: true });
   }
   if (u.includes("/chains")) {
     return json({ chains: [mockTrace.source, mockTrace.destination] });

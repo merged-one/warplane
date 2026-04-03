@@ -33,7 +33,7 @@ export function OverviewPage() {
 
   return (
     <div>
-      <DemoBanner />
+      {health.data?.demoMode && <DemoBanner />}
       <h1>Overview</h1>
 
       <div className="card-grid">

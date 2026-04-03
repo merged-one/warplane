@@ -21,6 +21,8 @@ import type { AlertEvaluator } from "../alerts/alert-evaluator.js";
 export interface PipelineConfig {
   /** Number of trace upserts to batch before auto-flushing (default: 50). */
   writeBatchSize?: number;
+  /** Max time (ms) between automatic flushes for pending traces (default: 10_000). */
+  flushIntervalMs?: number;
   /** Optional alert evaluator — when provided, state changes trigger alert evaluation. */
   alertEvaluator?: AlertEvaluator;
 }
@@ -48,10 +50,12 @@ export interface Pipeline {
 
 export function createPipeline(db: DatabaseAdapter, config?: PipelineConfig): Pipeline {
   const writeBatchSize = config?.writeBatchSize ?? 50;
+  const flushIntervalMs = config?.flushIntervalMs ?? 10_000;
   const alertEvaluator = config?.alertEvaluator;
   const correlator: Correlator = createCorrelator();
   let stopped = false;
   let pendingFlush = new Set<string>();
+  let flushTimer: ReturnType<typeof setInterval> | undefined;
 
   const pipelineStats: PipelineStats = {
     eventsReceived: 0,
@@ -61,8 +65,26 @@ export function createPipeline(db: DatabaseAdapter, config?: PipelineConfig): Pi
     tracesUpdated: 0,
   };
 
+  // Start a periodic flush timer on first event to ensure pending traces
+  // are persisted even when batch size is not reached (e.g., sparse live traffic).
+  function ensureFlushTimer(): void {
+    if (flushTimer || stopped) return;
+    flushTimer = setInterval(() => {
+      if (pendingFlush.size > 0) {
+        flush().catch(() => {
+          /* periodic flush errors handled at higher level */
+        });
+      }
+    }, flushIntervalMs);
+    // Unref so the timer doesn't keep the process alive during shutdown.
+    if (typeof flushTimer === "object" && "unref" in flushTimer) {
+      flushTimer.unref();
+    }
+  }
+
   async function handleEvents(_chainId: string, events: TeleporterEvent[]): Promise<void> {
     if (stopped) return;
+    ensureFlushTimer();
 
     for (const event of events) {
       pipelineStats.eventsReceived++;
@@ -139,6 +161,10 @@ export function createPipeline(db: DatabaseAdapter, config?: PipelineConfig): Pi
   }
 
   function stop(): void {
+    if (flushTimer) {
+      clearInterval(flushTimer);
+      flushTimer = undefined;
+    }
     flush().catch(() => {
       /* best-effort flush on stop */
     });

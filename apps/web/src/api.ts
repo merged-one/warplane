@@ -116,6 +116,7 @@ export interface HealthResponse {
   status: string;
   uptime: number;
   traceCount: number;
+  demoMode?: boolean;
 }
 
 export function getHealth(): Promise<HealthResponse> {

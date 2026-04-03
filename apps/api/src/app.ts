@@ -48,6 +48,7 @@ export interface AppOptions {
 declare module "fastify" {
   interface FastifyInstance {
     db: DatabaseAdapter;
+    demoMode: boolean;
     orchestrator?: Orchestrator;
     pipeline?: Pipeline;
   }
@@ -77,6 +78,7 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
     await initSchema(db);
   }
   app.decorate("db", db);
+  app.decorate("demoMode", opts.demoMode ?? false);
 
   app.addHook("onClose", async () => {
     if (app.orchestrator) await app.orchestrator.stop();
