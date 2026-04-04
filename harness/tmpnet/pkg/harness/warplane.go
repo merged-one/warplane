@@ -113,8 +113,11 @@ func StartWarplane(ctx context.Context, opts WarplaneOpts) (*WarplaneInstance, e
 	}, nil
 }
 
-// WaitHealthy polls /healthz until the server responds with 200 or the
-// context is cancelled. Default timeout: 30 seconds.
+// WaitHealthy polls the canonical /health endpoint until the server responds
+// with 200 or the context is cancelled. /healthz is retained as a fallback for
+// compatibility with older local builds, but Cloud Run reserves some paths
+// ending in "z", so /health must remain the primary probe. Default timeout:
+// 30 seconds.
 func (w *WarplaneInstance) WaitHealthy(ctx context.Context) error {
 	deadline, ok := ctx.Deadline()
 	if !ok {
@@ -124,7 +127,10 @@ func (w *WarplaneInstance) WaitHealthy(ctx context.Context) error {
 		deadline = time.Now().Add(30 * time.Second)
 	}
 
-	url := w.BaseURL + "/healthz"
+	urls := []string{
+		w.BaseURL + "/health",
+		w.BaseURL + "/healthz",
+	}
 	client := &http.Client{Timeout: 2 * time.Second}
 
 	for {
@@ -132,8 +138,11 @@ func (w *WarplaneInstance) WaitHealthy(ctx context.Context) error {
 			return fmt.Errorf("warplane did not become healthy within timeout")
 		}
 
-		resp, err := client.Get(url)
-		if err == nil {
+		for _, url := range urls {
+			resp, err := client.Get(url)
+			if err != nil {
+				continue
+			}
 			resp.Body.Close()
 			if resp.StatusCode == 200 {
 				return nil

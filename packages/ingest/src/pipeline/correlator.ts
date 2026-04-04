@@ -15,9 +15,16 @@ import type {
   MessageEventKind,
   MessageTrace,
   ExecutionStatus,
+  ChainMeta,
 } from "@warplane/domain";
-import type { NormalizedEvent, CorrelationResult, MessageState } from "./types.js";
+import type { NormalizedEvent, CorrelationResult, MessageState, ChainRegistry } from "./types.js";
 import { STATE_TRANSITIONS } from "./types.js";
+import {
+  createChainResolver,
+  cloneChainMeta,
+  isRawBlockchainId,
+  type ChainResolver,
+} from "./chain-resolver.js";
 
 // ---------------------------------------------------------------------------
 // Internal trace state
@@ -52,13 +59,15 @@ const PLACEHOLDER_TIMESTAMPS = {
 
 export interface Correlator {
   processEvent(event: NormalizedEvent): CorrelationResult;
+  seedTrace(trace: MessageTrace): void;
   getMessageState(messageId: string): MessageState | null;
   getTrace(messageId: string): MessageTrace | null;
   allTraces(): MessageTrace[];
 }
 
-export function createCorrelator(): Correlator {
+export function createCorrelator(chainRegistry?: ChainRegistry): Correlator {
   const traces = new Map<string, TraceState>();
+  const chainResolver = createChainResolver(chainRegistry);
 
   function processEvent(event: NormalizedEvent): CorrelationResult {
     const existing = traces.get(event.messageId);
@@ -68,6 +77,16 @@ export function createCorrelator(): Correlator {
     }
 
     return updateExistingTrace(existing, event);
+  }
+
+  function seedTrace(trace: MessageTrace): void {
+    if (traces.has(trace.messageId)) return;
+
+    traces.set(trace.messageId, {
+      state: traceToState(trace),
+      trace: cloneTrace(trace),
+      partial: isPartialTrace(trace),
+    });
   }
 
   function createNewTrace(event: NormalizedEvent): CorrelationResult {
@@ -88,7 +107,7 @@ export function createCorrelator(): Correlator {
     };
 
     // Enrich from event details
-    enrichTrace(trace, event);
+    enrichTrace(trace, event, chainResolver);
 
     const partial = event.kind !== "message_sent";
     traces.set(event.messageId, { state: initialState, trace, partial });
@@ -105,6 +124,17 @@ export function createCorrelator(): Correlator {
 
   function updateExistingTrace(ts: TraceState, event: NormalizedEvent): CorrelationResult {
     const previousState = ts.state;
+
+    if (isDuplicateEvent(ts.trace, event)) {
+      return {
+        messageId: event.messageId,
+        previousState,
+        newState: previousState,
+        trace: ts.trace,
+        isNew: false,
+        isStateChange: false,
+      };
+    }
 
     // Special: retry_succeeded only applies from failed or retrying state
     if (event.kind === "retry_succeeded" && ts.state !== "failed" && ts.state !== "retrying") {
@@ -129,7 +159,7 @@ export function createCorrelator(): Correlator {
     }
 
     ts.trace.events.push(toMessageEvent(event));
-    enrichTrace(ts.trace, event);
+    enrichTrace(ts.trace, event, chainResolver);
 
     // If this is a message_sent arriving after a partial trace, complete it
     if (event.kind === "message_sent" && ts.partial) {
@@ -158,7 +188,7 @@ export function createCorrelator(): Correlator {
     return Array.from(traces.values()).map((ts) => ts.trace);
   }
 
-  return { processEvent, getMessageState, getTrace, allTraces };
+  return { processEvent, seedTrace, getMessageState, getTrace, allTraces };
 }
 
 // ---------------------------------------------------------------------------
@@ -205,7 +235,7 @@ function stateToExecution(state: MessageState): ExecutionStatus {
 function toMessageEvent(event: NormalizedEvent): MessageEvent {
   const base = {
     timestamp: event.timestamp || "1970-01-01T00:00:00.000Z",
-    details: JSON.stringify(event.details, (_k, v) => (typeof v === "bigint" ? v.toString() : v)),
+    details: stringifyDetails(event.details),
   };
 
   const onChain = {
@@ -224,24 +254,81 @@ function toMessageEvent(event: NormalizedEvent): MessageEvent {
   }
 }
 
-function enrichTrace(trace: MessageTrace, event: NormalizedEvent): void {
+function cloneTrace(trace: MessageTrace): MessageTrace {
+  return {
+    ...trace,
+    source: { ...trace.source },
+    destination: { ...trace.destination },
+    timestamps: { ...trace.timestamps },
+    events: trace.events.map((event) => ({ ...event })),
+    relayer: trace.relayer ? { ...trace.relayer } : undefined,
+    fee: trace.fee ? { ...trace.fee } : undefined,
+    retry: trace.retry ? { ...trace.retry } : undefined,
+    artifacts: trace.artifacts?.map((artifact) => ({ ...artifact })),
+    rawRefs: trace.rawRefs ? [...trace.rawRefs] : undefined,
+  };
+}
+
+function isPartialTrace(trace: MessageTrace): boolean {
+  return (
+    trace.timestamps.blockSend === 0 || !trace.events.some((event) => event.kind === "message_sent")
+  );
+}
+
+function traceToState(trace: MessageTrace): MessageState {
+  if (trace.receiptDelivered) return "receipted";
+
+  switch (trace.execution) {
+    case "success":
+      return "delivered";
+    case "retry_success":
+      return "retry_success";
+    case "replay_blocked":
+      return "replay_blocked";
+    case "failed":
+      return trace.retry ? "retrying" : "failed";
+    default:
+      return "pending";
+  }
+}
+
+function isDuplicateEvent(trace: MessageTrace, event: NormalizedEvent): boolean {
+  return trace.events.some((existing) => {
+    if (existing.kind !== event.kind) return false;
+
+    if ("blockNumber" in existing && "txHash" in existing && "chain" in existing) {
+      return (
+        existing.blockNumber === event.blockNumber &&
+        existing.txHash === event.txHash &&
+        existing.chain === event.chain
+      );
+    }
+
+    return (
+      existing.timestamp === (event.timestamp || PLACEHOLDER_TIMESTAMPS.sendTime) &&
+      existing.details === stringifyDetails(event.details)
+    );
+  });
+}
+
+function stringifyDetails(details: Record<string, unknown>): string {
+  return JSON.stringify(details, (_k, value) =>
+    typeof value === "bigint" ? value.toString() : value,
+  );
+}
+
+function enrichTrace(
+  trace: MessageTrace,
+  event: NormalizedEvent,
+  chainResolver: ChainResolver,
+): void {
   const d = event.details;
 
   switch (event.kind) {
     case "message_sent":
       trace.sourceTxHash = event.txHash;
-      trace.source = {
-        ...trace.source,
-        blockchainId: event.chain,
-        name: event.chain,
-      };
-      if (d.destinationBlockchainID && typeof d.destinationBlockchainID === "string") {
-        trace.destination = {
-          ...trace.destination,
-          blockchainId: d.destinationBlockchainID,
-          name: d.destinationBlockchainID,
-        };
-      }
+      trace.source = observedChainMeta(chainResolver, event.chain);
+      applyReferencedChain(trace, "destination", d.destinationBlockchainID, chainResolver);
       if (typeof d.originSenderAddress === "string") trace.sender = d.originSenderAddress;
       if (typeof d.destinationAddress === "string") trace.recipient = d.destinationAddress;
       trace.timestamps.blockSend = event.blockNumber;
@@ -253,21 +340,50 @@ function enrichTrace(trace: MessageTrace, event: NormalizedEvent): void {
 
     case "delivery_confirmed":
       trace.destinationTxHash = event.txHash;
-      if (d.sourceBlockchainID && typeof d.sourceBlockchainID === "string") {
-        trace.source = {
-          ...trace.source,
-          blockchainId: d.sourceBlockchainID,
-          name: d.sourceBlockchainID,
-        };
+      trace.destination = observedChainMeta(chainResolver, event.chain);
+      applyReferencedChain(trace, "source", d.sourceBlockchainID, chainResolver);
+      if (typeof d.originSenderAddress === "string" && !trace.sender)
+        trace.sender = d.originSenderAddress;
+      if (typeof d.destinationAddress === "string" && !trace.recipient) {
+        trace.recipient = d.destinationAddress;
       }
       trace.timestamps.blockRecv = event.blockNumber;
       if (event.timestamp) trace.timestamps.receiveTime = event.timestamp;
       if (typeof d.deliverer === "string") {
         trace.relayer = { address: d.deliverer, txHash: event.txHash };
       }
+      if (typeof d.requiredGasLimit === "string" && trace.requiredGasLimit === undefined) {
+        trace.requiredGasLimit = parseInt(d.requiredGasLimit, 10) || undefined;
+      }
+      break;
+
+    case "execution_failed":
+      trace.destinationTxHash = event.txHash;
+      trace.destination = observedChainMeta(chainResolver, event.chain);
+      applyReferencedChain(trace, "source", d.sourceBlockchainID, chainResolver);
+      applyMessageDetails(trace, d, chainResolver);
+      if (trace.timestamps.blockRecv === undefined) {
+        trace.timestamps.blockRecv = event.blockNumber;
+      }
+      if (event.timestamp && isPlaceholderTimestamp(trace.timestamps.receiveTime)) {
+        trace.timestamps.receiveTime = event.timestamp;
+      }
+      break;
+
+    case "retry_succeeded":
+      trace.destinationTxHash = event.txHash;
+      trace.destination = observedChainMeta(chainResolver, event.chain);
+      applyReferencedChain(trace, "source", d.sourceBlockchainID, chainResolver);
+      if (trace.timestamps.blockRecv === undefined) {
+        trace.timestamps.blockRecv = event.blockNumber;
+      }
+      if (event.timestamp && isPlaceholderTimestamp(trace.timestamps.receiveTime)) {
+        trace.timestamps.receiveTime = event.timestamp;
+      }
       break;
 
     case "fee_added": {
+      trace.source = observedChainMeta(chainResolver, event.chain);
       const feeInfo = d.updatedFeeInfo as Record<string, unknown> | undefined;
       if (feeInfo) {
         trace.fee = {
@@ -282,10 +398,85 @@ function enrichTrace(trace: MessageTrace, event: NormalizedEvent): void {
 
     case "receipts_sent":
       trace.receiptDelivered = true;
+      trace.source = observedChainMeta(chainResolver, event.chain);
+      applyReferencedChain(trace, "destination", d.destinationBlockchainID, chainResolver);
       break;
 
     case "replay_blocked":
+      trace.destination = observedChainMeta(chainResolver, event.chain);
       trace.replayProtectionObserved = true;
       break;
   }
+}
+
+function observedChainMeta(chainResolver: ChainResolver, blockchainId: string): ChainMeta {
+  return cloneChainMeta(chainResolver.getChainMeta(blockchainId) ?? unmappedChain(blockchainId));
+}
+
+function applyReferencedChain(
+  trace: MessageTrace,
+  side: "source" | "destination",
+  blockchainId: unknown,
+  chainResolver: ChainResolver,
+): void {
+  if (typeof blockchainId !== "string" || !blockchainId) return;
+
+  const next = referencedChainMeta(chainResolver, blockchainId);
+  const current = side === "source" ? trace.source : trace.destination;
+  if (!shouldReplaceChain(current, next)) return;
+
+  if (side === "source") {
+    trace.source = next;
+  } else {
+    trace.destination = next;
+  }
+}
+
+function referencedChainMeta(chainResolver: ChainResolver, blockchainId: string): ChainMeta {
+  const resolved = chainResolver.getChainMeta(blockchainId);
+  if (resolved) return cloneChainMeta(resolved);
+
+  return unmappedChain(chainResolver.canonicalizeBlockchainId(blockchainId));
+}
+
+function applyMessageDetails(
+  trace: MessageTrace,
+  details: Record<string, unknown>,
+  chainResolver: ChainResolver,
+): void {
+  if (typeof details.originSenderAddress === "string" && !trace.sender) {
+    trace.sender = details.originSenderAddress;
+  }
+  if (typeof details.destinationAddress === "string" && !trace.recipient) {
+    trace.recipient = details.destinationAddress;
+  }
+  if (typeof details.requiredGasLimit === "string" && trace.requiredGasLimit === undefined) {
+    trace.requiredGasLimit = parseInt(details.requiredGasLimit, 10) || undefined;
+  }
+  applyReferencedChain(trace, "destination", details.destinationBlockchainID, chainResolver);
+}
+
+function shouldReplaceChain(current: ChainMeta, next: ChainMeta): boolean {
+  if (!current.blockchainId) return true;
+  if (current.blockchainId === next.blockchainId) return true;
+  if (isRawBlockchainId(current.blockchainId) && !isRawBlockchainId(next.blockchainId)) {
+    return true;
+  }
+  return false;
+}
+
+function unmappedChain(blockchainId: string): ChainMeta {
+  if (!blockchainId) {
+    return { ...UNKNOWN_CHAIN };
+  }
+
+  return {
+    ...UNKNOWN_CHAIN,
+    name: blockchainId,
+    blockchainId,
+  };
+}
+
+function isPlaceholderTimestamp(timestamp: string): boolean {
+  return timestamp === PLACEHOLDER_TIMESTAMPS.receiveTime;
 }

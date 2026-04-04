@@ -54,7 +54,7 @@ export function normalize(event: TeleporterEvent, chainId: string): NormalizedEv
   return {
     kind,
     messageId,
-    timestamp: "", // enriched by coordinator with block timestamp
+    timestamp: toIsoTimestamp(event),
     blockNumber: Number(event.blockNumber),
     txHash: event.transactionHash,
     chain: chainId,
@@ -92,6 +92,7 @@ function extractDetails(event: TeleporterEvent): Record<string, unknown> {
       details.sourceBlockchainID = event.args.sourceBlockchainID;
       details.deliverer = event.args.deliverer;
       details.rewardRedeemer = event.args.rewardRedeemer;
+      attachMessageFields(details, event.args.message);
       break;
     case "MessageExecuted":
       details.sourceBlockchainID = event.args.sourceBlockchainID;
@@ -99,6 +100,7 @@ function extractDetails(event: TeleporterEvent): Record<string, unknown> {
     case "MessageExecutionFailed":
       details.sourceBlockchainID = event.args.sourceBlockchainID;
       details.message = event.args.message;
+      attachMessageFields(details, event.args.message);
       break;
     case "AddFeeAmount":
       details.updatedFeeInfo = event.args.updatedFeeInfo;
@@ -111,4 +113,19 @@ function extractDetails(event: TeleporterEvent): Record<string, unknown> {
   }
 
   return details;
+}
+
+function toIsoTimestamp(event: TeleporterEvent): string {
+  if (event.blockTimestamp === undefined) return "";
+  return new Date(Number(event.blockTimestamp) * 1000).toISOString();
+}
+
+function attachMessageFields(details: Record<string, unknown>, message: unknown): void {
+  const msg = message as Record<string, unknown> | undefined;
+  if (!msg) return;
+
+  details.originSenderAddress = msg.originSenderAddress;
+  details.destinationBlockchainID = msg.destinationBlockchainID;
+  details.destinationAddress = msg.destinationAddress;
+  details.requiredGasLimit = String(msg.requiredGasLimit ?? "");
 }

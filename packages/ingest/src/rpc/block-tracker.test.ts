@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { BlockTracker, type BlockHeader } from "./block-tracker.js";
 
 function header(n: number, hash: string, parentHash: string): BlockHeader {
-  return { number: BigInt(n), hash, parentHash };
+  return { number: BigInt(n), hash, parentHash, timestamp: BigInt(n) };
 }
 
 describe("BlockTracker", () => {

@@ -40,7 +40,12 @@ function mockClient(getLogsFn: RpcClient["getLogs"]): RpcClient {
   return {
     name: "mock",
     getBlockNumber: vi.fn(),
-    getBlockHeader: vi.fn(),
+    getBlockHeader: vi.fn().mockImplementation(async (blockNumber: bigint) => ({
+      number: blockNumber,
+      hash: `0xblock${blockNumber}`,
+      parentHash: `0xblock${blockNumber - 1n}`,
+      timestamp: blockNumber + 1_700_000_000n,
+    })),
     getLogs: getLogsFn,
     watchBlocks: vi.fn(),
     isHealthy: vi.fn(),
@@ -114,6 +119,25 @@ describe("fetchTeleporterEvents", () => {
     expect(result.events).toHaveLength(2);
   });
 
+  it("bisects on Avalanche max block range errors", async () => {
+    const getLogs = vi
+      .fn()
+      .mockImplementation(async (params: { fromBlock: bigint; toBlock: bigint }) => {
+        if (params.fromBlock === 0n && params.toBlock === 4095n) {
+          throw new Error("requested too many blocks from 0 to 4095, maximum is set to 2048");
+        }
+        return [fakeLog(params.fromBlock)];
+      });
+
+    const client = mockClient(getLogs);
+    const result = await fetchTeleporterEvents(client, 0n, 4095n, {
+      maxBlockRange: 10_000,
+    });
+
+    expect(getLogs).toHaveBeenCalledTimes(3);
+    expect(result.events).toHaveLength(2);
+  });
+
   it("combines events from paginated chunks in order", async () => {
     const getLogs = vi.fn().mockImplementation(async (params: { fromBlock: bigint }) => {
       return [fakeLog(params.fromBlock)];
@@ -127,6 +151,18 @@ describe("fetchTeleporterEvents", () => {
     expect(result.events).toHaveLength(2);
     expect(result.events[0]!.blockNumber).toBe(0n);
     expect(result.events[1]!.blockNumber).toBe(100n);
+  });
+
+  it("enriches decoded events with block timestamps per unique block", async () => {
+    const getLogs = vi.fn().mockResolvedValue([fakeLog(10n, 0), fakeLog(10n, 1), fakeLog(11n, 0)]);
+    const client = mockClient(getLogs);
+
+    const result = await fetchTeleporterEvents(client, 10n, 11n);
+
+    expect(client.getBlockHeader).toHaveBeenCalledTimes(2);
+    expect(result.events[0]!.blockTimestamp).toBe(1_700_000_010n);
+    expect(result.events[1]!.blockTimestamp).toBe(1_700_000_010n);
+    expect(result.events[2]!.blockTimestamp).toBe(1_700_000_011n);
   });
 
   it("returns empty events for a range with no logs", async () => {

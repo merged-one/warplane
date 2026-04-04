@@ -58,40 +58,20 @@ export function registerTraceRoutes(app: FastifyInstance): void {
       const filter: TraceFilter = {
         scenario: q.scenario,
         execution: q.status,
-        sourceChain: q.sourceBlockchainId ?? q.chain,
-        destChain: q.destinationBlockchainId ?? q.chain,
+        messageId: q.messageId,
         limit: pageSize,
         offset: (page - 1) * pageSize,
       };
 
-      // If chain is specified without explicit source/dest, it means "either"
-      // The storage layer ANDs source and dest, so only set one if generic chain filter
       if (q.chain && !q.sourceBlockchainId && !q.destinationBlockchainId) {
-        // Query twice and merge (source OR dest)
-        const fromSource = await listTraces(app.db, {
-          ...filter,
-          sourceChain: q.chain,
-          destChain: undefined,
-        });
-        const fromDest = await listTraces(app.db, {
-          ...filter,
-          sourceChain: undefined,
-          destChain: q.chain,
-        });
-        const seen = new Set<string>();
-        const merged = [];
-        for (const t of [...fromSource, ...fromDest]) {
-          const key = `${t.messageId}:${t.scenario}`;
-          if (!seen.has(key)) {
-            seen.add(key);
-            merged.push(t);
-          }
-        }
-        return { traces: merged, total: merged.length, page, pageSize };
+        filter.chain = q.chain;
+      } else {
+        filter.sourceChain = q.sourceBlockchainId;
+        filter.destChain = q.destinationBlockchainId;
       }
 
       const traces = await listTraces(app.db, filter);
-      const total = await countTraces(app.db, { scenario: q.scenario, execution: q.status });
+      const total = await countTraces(app.db, filter);
 
       return { traces, total, page, pageSize };
     },

@@ -65,7 +65,12 @@ describe("normalize", () => {
       sourceBlockchainID: SRC_CHAIN,
       deliverer: "0xRelayer",
       rewardRedeemer: "0xRedeemer",
-      message: {},
+      message: {
+        originSenderAddress: "0xSender",
+        destinationBlockchainID: DEST_CHAIN,
+        destinationAddress: "0xRecipient",
+        requiredGasLimit: 100000n,
+      },
     });
 
     const result = normalize(event, CHAIN_ID);
@@ -74,6 +79,9 @@ describe("normalize", () => {
     expect(result!.details.sourceBlockchainID).toBe(SRC_CHAIN);
     expect(result!.details.deliverer).toBe("0xRelayer");
     expect(result!.details.rewardRedeemer).toBe("0xRedeemer");
+    expect(result!.details.originSenderAddress).toBe("0xSender");
+    expect(result!.details.destinationBlockchainID).toBe(DEST_CHAIN);
+    expect(result!.details.destinationAddress).toBe("0xRecipient");
   });
 
   it("MessageExecuted → retry_succeeded", () => {
@@ -110,6 +118,9 @@ describe("normalize", () => {
     expect(result!.kind).toBe("execution_failed");
     expect(result!.details.sourceBlockchainID).toBe(SRC_CHAIN);
     expect(result!.details.message).toEqual(fullMessage);
+    expect(result!.details.originSenderAddress).toBe("0xSender");
+    expect(result!.details.destinationBlockchainID).toBe(DEST_CHAIN);
+    expect(result!.details.destinationAddress).toBe("0xRecipient");
   });
 
   it("AddFeeAmount → fee_added", () => {

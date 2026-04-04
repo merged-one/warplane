@@ -13,6 +13,7 @@ export interface BlockHeader {
   number: bigint;
   hash: string;
   parentHash: string;
+  timestamp: bigint;
 }
 
 export interface ReorgResult {

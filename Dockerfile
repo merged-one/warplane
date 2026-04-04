@@ -19,12 +19,12 @@ COPY apps/web/package.json apps/web/
 # Install dependencies (cached unless lockfile or package.json changes)
 RUN pnpm install --frozen-lockfile
 
-# Copy source and build all packages + apps
+# Copy source and build only deployable targets plus their workspace deps.
 COPY packages/ packages/
 COPY apps/api/ apps/api/
 COPY apps/web/ apps/web/
 COPY tsconfig.json tsconfig.base.json ./
-RUN pnpm build
+RUN pnpm --filter @warplane/api... build && pnpm --filter @warplane/web build
 
 # Create a self-contained production deploy of the API server.
 # pnpm deploy bundles workspace deps and hoists node_modules for ESM compat.
@@ -47,5 +47,5 @@ COPY --from=builder /app/apps/web/dist ./apps/web/dist
 COPY config/ config/
 
 EXPOSE 3000
-HEALTHCHECK --interval=30s --timeout=5s CMD wget -qO- http://localhost:3000/healthz || exit 1
+HEALTHCHECK --interval=30s --timeout=5s CMD wget -qO- http://localhost:3000/health || exit 1
 CMD ["node", "dist/index.js"]

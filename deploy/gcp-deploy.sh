@@ -37,7 +37,7 @@ gcloud run deploy "${SERVICE}" \
   --cpu=1 \
   --memory=512Mi \
   --min-instances=0 \
-  --max-instances=3 \
+  --max-instances=1 \
   --port=3000 \
   --set-env-vars="NODE_ENV=production,WARPLANE_LOG_LEVEL=info,DEMO_MODE=false,HOST=0.0.0.0,WARPLANE_CONFIG=/secrets/config/warplane.yaml" \
   --set-secrets="DATABASE_URL=database-url:latest" \
@@ -54,4 +54,4 @@ echo ""
 echo "==> Deployed!"
 echo "  Image:   ${IMAGE}"
 echo "  URL:     ${URL}"
-echo "  Health:  ${URL}/healthz"
+echo "  Health:  ${URL}/health"

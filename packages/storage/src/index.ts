@@ -20,7 +20,10 @@ export { upsertScenarioRun, getScenarioRun, listScenarioRuns } from "./repos/sce
 export {
   upsertTrace,
   getTrace,
+  getTracesByMessageIds,
   listTraces,
+  listTracesWithPlaceholderTimestamps,
+  listTracesNeedingChainRepair,
   getTraceEvents,
   getTimeline,
   countTraces,

@@ -28,6 +28,8 @@ export interface FetchResult {
   toBlock: bigint;
 }
 
+const BLOCK_HEADER_BATCH_SIZE = 16;
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -53,7 +55,9 @@ function isResponseTooLarge(err: unknown): boolean {
     msg.includes("response size is too large") ||
     msg.includes("query returned more than") ||
     msg.includes("Log response size exceeded") ||
-    msg.includes("exceed maximum block range")
+    msg.includes("exceed maximum block range") ||
+    msg.includes("requested too many blocks") ||
+    msg.includes("maximum is set to")
   );
 }
 
@@ -84,6 +88,8 @@ export async function fetchTeleporterEvents(
     cursor = chunkEnd + 1n;
   }
 
+  await enrichBlockTimestamps(client, allEvents);
+
   return { events: allEvents, fromBlock, toBlock };
 }
 
@@ -108,5 +114,27 @@ async function fetchRange(
       return [...left, ...right];
     }
     throw err;
+  }
+}
+
+async function enrichBlockTimestamps(client: RpcClient, events: TeleporterEvent[]): Promise<void> {
+  if (events.length === 0) return;
+
+  const blockTimestamps = new Map<bigint, bigint>();
+  const uniqueBlocks = [...new Set(events.map((event) => event.blockNumber))];
+
+  for (let i = 0; i < uniqueBlocks.length; i += BLOCK_HEADER_BATCH_SIZE) {
+    const batch = uniqueBlocks.slice(i, i + BLOCK_HEADER_BATCH_SIZE);
+    const headers = await Promise.all(
+      batch.map((blockNumber) => client.getBlockHeader(blockNumber)),
+    );
+
+    for (let j = 0; j < batch.length; j++) {
+      blockTimestamps.set(batch[j]!, headers[j]!.timestamp);
+    }
+  }
+
+  for (const event of events) {
+    event.blockTimestamp = blockTimestamps.get(event.blockNumber);
   }
 }

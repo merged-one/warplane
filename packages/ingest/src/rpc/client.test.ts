@@ -97,6 +97,7 @@ describe("RpcClient", () => {
       number: 50n,
       hash: "0xblock50",
       parentHash: "0xblock49",
+      timestamp: 1000n,
     });
     expect(mockGetBlock).toHaveBeenCalledWith({ blockNumber: 50n });
   });

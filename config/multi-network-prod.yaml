@@ -18,6 +18,20 @@ chains:
     teleporterAddress: "0x253b2784c75e510dD0fF1da844684a1aC0aa5fcf"
     startBlock: 82037900
 
+  - name: "CXChain"
+    blockchainId: "25xjR3fvh7aXkxs36n1xRc3wLUAuqnS1wBxJD1BC4z3y6mHsEV"
+    evmChainId: 737373
+    rpcUrl: "https://subnets.avax.network/cx/mainnet/rpc"
+    teleporterAddress: "0x253b2784c75e510dD0fF1da844684a1aC0aa5fcf"
+    startBlock: 789000
+
+  - name: "Henesys"
+    blockchainId: "2LFmzhHDKxkreihEtPanVmofuFn63bsh8twnRXEbDhBtCJxURB"
+    evmChainId: 68414
+    rpcUrl: "https://henesys-rpc.msu.io"
+    teleporterAddress: "0x253b2784c75e510dD0fF1da844684a1aC0aa5fcf"
+    startBlock: 13180000
+
   # ── Fuji Testnet ─────────────────────────────────────────────────────
   - name: "Fuji C-Chain"
     blockchainId: "yH8D7ThNJkxmtkuv2jgBa4P1Rn3Qpr4pPr7QYNfcdoS6k6HWp"

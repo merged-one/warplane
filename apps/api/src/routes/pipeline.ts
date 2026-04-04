@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { countTraces } from "@warplane/storage";
+import { countTraces, listCheckpoints } from "@warplane/storage";
 
 export function registerPipelineRoutes(app: FastifyInstance): void {
   app.get(
@@ -34,16 +34,37 @@ export function registerPipelineRoutes(app: FastifyInstance): void {
       },
     },
     async () => {
-      const traceCount = await countTraces(app.db);
+      const [traceCount, checkpoints] = await Promise.all([
+        countTraces(app.db),
+        listCheckpoints(app.db),
+      ]);
       const uptime = process.uptime();
+      const checkpointByChainId = new Map(
+        checkpoints.map((checkpoint) => [checkpoint.chainId, checkpoint]),
+      );
+      const localStatuses = app.orchestrator?.status() ?? [];
+      const localStatusByChainId = new Map(localStatuses.map((status) => [status.chainId, status]));
+      const chainIds = [
+        ...new Set([
+          ...checkpoints.map((checkpoint) => checkpoint.chainId),
+          ...localStatuses.map((status) => status.chainId),
+        ]),
+      ];
 
-      if (app.orchestrator) {
-        const chains = app.orchestrator.status().map((c) => ({
-          chainId: c.chainId,
-          mode: c.mode,
-          lastBlock: Number(c.lastBlock),
-          error: c.error ?? null,
-        }));
+      if (chainIds.length > 0) {
+        const chains = chainIds.map((chainId) => {
+          const localStatus = localStatusByChainId.get(chainId);
+          const checkpoint = checkpointByChainId.get(chainId);
+          const localLastBlock = localStatus ? Number(localStatus.lastBlock) : 0;
+          const checkpointLastBlock = checkpoint?.lastBlock ?? 0;
+
+          return {
+            chainId,
+            mode: localStatus?.mode ?? (checkpoint ? "backfill" : "stopped"),
+            lastBlock: Math.max(localLastBlock, checkpointLastBlock),
+            error: localStatus?.error ?? null,
+          };
+        });
         const stats = app.pipeline?.stats() ?? {};
 
         return {

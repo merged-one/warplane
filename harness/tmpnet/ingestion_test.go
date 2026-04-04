@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"net/http"
 	"os"
 	"path/filepath"
 	"testing"
@@ -182,5 +183,20 @@ func TestIngestionTracesList(t *testing.T) {
 	// Golden fixtures contain 8+ traces across all scenarios
 	if list.Total < 5 {
 		t.Errorf("expected at least 5 seeded traces, got %d", list.Total)
+	}
+}
+
+func TestIngestionHealthEndpoint(t *testing.T) {
+	skipIfNoBinary(t)
+	inst := startTestServer(t)
+
+	resp, err := http.Get(inst.BaseURL + "/health")
+	if err != nil {
+		t.Fatalf("GET /health: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d", resp.StatusCode)
 	}
 }
