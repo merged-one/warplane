@@ -906,3 +906,243 @@ h1 {
   font-weight: 600;
   letter-spacing: 0.3px;
 }
+
+/* ---- Topbar menu wrapper (desktop: inline flex) ---- */
+.topbar-menu {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+/* ---- Hamburger (hidden on desktop) ---- */
+.topbar-hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  margin-left: auto;
+}
+.topbar-hamburger span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--text);
+  border-radius: 1px;
+  transition: transform 0.2s;
+}
+
+/* ---- Table scroll wrapper ---- */
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ================================================================
+   Responsive — Tablet (max-width: 768px)
+   ================================================================ */
+@media (max-width: 768px) {
+  /* Topbar: show hamburger, collapse menu */
+  .topbar {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 48px;
+    padding: 8px 12px;
+  }
+  .topbar-hamburger {
+    display: flex;
+  }
+  .topbar-menu {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+  .topbar-menu.open {
+    display: flex;
+  }
+  .topbar-nav {
+    flex-direction: column;
+    gap: 2px;
+  }
+  .topbar-link {
+    padding: 10px 12px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  .topbar-search {
+    margin-left: 0;
+    width: 100%;
+  }
+  .search-input {
+    width: 100%;
+  }
+  .search-dropdown {
+    min-width: unset;
+    width: 100%;
+  }
+  .topbar-controls {
+    width: 100%;
+  }
+  .topbar-select {
+    flex: 1;
+    min-height: 36px;
+    padding: 6px 8px;
+  }
+  .topbar-tag {
+    display: none;
+  }
+
+  /* Content padding */
+  .content {
+    padding: 16px 12px;
+  }
+
+  /* Cards */
+  .card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Tables: horizontal scroll */
+  .table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .table th,
+  .table td {
+    white-space: nowrap;
+    padding: 8px 10px;
+  }
+
+  /* Filters */
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filters label {
+    width: 100%;
+  }
+  .filters select,
+  .filters .input {
+    width: 100%;
+    min-height: 36px;
+  }
+
+  /* Filter chips */
+  .filter-chips {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  .chip {
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  /* Buttons — larger touch targets */
+  .btn {
+    min-height: 44px;
+    padding: 10px 16px;
+  }
+
+  /* Pagination */
+  .pagination {
+    flex-wrap: wrap;
+  }
+
+  /* Definition lists */
+  .dl {
+    grid-template-columns: 1fr;
+    gap: 2px 0;
+  }
+  .dl dt {
+    margin-top: 8px;
+  }
+
+  /* Failure chart bars */
+  .failure-bar-label {
+    width: 100px;
+  }
+  .stake-bar-label {
+    width: 80px;
+  }
+
+  /* Trace header */
+  .trace-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  /* Latency stats */
+  .latency-stats {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  /* Footer */
+  .site-footer {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+  .footer-sep {
+    display: none;
+  }
+
+  /* Failure meta */
+  .failure-meta {
+    flex-direction: column;
+    gap: 4px;
+  }
+}
+
+/* ================================================================
+   Responsive — Small phone (max-width: 480px)
+   ================================================================ */
+@media (max-width: 480px) {
+  /* Single column cards */
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+  .card {
+    padding: 12px;
+  }
+  .card-value {
+    font-size: 1.2rem;
+  }
+
+  /* Smaller table text */
+  .table {
+    font-size: 0.82rem;
+  }
+  .table th {
+    font-size: 0.72rem;
+  }
+
+  /* Ops grid */
+  .ops-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Page title */
+  h1 {
+    font-size: 1.3rem;
+  }
+
+  /* Status bar */
+  .status-bar {
+    flex-direction: column;
+    gap: 6px;
+  }
+}
