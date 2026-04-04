@@ -194,6 +194,7 @@ code {
   width: 100%;
   margin: 0 auto;
   padding: 24px 20px;
+  overflow-x: hidden;
 }
 
 /* ---- Cards ---- */
@@ -242,6 +243,9 @@ code {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.92rem;
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .table th,
@@ -257,6 +261,13 @@ code {
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+.table td {
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .table tbody tr:hover {
@@ -1010,12 +1021,7 @@ h1 {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  /* Tables: horizontal scroll */
-  .table {
-    display: block;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
+  /* Tables: tighter padding on mobile */
   .table th,
   .table td {
     white-space: nowrap;
