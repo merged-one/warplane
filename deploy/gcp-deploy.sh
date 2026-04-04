@@ -22,7 +22,7 @@ TAG=${1:-$(git rev-parse --short HEAD)}
 IMAGE="${REGION}-docker.pkg.dev/${PROJECT}/${REGISTRY}/api:${TAG}"
 
 echo "==> Building Docker image: ${IMAGE}"
-docker build -t "${IMAGE}" .
+docker build --platform linux/amd64 -t "${IMAGE}" .
 
 echo "==> Pushing to Artifact Registry"
 docker push "${IMAGE}"
