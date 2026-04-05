@@ -1,11 +1,12 @@
-import { useState } from "react";
-import { Link, useSearchParams, useNavigate } from "react-router-dom";
-import { useFetch, useFormatTime } from "../hooks.js";
-import { getTraces, getScenarios, getChains } from "../api.js";
-import type { ExecutionStatus } from "../api.js";
-import { StatusBadge } from "../components/StatusBadge.js";
-import { Loading } from "../components/Loading.js";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { getChains, getScenarios, getTraces } from "../api.js";
+import type { ExecutionStatus, MessageTrace } from "../api.js";
+import { useDebouncedValue, useFetch, useFormatTime } from "../hooks.js";
 import { ErrorBox } from "../components/ErrorBox.js";
+import { Loading } from "../components/Loading.js";
+import { StatusBadge } from "../components/StatusBadge.js";
+import { getTraceLatencyLabel } from "../trace-utils.js";
 
 const PAGE_SIZE = 50;
 
@@ -21,176 +22,373 @@ const STATUS_CHIPS: Array<{ value: ExecutionStatus | ""; label: string }> = [
 export function TracesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const fmt = useFormatTime();
+
   const scenario = searchParams.get("scenario") ?? "";
   const status = searchParams.get("status") ?? "";
-  const chain = searchParams.get("chain") ?? "";
+  const sourceBlockchainId = searchParams.get("sourceBlockchainId") ?? "";
+  const destinationBlockchainId = searchParams.get("destinationBlockchainId") ?? "";
+  const messageId = searchParams.get("messageId") ?? "";
+  const legacyChain = searchParams.get("chain") ?? "";
   const page = Number(searchParams.get("page") ?? "1");
-  const [filterMsgId, setFilterMsgId] = useState("");
-  const fmt = useFormatTime();
+  const currentListUrl = `${location.pathname}${location.search}`;
+
+  const [messageIdInput, setMessageIdInput] = useState(messageId);
+  const debouncedMessageId = useDebouncedValue(messageIdInput.trim(), 300);
+
+  useEffect(() => {
+    setMessageIdInput(messageId);
+  }, [messageId]);
+
+  useEffect(() => {
+    if (debouncedMessageId === messageId) {
+      return;
+    }
+
+    const next = new URLSearchParams(searchParams);
+    if (debouncedMessageId) next.set("messageId", debouncedMessageId);
+    else next.delete("messageId");
+    next.delete("page");
+    setSearchParams(next);
+  }, [debouncedMessageId, messageId, searchParams, setSearchParams]);
 
   const { data, loading, error, reload } = useFetch(
     () =>
       getTraces({
         scenario: scenario || undefined,
         status: status || undefined,
-        chain: chain || undefined,
-        messageId: filterMsgId || undefined,
+        chain:
+          !sourceBlockchainId && !destinationBlockchainId ? legacyChain || undefined : undefined,
+        sourceBlockchainId: sourceBlockchainId || undefined,
+        destinationBlockchainId: destinationBlockchainId || undefined,
+        messageId: messageId || undefined,
+        sort: "newest",
         page,
         pageSize: PAGE_SIZE,
       }),
-    [scenario, status, chain, filterMsgId, page],
+    [scenario, status, sourceBlockchainId, destinationBlockchainId, legacyChain, messageId, page],
   );
 
   const scenariosRes = useFetch(() => getScenarios());
-  const scenarioNames = (scenariosRes.data?.scenarios ?? []).map((s) => s.scenario);
+  const scenarioNames = (scenariosRes.data?.scenarios ?? []).map((entry) => entry.scenario);
 
   const chainsRes = useFetch(() => getChains());
-  const chainOptions = (chainsRes.data?.chains ?? []).map((c) => ({
-    id: c.blockchainId,
-    name: c.name,
+  const chainOptions = (chainsRes.data?.chains ?? []).map((chainEntry) => ({
+    id: chainEntry.blockchainId,
+    name: chainEntry.name,
   }));
 
   const totalPages = data ? Math.max(1, Math.ceil(data.total / PAGE_SIZE)) : 1;
+  const statusLabel =
+    STATUS_CHIPS.find((chip) => chip.value === status)?.label ?? status.replace(/_/g, " ");
+  const sourceChainName =
+    chainOptions.find((option) => option.id === sourceBlockchainId)?.name ?? sourceBlockchainId;
+  const destinationChainName =
+    chainOptions.find((option) => option.id === destinationBlockchainId)?.name ??
+    destinationBlockchainId;
+  const legacyChainName =
+    chainOptions.find((option) => option.id === legacyChain)?.name ?? legacyChain;
+  const activeFilterCount = [
+    scenario,
+    status,
+    sourceBlockchainId,
+    destinationBlockchainId,
+    legacyChain,
+    messageId,
+  ].filter(Boolean).length;
 
-  function updateParam(key: string, val: string) {
+  function updateParam(key: string, value: string, opts?: { clearLegacyChain?: boolean }) {
     const next = new URLSearchParams(searchParams);
-    if (val) next.set(key, val);
+    if (value) next.set(key, value);
     else next.delete(key);
+    if (opts?.clearLegacyChain) next.delete("chain");
     next.delete("page");
     setSearchParams(next);
   }
 
-  function goToPage(p: number) {
+  function clearAllFilters() {
+    setSearchParams(new URLSearchParams());
+  }
+
+  function clearMessageIdFilter() {
+    setMessageIdInput("");
+    updateParam("messageId", "");
+  }
+
+  function goToPage(nextPage: number) {
     const next = new URLSearchParams(searchParams);
-    if (p > 1) next.set("page", String(p));
+    if (nextPage > 1) next.set("page", String(nextPage));
     else next.delete("page");
     setSearchParams(next);
   }
 
-  function computeLatency(sendTime: string, receiveTime: string): string {
-    const ms = new Date(receiveTime).getTime() - new Date(sendTime).getTime();
-    if (ms <= 0) return "—";
-    return `${(ms / 1000).toFixed(1)}s`;
+  function openTrace(trace: MessageTrace) {
+    navigate(`/traces/${trace.messageId}`, { state: { returnTo: currentListUrl } });
   }
 
   return (
     <div>
       <h1>Traces</h1>
+      <p className="muted trace-page-subtitle">
+        Filter by status, route, or message ID, then drill into the full lifecycle without losing
+        list context.
+      </p>
 
-      {/* Status filter chips */}
-      <div className="filter-chips" style={{ marginBottom: 12 }}>
-        {STATUS_CHIPS.map((chip) => (
-          <button
-            key={chip.value}
-            className={`chip${status === chip.value ? " chip-active" : ""}`}
-            onClick={() => updateParam("status", chip.value)}
-          >
-            {chip.label}
+      <div className="trace-toolbar">
+        <div className="filter-chips" aria-label="Trace status filters">
+          {STATUS_CHIPS.map((chip) => (
+            <button
+              key={chip.value}
+              className={`chip${status === chip.value ? " chip-active" : ""}`}
+              onClick={() => updateParam("status", chip.value)}
+            >
+              {chip.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="trace-filter-grid">
+          <label className="filter-field">
+            <span>Scenario</span>
+            <select
+              aria-label="Scenario filter"
+              value={scenario}
+              onChange={(event) => updateParam("scenario", event.target.value)}
+            >
+              <option value="">All scenarios</option>
+              {scenarioNames.map((scenarioName) => (
+                <option key={scenarioName} value={scenarioName}>
+                  {scenarioName}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="filter-field">
+            <span>Source chain</span>
+            <select
+              aria-label="Source chain filter"
+              value={sourceBlockchainId}
+              onChange={(event) =>
+                updateParam("sourceBlockchainId", event.target.value, { clearLegacyChain: true })
+              }
+            >
+              <option value="">Any source</option>
+              {chainOptions.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="filter-field">
+            <span>Destination chain</span>
+            <select
+              aria-label="Destination chain filter"
+              value={destinationBlockchainId}
+              onChange={(event) =>
+                updateParam("destinationBlockchainId", event.target.value, {
+                  clearLegacyChain: true,
+                })
+              }
+            >
+              <option value="">Any destination</option>
+              {chainOptions.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="filter-field filter-field-wide">
+            <span>Message ID</span>
+            <input
+              aria-label="Message ID filter"
+              type="text"
+              placeholder="Debounced prefix search"
+              value={messageIdInput}
+              onChange={(event) => setMessageIdInput(event.target.value)}
+              className="input"
+            />
+          </label>
+        </div>
+
+        <div className="trace-toolbar-actions">
+          <button onClick={reload} className="btn btn-sm">
+            Refresh
           </button>
-        ))}
+          <button
+            onClick={clearAllFilters}
+            className="btn btn-sm"
+            disabled={activeFilterCount === 0}
+          >
+            Clear all
+          </button>
+        </div>
       </div>
 
-      <div className="filters">
-        <label>
-          Scenario:{" "}
-          <select value={scenario} onChange={(e) => updateParam("scenario", e.target.value)}>
-            <option value="">All</option>
-            {scenarioNames.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Chain:{" "}
-          <select value={chain} onChange={(e) => updateParam("chain", e.target.value)}>
-            <option value="">All chains</option>
-            {chainOptions.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Message ID:{" "}
-          <input
-            type="text"
-            placeholder="prefix search..."
-            value={filterMsgId}
-            onChange={(e) => setFilterMsgId(e.target.value)}
-            className="input"
-          />
-        </label>
-        <button onClick={reload} className="btn btn-sm">
-          Refresh
-        </button>
-      </div>
+      {activeFilterCount > 0 && (
+        <div className="active-filter-list" aria-label="Active trace filters">
+          {status && (
+            <button className="active-filter-pill" onClick={() => updateParam("status", "")}>
+              Status: {statusLabel}
+            </button>
+          )}
+          {scenario && (
+            <button className="active-filter-pill" onClick={() => updateParam("scenario", "")}>
+              Scenario: {scenario}
+            </button>
+          )}
+          {sourceBlockchainId && (
+            <button
+              className="active-filter-pill"
+              onClick={() => updateParam("sourceBlockchainId", "", { clearLegacyChain: true })}
+            >
+              Source: {sourceChainName}
+            </button>
+          )}
+          {destinationBlockchainId && (
+            <button
+              className="active-filter-pill"
+              onClick={() => updateParam("destinationBlockchainId", "", { clearLegacyChain: true })}
+            >
+              Destination: {destinationChainName}
+            </button>
+          )}
+          {legacyChain && !sourceBlockchainId && !destinationBlockchainId && (
+            <button className="active-filter-pill" onClick={() => updateParam("chain", "")}>
+              Any chain: {legacyChainName}
+            </button>
+          )}
+          {messageId && (
+            <button className="active-filter-pill" onClick={clearMessageIdFilter}>
+              Message ID: {messageId}
+            </button>
+          )}
+        </div>
+      )}
 
       {loading && <Loading />}
       {error && <ErrorBox message={error} onRetry={reload} />}
 
       {data && (
         <>
-          <p className="muted">
-            Showing {data.traces.length} of {data.total} traces (page {data.page})
+          <p className="muted trace-results-summary">
+            Showing {data.traces.length} of {data.total} traces (page {data.page}, newest first)
           </p>
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Message ID</th>
-                <th>Scenario</th>
-                <th>Status</th>
-                <th>Source</th>
-                <th>Dest</th>
-                <th>Events</th>
-                <th>Latency</th>
-                <th>Send Time</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.traces.map((t) => (
-                <tr
-                  key={t.messageId}
-                  onClick={() => navigate(`/traces/${t.messageId}`)}
-                  style={{ cursor: "pointer" }}
-                >
-                  <td>
-                    <Link
-                      to={`/traces/${t.messageId}`}
-                      className="mono"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {t.messageId.slice(0, 12)}...
-                    </Link>
-                    {t.execution === "pending" && (
-                      <>
-                        {" "}
-                        <span className="live-dot" title="In progress" />
-                      </>
-                    )}
-                  </td>
-                  <td>{t.scenario}</td>
-                  <td>
-                    <StatusBadge status={t.execution} />
-                  </td>
-                  <td>{t.source.name}</td>
-                  <td>{t.destination.name}</td>
-                  <td>{t.events.length}</td>
-                  <td>{computeLatency(t.timestamps.sendTime, t.timestamps.receiveTime)}</td>
-                  <td>{fmt(t.timestamps.sendTime)}</td>
-                </tr>
-              ))}
-              {data.traces.length === 0 && (
+
+          <div className="trace-table-desktop">
+            <table className="table">
+              <thead>
                 <tr>
-                  <td colSpan={8} className="muted">
-                    No traces match the current filters.
-                  </td>
+                  <th>Message</th>
+                  <th>Status</th>
+                  <th>Route</th>
+                  <th>Scenario</th>
+                  <th>Events</th>
+                  <th>Latency</th>
+                  <th>Sent</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {data.traces.map((trace) => (
+                  <tr
+                    key={trace.messageId}
+                    className="trace-row"
+                    onClick={() => openTrace(trace)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <td>
+                      <Link
+                        to={`/traces/${trace.messageId}`}
+                        state={{ returnTo: currentListUrl }}
+                        className="mono trace-row-link"
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        {trace.messageId.slice(0, 12)}...
+                      </Link>
+                      {trace.execution === "pending" && (
+                        <span className="trace-live-state">
+                          <span className="live-dot" title="In progress" /> Live
+                        </span>
+                      )}
+                    </td>
+                    <td>
+                      <StatusBadge status={trace.execution} />
+                    </td>
+                    <td>
+                      {trace.source.name} → {trace.destination.name}
+                    </td>
+                    <td>{trace.scenario}</td>
+                    <td>{trace.events.length}</td>
+                    <td>{getTraceLatencyLabel(trace)}</td>
+                    <td>{fmt(trace.timestamps.sendTime)}</td>
+                  </tr>
+                ))}
+                {data.traces.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="muted">
+                      No traces match the current filters.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="trace-cards-mobile">
+            {data.traces.map((trace) => (
+              <article
+                key={trace.messageId}
+                className="trace-card"
+                onClick={() => openTrace(trace)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    openTrace(trace);
+                  }
+                }}
+              >
+                <div className="trace-card-header">
+                  <Link
+                    to={`/traces/${trace.messageId}`}
+                    state={{ returnTo: currentListUrl }}
+                    className="mono trace-row-link"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    {trace.messageId.slice(0, 16)}...
+                  </Link>
+                  <StatusBadge status={trace.execution} />
+                </div>
+                <div className="trace-card-route">
+                  {trace.source.name} → {trace.destination.name}
+                </div>
+                <div className="trace-card-grid">
+                  <span>Scenario</span>
+                  <span>{trace.scenario}</span>
+                  <span>Events</span>
+                  <span>{trace.events.length}</span>
+                  <span>Latency</span>
+                  <span>{getTraceLatencyLabel(trace)}</span>
+                  <span>Sent</span>
+                  <span>{fmt(trace.timestamps.sendTime)}</span>
+                </div>
+                {trace.execution === "pending" && (
+                  <div className="trace-live-state">
+                    <span className="live-dot" title="In progress" /> Live trace
+                  </div>
+                )}
+              </article>
+            ))}
+            {data.traces.length === 0 && (
+              <p className="muted">No traces match the current filters.</p>
+            )}
+          </div>
 
           <Pagination page={page} totalPages={totalPages} onGoToPage={goToPage} />
         </>
@@ -206,15 +404,15 @@ function Pagination({
 }: {
   page: number;
   totalPages: number;
-  onGoToPage: (p: number) => void;
+  onGoToPage: (pageNumber: number) => void;
 }) {
   const [jumpInput, setJumpInput] = useState("");
 
-  function handleJump(e: React.FormEvent) {
-    e.preventDefault();
-    const p = Number(jumpInput);
-    if (p >= 1 && p <= totalPages) {
-      onGoToPage(p);
+  function handleJump(event: React.FormEvent) {
+    event.preventDefault();
+    const nextPage = Number(jumpInput);
+    if (nextPage >= 1 && nextPage <= totalPages) {
+      onGoToPage(nextPage);
       setJumpInput("");
     }
   }
@@ -242,7 +440,7 @@ function Pagination({
             max={totalPages}
             placeholder="Go to"
             value={jumpInput}
-            onChange={(e) => setJumpInput(e.target.value)}
+            onChange={(event) => setJumpInput(event.target.value)}
             className="input pagination-input"
           />
           <button type="submit" className="btn btn-sm">

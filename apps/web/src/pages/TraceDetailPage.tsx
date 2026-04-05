@@ -1,55 +1,86 @@
-import { useState, useEffect, useCallback } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useParams } from "react-router-dom";
+import { getChains, getTrace, getTraceRaw } from "../api.js";
+import type { ChainRegistryEntry, MessageEvent, MessageTrace } from "../api.js";
 import { useFetch, useFormatTime } from "../hooks.js";
-import { getTrace, getTraceRaw } from "../api.js";
-import type { MessageEvent } from "../api.js";
-import { StatusBadge } from "../components/StatusBadge.js";
+import { ErrorBox } from "../components/ErrorBox.js";
 import { EventTimeline } from "../components/EventTimeline.js";
 import { Loading } from "../components/Loading.js";
-import { ErrorBox } from "../components/ErrorBox.js";
+import { StatusBadge } from "../components/StatusBadge.js";
+import {
+  findLatestFailureEvent,
+  formatDurationMs,
+  formatEventKind,
+  getCurrentStateSummary,
+  getTraceLatencyLabel,
+} from "../trace-utils.js";
 
 export function TraceDetailPage() {
   const { messageId } = useParams<{ messageId: string }>();
-  const { data: trace, loading, error } = useFetch(() => getTrace(messageId!), [messageId]);
-  const [showRaw, setShowRaw] = useState(false);
-  const rawFetch = useFetch(() => getTraceRaw(messageId!), [messageId]);
+  const location = useLocation();
   const fmt = useFormatTime();
+  const traceRequest = messageId
+    ? () => getTrace(messageId)
+    : () => Promise.reject(new Error("Trace ID is missing"));
+  const rawTraceRequest = messageId
+    ? () => getTraceRaw(messageId)
+    : () => Promise.reject(new Error("Trace ID is missing"));
 
-  // Auto-refresh every 5s for in-progress traces
+  const { data: trace, loading, error } = useFetch(traceRequest, [messageId]);
+  const rawFetch = useFetch(rawTraceRequest, [messageId]);
+  const chainsRes = useFetch(() => getChains());
+
+  const [showRaw, setShowRaw] = useState(false);
   const [refreshTick, setRefreshTick] = useState(0);
+  const [selectedEventIdx, setSelectedEventIdx] = useState<number | undefined>();
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSelectedEventIdx(undefined);
+  }, [messageId]);
+
   useEffect(() => {
     if (trace?.execution !== "pending") return;
-    const id = window.setInterval(() => setRefreshTick((t) => t + 1), 5000);
+    const id = window.setInterval(() => setRefreshTick((tick) => tick + 1), 5000);
     return () => window.clearInterval(id);
   }, [trace?.execution]);
 
-  // Re-fetch on tick
-  const { data: liveTrace } = useFetch(() => getTrace(messageId!), [messageId, refreshTick]);
+  const { data: liveTrace } = useFetch(traceRequest, [messageId, refreshTick]);
   const displayTrace = liveTrace ?? trace;
-
-  // Event selection
-  const [selectedEventIdx, setSelectedEventIdx] = useState<number | undefined>();
   const selectedEvent =
     selectedEventIdx != null ? displayTrace?.events[selectedEventIdx] : undefined;
-
-  const handleSelectEvent = useCallback((_ev: MessageEvent, idx: number) => {
-    setSelectedEventIdx((prev) => (prev === idx ? undefined : idx));
-  }, []);
+  const currentState = displayTrace ? getCurrentStateSummary(displayTrace, fmt) : null;
+  const backTo = getReturnTo(location.state);
 
   if (loading) return <Loading />;
   if (error) return <ErrorBox message={error} />;
   if (!displayTrace) return <ErrorBox message="Trace not found" />;
 
-  // Compute duration
-  const sendMs = new Date(displayTrace.timestamps.sendTime).getTime();
-  const recvMs = new Date(displayTrace.timestamps.receiveTime).getTime();
-  const durationMs = recvMs - sendMs;
-  const durationStr = durationMs > 0 ? `${(durationMs / 1000).toFixed(1)}s` : "—";
+  const selectedExplorerHref = selectedEvent
+    ? getEventExplorerHref(displayTrace, selectedEvent, chainsRes.data?.chains ?? [])
+    : undefined;
+  const failureEvent = findLatestFailureEvent(displayTrace.events);
+
+  async function copyValue(copyId: string, value: string) {
+    if (!value || !navigator.clipboard?.writeText) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedKey(copyId);
+      window.setTimeout(() => {
+        setCopiedKey((current) => (current === copyId ? null : current));
+      }, 1500);
+    } catch {
+      setCopiedKey(null);
+    }
+  }
 
   return (
     <div>
       <nav className="breadcrumb">
-        <Link to="/traces">&larr; Back to Traces</Link>
+        <Link to={backTo}>&larr; Back to Traces</Link>
       </nav>
 
       <div className="trace-header">
@@ -61,12 +92,27 @@ export function TraceDetailPage() {
         </h1>
       </div>
 
+      {currentState && (
+        <section className={`trace-state-card trace-state-${currentState.tone}`}>
+          <div className="trace-state-label">Current state</div>
+          <h2>{currentState.title}</h2>
+          <p>{currentState.detail}</p>
+          {failureEvent?.details && displayTrace.execution !== "pending" && (
+            <p className="trace-state-note">Latest failure detail: {failureEvent.details}</p>
+          )}
+        </section>
+      )}
+
       <div className="card-grid">
         <div className="card">
           <div className="card-label">Message ID</div>
-          <div className="card-value mono" style={{ fontSize: "0.85rem", wordBreak: "break-all" }}>
-            {displayTrace.messageId}
-          </div>
+          <div className="card-value mono trace-value-break">{displayTrace.messageId}</div>
+          <QuickActions
+            copyId="message-id"
+            copyValue={displayTrace.messageId}
+            copiedKey={copiedKey}
+            onCopy={copyValue}
+          />
         </div>
         <div className="card">
           <div className="card-label">Route</div>
@@ -74,14 +120,25 @@ export function TraceDetailPage() {
             {displayTrace.source.name} <span className="arrow">&rarr;</span>{" "}
             {displayTrace.destination.name}
           </div>
+          <div className="trace-route-meta">
+            {displayTrace.source.blockchainId.slice(0, 10)}... →{" "}
+            {displayTrace.destination.blockchainId.slice(0, 10)}...
+          </div>
         </div>
         <div className="card">
-          <div className="card-label">Duration</div>
-          <div className="card-value">{durationStr}</div>
+          <div className="card-label">Latency</div>
+          <div className="card-value">{getTraceLatencyLabel(displayTrace)}</div>
+          <div className="trace-route-meta">Sent {fmt(displayTrace.timestamps.sendTime)}</div>
         </div>
         <div className="card">
           <div className="card-label">Events</div>
           <div className="card-value">{displayTrace.events.length}</div>
+          <div className="trace-route-meta">
+            Latest event:{" "}
+            {formatEventKind(
+              displayTrace.events[displayTrace.events.length - 1]?.kind ?? "unknown",
+            )}
+          </div>
         </div>
       </div>
 
@@ -89,13 +146,13 @@ export function TraceDetailPage() {
         <h2>Addresses</h2>
         <dl className="dl">
           <dt>Sender</dt>
-          <dd className="mono">{displayTrace.sender}</dd>
+          <dd className="trace-detail-value mono">{displayTrace.sender}</dd>
           <dt>Recipient</dt>
-          <dd className="mono">{displayTrace.recipient}</dd>
+          <dd className="trace-detail-value mono">{displayTrace.recipient}</dd>
           {displayTrace.relayer && (
             <>
               <dt>Relayer</dt>
-              <dd className="mono">{displayTrace.relayer.address}</dd>
+              <dd className="trace-detail-value mono">{displayTrace.relayer.address}</dd>
             </>
           )}
         </dl>
@@ -105,17 +162,75 @@ export function TraceDetailPage() {
         <h2>Transaction Hashes</h2>
         <dl className="dl">
           <dt>Source Tx</dt>
-          <dd className="mono">{displayTrace.sourceTxHash}</dd>
+          <dd className="trace-detail-value">
+            <span className="mono trace-value-break">{displayTrace.sourceTxHash}</span>
+            <QuickActions
+              copyId="source-tx"
+              copyValue={displayTrace.sourceTxHash}
+              copiedKey={copiedKey}
+              onCopy={copyValue}
+              explorerHref={getTxExplorerHref(
+                displayTrace.source.blockchainId,
+                displayTrace.sourceTxHash,
+                chainsRes.data?.chains ?? [],
+              )}
+            />
+          </dd>
           {displayTrace.relayTxHash && (
             <>
               <dt>Relay Tx</dt>
-              <dd className="mono">{displayTrace.relayTxHash}</dd>
+              <dd className="trace-detail-value">
+                <span className="mono trace-value-break">{displayTrace.relayTxHash}</span>
+                <QuickActions
+                  copyId="relay-tx"
+                  copyValue={displayTrace.relayTxHash}
+                  copiedKey={copiedKey}
+                  onCopy={copyValue}
+                  explorerHref={getTxExplorerHref(
+                    displayTrace.destination.blockchainId,
+                    displayTrace.relayTxHash,
+                    chainsRes.data?.chains ?? [],
+                  )}
+                />
+              </dd>
             </>
           )}
           {displayTrace.destinationTxHash && (
             <>
               <dt>Destination Tx</dt>
-              <dd className="mono">{displayTrace.destinationTxHash}</dd>
+              <dd className="trace-detail-value">
+                <span className="mono trace-value-break">{displayTrace.destinationTxHash}</span>
+                <QuickActions
+                  copyId="destination-tx"
+                  copyValue={displayTrace.destinationTxHash}
+                  copiedKey={copiedKey}
+                  onCopy={copyValue}
+                  explorerHref={getTxExplorerHref(
+                    displayTrace.destination.blockchainId,
+                    displayTrace.destinationTxHash,
+                    chainsRes.data?.chains ?? [],
+                  )}
+                />
+              </dd>
+            </>
+          )}
+          {displayTrace.retry?.retryTxHash && (
+            <>
+              <dt>Retry Tx</dt>
+              <dd className="trace-detail-value">
+                <span className="mono trace-value-break">{displayTrace.retry.retryTxHash}</span>
+                <QuickActions
+                  copyId="retry-tx"
+                  copyValue={displayTrace.retry.retryTxHash}
+                  copiedKey={copiedKey}
+                  onCopy={copyValue}
+                  explorerHref={getTxExplorerHref(
+                    displayTrace.destination.blockchainId,
+                    displayTrace.retry.retryTxHash,
+                    chainsRes.data?.chains ?? [],
+                  )}
+                />
+              </dd>
             </>
           )}
         </dl>
@@ -126,13 +241,13 @@ export function TraceDetailPage() {
           <h2>Fee Info</h2>
           <dl className="dl">
             <dt>Token</dt>
-            <dd className="mono">{displayTrace.fee.feeTokenAddress}</dd>
+            <dd className="trace-detail-value mono">{displayTrace.fee.feeTokenAddress}</dd>
             <dt>Initial</dt>
-            <dd>{displayTrace.fee.initialAmount}</dd>
+            <dd className="trace-detail-value">{displayTrace.fee.initialAmount}</dd>
             <dt>Added</dt>
-            <dd>{displayTrace.fee.addedAmount}</dd>
+            <dd className="trace-detail-value">{displayTrace.fee.addedAmount}</dd>
             <dt>Total</dt>
-            <dd>{displayTrace.fee.totalAmount}</dd>
+            <dd className="trace-detail-value">{displayTrace.fee.totalAmount}</dd>
           </dl>
         </section>
       )}
@@ -142,11 +257,13 @@ export function TraceDetailPage() {
           <h2>Retry Info</h2>
           <dl className="dl">
             <dt>Original Gas Limit</dt>
-            <dd>{displayTrace.retry.originalGasLimit}</dd>
+            <dd className="trace-detail-value">{displayTrace.retry.originalGasLimit}</dd>
             <dt>Retry Gas Limit</dt>
-            <dd>{displayTrace.retry.retryGasLimit}</dd>
-            <dt>Retry Tx</dt>
-            <dd className="mono">{displayTrace.retry.retryTxHash}</dd>
+            <dd className="trace-detail-value">{displayTrace.retry.retryGasLimit}</dd>
+            <dt>Retry Outcome</dt>
+            <dd className="trace-detail-value">
+              Delivered after retry in {getTraceLatencyLabel(displayTrace)}
+            </dd>
           </dl>
         </section>
       )}
@@ -156,7 +273,9 @@ export function TraceDetailPage() {
         <EventTimeline
           events={displayTrace.events}
           selectedIndex={selectedEventIdx}
-          onSelectEvent={handleSelectEvent}
+          onSelectEvent={(_event, index) => {
+            setSelectedEventIdx((current) => (current === index ? undefined : index));
+          }}
         />
       </section>
 
@@ -165,33 +284,46 @@ export function TraceDetailPage() {
           <h3>Event Details</h3>
           <dl className="dl">
             <dt>Kind</dt>
-            <dd>{selectedEvent.kind.replace(/_/g, " ")}</dd>
+            <dd className="trace-detail-value">{formatEventKind(selectedEvent.kind)}</dd>
             <dt>Timestamp</dt>
-            <dd>{fmt(selectedEvent.timestamp)}</dd>
+            <dd className="trace-detail-value">{fmt(selectedEvent.timestamp)}</dd>
             {selectedEvent.chain && (
               <>
                 <dt>Chain</dt>
-                <dd>{selectedEvent.chain}</dd>
+                <dd className="trace-detail-value">{selectedEvent.chain}</dd>
               </>
             )}
             {selectedEvent.blockNumber != null && (
               <>
                 <dt>Block Number</dt>
-                <dd>{selectedEvent.blockNumber.toLocaleString()}</dd>
+                <dd className="trace-detail-value">{selectedEvent.blockNumber.toLocaleString()}</dd>
               </>
             )}
             {selectedEvent.txHash && (
               <>
                 <dt>Transaction Hash</dt>
-                <dd className="mono">{selectedEvent.txHash}</dd>
+                <dd className="trace-detail-value">
+                  <span className="mono trace-value-break">{selectedEvent.txHash}</span>
+                  <QuickActions
+                    copyId={`event-tx-${selectedEventIdx}`}
+                    copyValue={selectedEvent.txHash}
+                    copiedKey={copiedKey}
+                    onCopy={copyValue}
+                    explorerHref={selectedExplorerHref}
+                  />
+                </dd>
               </>
             )}
             {selectedEvent.details && (
               <>
                 <dt>Details</dt>
-                <dd>{selectedEvent.details}</dd>
+                <dd className="trace-detail-value">{selectedEvent.details}</dd>
               </>
             )}
+            <dt>Elapsed from send</dt>
+            <dd className="trace-detail-value">
+              {formatElapsedFromSend(displayTrace, selectedEvent)}
+            </dd>
           </dl>
         </div>
       )}
@@ -210,5 +342,122 @@ export function TraceDetailPage() {
         {showRaw && rawFetch.error && <ErrorBox message={rawFetch.error} />}
       </section>
     </div>
+  );
+}
+
+function QuickActions({
+  copyId,
+  copyValue,
+  copiedKey,
+  explorerHref,
+  onCopy,
+}: {
+  copyId: string;
+  copyValue: string;
+  copiedKey: string | null;
+  explorerHref?: string;
+  onCopy: (copyId: string, value: string) => Promise<void>;
+}) {
+  return (
+    <div className="trace-action-row">
+      <button
+        type="button"
+        className="btn btn-sm trace-action-btn"
+        onClick={() => onCopy(copyId, copyValue)}
+      >
+        {copiedKey === copyId ? "Copied" : "Copy"}
+      </button>
+      {explorerHref && (
+        <a
+          href={explorerHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn btn-sm trace-action-link"
+        >
+          View on Explorer
+        </a>
+      )}
+    </div>
+  );
+}
+
+function getReturnTo(state: unknown): string {
+  if (
+    state &&
+    typeof state === "object" &&
+    "returnTo" in state &&
+    typeof state.returnTo === "string"
+  ) {
+    return state.returnTo;
+  }
+
+  return "/traces";
+}
+
+function formatElapsedFromSend(trace: MessageTrace, event: MessageEvent): string {
+  const sendMs = Date.parse(trace.timestamps.sendTime);
+  const eventMs = Date.parse(event.timestamp);
+
+  if (!Number.isFinite(sendMs) || !Number.isFinite(eventMs) || eventMs < sendMs) {
+    return "—";
+  }
+
+  return formatDurationMs(eventMs - sendMs);
+}
+
+function getEventExplorerHref(
+  trace: MessageTrace,
+  event: MessageEvent,
+  chains: ChainRegistryEntry[],
+): string | undefined {
+  if (!event.txHash) return undefined;
+  const chainId = resolveEventChainId(trace, event);
+  return chainId ? getTxExplorerHref(chainId, event.txHash, chains) : undefined;
+}
+
+function getTxExplorerHref(
+  blockchainId: string,
+  txHash: string,
+  chains: ChainRegistryEntry[],
+): string | undefined {
+  const explorerUrl = chains.find((chain) => chain.blockchainId === blockchainId)?.explorerUrl;
+  if (!explorerUrl) return undefined;
+  return `${explorerUrl.replace(/\/$/, "")}/tx/${txHash}`;
+}
+
+function resolveEventChainId(trace: MessageTrace, event: MessageEvent): string | undefined {
+  if (event.chain) {
+    if (matchesChain(event.chain, trace.source, "source")) return trace.source.blockchainId;
+    if (matchesChain(event.chain, trace.destination, "destination")) {
+      return trace.destination.blockchainId;
+    }
+  }
+
+  if (event.txHash === trace.sourceTxHash) return trace.source.blockchainId;
+  if (
+    event.txHash &&
+    [
+      trace.relayTxHash,
+      trace.destinationTxHash,
+      trace.retry?.retryTxHash,
+      trace.relayer?.txHash,
+    ].includes(event.txHash)
+  ) {
+    return trace.destination.blockchainId;
+  }
+
+  return undefined;
+}
+
+function matchesChain(
+  chainValue: string,
+  chain: MessageTrace["source"],
+  role: "source" | "destination",
+): boolean {
+  const normalized = chainValue.toLowerCase();
+  return (
+    normalized === chain.name.toLowerCase() ||
+    normalized === chain.blockchainId.toLowerCase() ||
+    normalized === role
   );
 }

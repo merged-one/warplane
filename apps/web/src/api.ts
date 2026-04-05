@@ -141,7 +141,10 @@ export interface TracesParams {
   scenario?: string;
   status?: string;
   chain?: string;
+  sourceBlockchainId?: string;
+  destinationBlockchainId?: string;
   messageId?: string;
+  sort?: "newest" | "oldest";
   page?: number;
   pageSize?: number;
 }
@@ -158,7 +161,12 @@ export function getTraces(params?: TracesParams): Promise<TracesResponse> {
   if (params?.scenario) qs.set("scenario", params.scenario);
   if (params?.status) qs.set("status", params.status);
   if (params?.chain) qs.set("chain", params.chain);
+  if (params?.sourceBlockchainId) qs.set("sourceBlockchainId", params.sourceBlockchainId);
+  if (params?.destinationBlockchainId) {
+    qs.set("destinationBlockchainId", params.destinationBlockchainId);
+  }
   if (params?.messageId) qs.set("messageId", params.messageId);
+  if (params?.sort) qs.set("sort", params.sort);
   if (params?.page) qs.set("page", String(params.page));
   if (params?.pageSize) qs.set("pageSize", String(params.pageSize));
   const q = qs.toString();

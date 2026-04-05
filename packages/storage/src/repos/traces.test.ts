@@ -103,6 +103,56 @@ describe("trace filtering", () => {
     expect(traces.map((trace) => trace.messageId)).toEqual(["msg-source", "msg-dest"]);
     expect(count).toBe(2);
   });
+
+  it("supports newest-first and oldest-first ordering", async () => {
+    await upsertTrace(
+      db,
+      makeTrace({
+        messageId: "msg-oldest",
+        timestamps: {
+          sendTime: "2026-04-01T12:00:00.000Z",
+          receiveTime: "2026-04-01T12:00:05.000Z",
+          blockSend: 100,
+        },
+      }),
+    );
+    await upsertTrace(
+      db,
+      makeTrace({
+        messageId: "msg-middle",
+        timestamps: {
+          sendTime: "2026-04-01T12:05:00.000Z",
+          receiveTime: "2026-04-01T12:05:05.000Z",
+          blockSend: 200,
+        },
+      }),
+    );
+    await upsertTrace(
+      db,
+      makeTrace({
+        messageId: "msg-newest",
+        timestamps: {
+          sendTime: "2026-04-01T12:10:00.000Z",
+          receiveTime: "2026-04-01T12:10:05.000Z",
+          blockSend: 300,
+        },
+      }),
+    );
+
+    const oldestFirst = await listTraces(db, { sort: "oldest" });
+    const newestFirst = await listTraces(db, { sort: "newest" });
+
+    expect(oldestFirst.map((trace) => trace.messageId)).toEqual([
+      "msg-oldest",
+      "msg-middle",
+      "msg-newest",
+    ]);
+    expect(newestFirst.map((trace) => trace.messageId)).toEqual([
+      "msg-newest",
+      "msg-middle",
+      "msg-oldest",
+    ]);
+  });
 });
 
 describe("getTracesByMessageIds", () => {
