@@ -7,6 +7,10 @@ import {
 import type { RpcClient } from "../rpc/client.js";
 
 const PLACEHOLDER_TRACE_TIMESTAMP = "1970-01-01T00:00:00.000Z";
+type ReceiveTimestampEvent = Extract<
+  MessageEvent,
+  { kind: "delivery_confirmed" | "execution_failed" | "retry_succeeded" }
+>;
 
 export interface TimestampRepairOptions {
   limit?: number;
@@ -70,7 +74,7 @@ async function repairTraceTimestamps(
     changed = true;
   }
 
-  const receiveEvent = repairedEvents.find((event) => event.kind === "delivery_confirmed");
+  const receiveEvent = repairedEvents.find(isReceiveTimestampEvent);
   if (receiveEvent && needsRepair(timestamps.receiveTime) && !needsRepair(receiveEvent.timestamp)) {
     timestamps.receiveTime = receiveEvent.timestamp;
     if (timestamps.blockRecv === undefined) {
@@ -119,4 +123,12 @@ async function resolveEventTimestamp(
 
 function needsRepair(timestamp: string): boolean {
   return timestamp === "" || timestamp === PLACEHOLDER_TRACE_TIMESTAMP;
+}
+
+function isReceiveTimestampEvent(event: MessageEvent): event is ReceiveTimestampEvent {
+  return (
+    event.kind === "delivery_confirmed" ||
+    event.kind === "execution_failed" ||
+    event.kind === "retry_succeeded"
+  );
 }

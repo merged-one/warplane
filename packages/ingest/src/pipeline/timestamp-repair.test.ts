@@ -114,4 +114,95 @@ describe("repairPlaceholderTraceTimestamps", () => {
     expect(trace!.timestamps.sendTime).toBe(PLACEHOLDER_TRACE_TIMESTAMP);
     expect(trace!.timestamps.receiveTime).toBe(PLACEHOLDER_TRACE_TIMESTAMP);
   });
+
+  it("repairs receiveTime from execution_failed when delivery_confirmed is absent", async () => {
+    await upsertTrace(
+      db,
+      makeTrace({
+        messageId: "msg-3",
+        execution: "failed",
+        events: [
+          {
+            kind: "message_sent",
+            timestamp: PLACEHOLDER_TRACE_TIMESTAMP,
+            blockNumber: 100,
+            txHash: "0xsource",
+            chain: "chain-a",
+          },
+          {
+            kind: "execution_failed",
+            timestamp: PLACEHOLDER_TRACE_TIMESTAMP,
+            blockNumber: 200,
+            txHash: "0xfailed",
+            chain: "chain-b",
+          },
+        ],
+      }),
+    );
+
+    const result = await repairPlaceholderTraceTimestamps(
+      db,
+      new Map([
+        ["chain-a", makeClient({ 100: 1_712_188_800n })],
+        ["chain-b", makeClient({ 200: 1_712_188_845n })],
+      ]),
+    );
+
+    expect(result).toEqual({ scanned: 1, repaired: 1 });
+
+    const trace = await getTrace(db, "msg-3");
+    expect(trace).toBeDefined();
+    expect(trace!.timestamps.receiveTime).toBe("2024-04-04T00:00:45.000Z");
+    expect(trace!.events[1]!.kind).toBe("execution_failed");
+    expect(trace!.events[1]!.timestamp).toBe("2024-04-04T00:00:45.000Z");
+  });
+
+  it("keeps the earliest repaired receive-side timestamp during retries", async () => {
+    await upsertTrace(
+      db,
+      makeTrace({
+        messageId: "msg-4",
+        execution: "retry_success",
+        events: [
+          {
+            kind: "message_sent",
+            timestamp: PLACEHOLDER_TRACE_TIMESTAMP,
+            blockNumber: 100,
+            txHash: "0xsource",
+            chain: "chain-a",
+          },
+          {
+            kind: "execution_failed",
+            timestamp: PLACEHOLDER_TRACE_TIMESTAMP,
+            blockNumber: 200,
+            txHash: "0xfailed",
+            chain: "chain-b",
+          },
+          {
+            kind: "retry_succeeded",
+            timestamp: PLACEHOLDER_TRACE_TIMESTAMP,
+            blockNumber: 201,
+            txHash: "0xretry",
+            chain: "chain-b",
+          },
+        ],
+      }),
+    );
+
+    const result = await repairPlaceholderTraceTimestamps(
+      db,
+      new Map([
+        ["chain-a", makeClient({ 100: 1_712_188_800n })],
+        ["chain-b", makeClient({ 200: 1_712_188_845n, 201: 1_712_188_900n })],
+      ]),
+    );
+
+    expect(result).toEqual({ scanned: 1, repaired: 1 });
+
+    const trace = await getTrace(db, "msg-4");
+    expect(trace).toBeDefined();
+    expect(trace!.timestamps.receiveTime).toBe("2024-04-04T00:00:45.000Z");
+    expect(trace!.events[1]!.timestamp).toBe("2024-04-04T00:00:45.000Z");
+    expect(trace!.events[2]!.timestamp).toBe("2024-04-04T00:01:40.000Z");
+  });
 });
