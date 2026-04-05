@@ -7,11 +7,11 @@
  */
 
 import type { DatabaseAdapter } from "@warplane/storage";
-import { upsertTrace } from "@warplane/storage";
+import { getTracesByMessageIds, upsertTrace } from "@warplane/storage";
 import type { TeleporterEvent } from "../rpc/decoder.js";
 import { normalize } from "./normalizer.js";
 import { createCorrelator, type Correlator } from "./correlator.js";
-import type { NormalizedEvent, PipelineStats } from "./types.js";
+import type { NormalizedEvent, PipelineStats, ChainRegistry } from "./types.js";
 import type { AlertEvaluator } from "../alerts/alert-evaluator.js";
 
 // ---------------------------------------------------------------------------
@@ -23,8 +23,12 @@ export interface PipelineConfig {
   writeBatchSize?: number;
   /** Max time (ms) between automatic flushes for pending traces (default: 1_000). */
   flushIntervalMs?: number;
+  /** Max number of trace upserts to run concurrently during flush (default: 8). */
+  flushConcurrency?: number;
   /** Optional alert evaluator — when provided, state changes trigger alert evaluation. */
   alertEvaluator?: AlertEvaluator;
+  /** Optional configured chains for canonical blockchain ID resolution. */
+  chainRegistry?: ChainRegistry;
 }
 
 // ---------------------------------------------------------------------------
@@ -51,8 +55,9 @@ export interface Pipeline {
 export function createPipeline(db: DatabaseAdapter, config?: PipelineConfig): Pipeline {
   const writeBatchSize = config?.writeBatchSize ?? 50;
   const flushIntervalMs = config?.flushIntervalMs ?? 1_000;
+  const flushConcurrency = Math.max(1, config?.flushConcurrency ?? 8);
   const alertEvaluator = config?.alertEvaluator;
-  const correlator: Correlator = createCorrelator();
+  const correlator: Correlator = createCorrelator(config?.chainRegistry);
   let stopped = false;
   let pendingFlush = new Set<string>();
   let flushTimer: ReturnType<typeof setInterval> | undefined;
@@ -86,6 +91,9 @@ export function createPipeline(db: DatabaseAdapter, config?: PipelineConfig): Pi
     if (stopped) return;
     ensureFlushTimer();
 
+    const normalizedEvents: NormalizedEvent[] = [];
+    const messageIdsToHydrate = new Set<string>();
+
     for (const event of events) {
       pipelineStats.eventsReceived++;
 
@@ -95,7 +103,20 @@ export function createPipeline(db: DatabaseAdapter, config?: PipelineConfig): Pi
         continue;
       }
       pipelineStats.eventsNormalized++;
+      normalizedEvents.push(normalized);
+      if (correlator.getMessageState(normalized.messageId) === null) {
+        messageIdsToHydrate.add(normalized.messageId);
+      }
+    }
 
+    if (messageIdsToHydrate.size > 0) {
+      const persistedTraces = await getTracesByMessageIds(db, [...messageIdsToHydrate]);
+      for (const trace of persistedTraces.values()) {
+        correlator.seedTrace(trace);
+      }
+    }
+
+    for (const normalized of normalizedEvents) {
       const result = correlator.processEvent(normalized);
       pendingFlush.add(result.messageId);
 
@@ -147,13 +168,29 @@ export function createPipeline(db: DatabaseAdapter, config?: PipelineConfig): Pi
   }
 
   async function flush(): Promise<void> {
-    for (const messageId of pendingFlush) {
-      const trace = correlator.getTrace(messageId);
-      if (trace) {
-        await upsertTrace(db, trace);
-      }
-    }
+    const messageIds = Array.from(pendingFlush);
+    if (messageIds.length === 0) return;
+
     pendingFlush = new Set();
+
+    try {
+      for (let i = 0; i < messageIds.length; i += flushConcurrency) {
+        const batch = messageIds.slice(i, i + flushConcurrency);
+        await Promise.all(
+          batch.map(async (messageId) => {
+            const trace = correlator.getTrace(messageId);
+            if (trace) {
+              await upsertTrace(db, trace);
+            }
+          }),
+        );
+      }
+    } catch (error) {
+      for (const messageId of messageIds) {
+        pendingFlush.add(messageId);
+      }
+      throw error;
+    }
   }
 
   function stats(): PipelineStats {

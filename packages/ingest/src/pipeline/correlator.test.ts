@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { createCorrelator } from "./correlator.js";
 import type { NormalizedEvent } from "./types.js";
+import type { ChainRegistry } from "./types.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -9,6 +10,31 @@ import type { NormalizedEvent } from "./types.js";
 const MSG_ID = "0xmsg1";
 const CHAIN_A = "chain-a";
 const CHAIN_B = "chain-b";
+const CANONICAL_SOURCE = "2LFmzhHDKxkreihEtPanVmofuFn63bsh8twnRXEbDhBtCJxURB";
+const RAW_SOURCE = "0xaf6a974f467006d94388f438014162dd12ec2d1475c48faf09ffe7222d59e478";
+const CANONICAL_DEST = "2q9e4r6Mu3U68nU1fYjgbR6JvwrRx36CohpAX5UQxse55x1Q5";
+const RAW_DEST = "0x0427d4b22a2a78bcddd456742caf91b56badbff985ee19aef14573e7343fd652";
+
+const CHAIN_REGISTRY: ChainRegistry = new Map([
+  [
+    CANONICAL_SOURCE,
+    {
+      name: "Henesys",
+      blockchainId: CANONICAL_SOURCE,
+      subnetId: "",
+      evmChainId: 68414,
+    },
+  ],
+  [
+    CANONICAL_DEST,
+    {
+      name: "Mainnet C-Chain",
+      blockchainId: CANONICAL_DEST,
+      subnetId: "",
+      evmChainId: 43114,
+    },
+  ],
+]);
 
 function makeNormalized(
   kind: NormalizedEvent["kind"],
@@ -152,35 +178,38 @@ describe("Correlator", () => {
   });
 
   it("partial trace: delivery_confirmed before message_sent", () => {
-    const c = createCorrelator();
+    const c = createCorrelator(CHAIN_REGISTRY);
     const result = c.processEvent(
       makeNormalized("delivery_confirmed", {
-        chain: CHAIN_B,
-        details: { sourceBlockchainID: CHAIN_A, deliverer: "0xRelayer" },
+        chain: CANONICAL_DEST,
+        details: { sourceBlockchainID: RAW_SOURCE, deliverer: "0xRelayer" },
       }),
     );
 
     expect(result.isNew).toBe(true);
     expect(result.newState).toBe("delivered");
     expect(result.trace.execution).toBe("success");
+    expect(result.trace.source.blockchainId).toBe(CANONICAL_SOURCE);
+    expect(result.trace.source.name).toBe("Henesys");
+    expect(result.trace.destination.blockchainId).toBe(CANONICAL_DEST);
   });
 
   it("partial trace completed by later message_sent", () => {
-    const c = createCorrelator();
+    const c = createCorrelator(CHAIN_REGISTRY);
     // delivery arrives first (backfill order)
     c.processEvent(
       makeNormalized("delivery_confirmed", {
-        chain: CHAIN_B,
-        details: { sourceBlockchainID: CHAIN_A, deliverer: "0xRelayer" },
+        chain: CANONICAL_DEST,
+        details: { sourceBlockchainID: RAW_SOURCE, deliverer: "0xRelayer" },
       }),
     );
     // Then send event arrives
     const result = c.processEvent(
       makeNormalized("message_sent", {
-        chain: CHAIN_A,
+        chain: CANONICAL_SOURCE,
         txHash: "0xSendTx",
         details: {
-          destinationBlockchainID: CHAIN_B,
+          destinationBlockchainID: CANONICAL_DEST,
           originSenderAddress: "0xSender",
           destinationAddress: "0xRecipient",
         },
@@ -191,6 +220,42 @@ describe("Correlator", () => {
     expect(result.trace.sender).toBe("0xSender");
     expect(result.trace.recipient).toBe("0xRecipient");
     expect(result.trace.sourceTxHash).toBe("0xSendTx");
+    expect(result.trace.destination.blockchainId).toBe(CANONICAL_DEST);
+  });
+
+  it("receipts_sent attributes the observed source chain and canonicalizes the destination", () => {
+    const c = createCorrelator(CHAIN_REGISTRY);
+    const result = c.processEvent(
+      makeNormalized("receipts_sent", {
+        chain: CANONICAL_DEST,
+        details: {
+          destinationBlockchainID: RAW_SOURCE,
+        },
+      }),
+    );
+
+    expect(result.trace.source.blockchainId).toBe(CANONICAL_DEST);
+    expect(result.trace.destination.blockchainId).toBe(CANONICAL_SOURCE);
+  });
+
+  it("delivery_confirmed canonicalizes the destination blockchain when present in the payload", () => {
+    const c = createCorrelator(CHAIN_REGISTRY);
+    const result = c.processEvent(
+      makeNormalized("delivery_confirmed", {
+        chain: CANONICAL_SOURCE,
+        details: {
+          sourceBlockchainID: RAW_DEST,
+          destinationBlockchainID: RAW_SOURCE,
+          originSenderAddress: "0xSender",
+          destinationAddress: "0xRecipient",
+        },
+      }),
+    );
+
+    expect(result.trace.source.blockchainId).toBe(CANONICAL_DEST);
+    expect(result.trace.destination.blockchainId).toBe(CANONICAL_SOURCE);
+    expect(result.trace.sender).toBe("0xSender");
+    expect(result.trace.recipient).toBe("0xRecipient");
   });
 
   it("fee_added updates fee info on existing trace", () => {

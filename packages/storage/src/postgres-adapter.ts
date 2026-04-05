@@ -16,6 +16,10 @@ export interface PostgresAdapterConfig {
   ssl?: boolean;
 }
 
+type PostgresSql =
+  | postgres.Sql<Record<string, unknown>>
+  | postgres.TransactionSql<Record<string, unknown>>;
+
 /**
  * Create a Postgres-backed DatabaseAdapter.
  */
@@ -47,7 +51,12 @@ export function createPostgresAdapter(config: PostgresAdapterConfig): DatabaseAd
   }
 
   const sql = isCloudSql ? postgres(sqlOpts as never) : postgres(connStr, sqlOpts as never);
+  return createAdapter(sql, async () => {
+    await sql.end();
+  });
+}
 
+function createAdapter(sql: PostgresSql, close: () => Promise<void>): DatabaseAdapter {
   const adapter: DatabaseAdapter = {
     dialect: "postgres" as const,
 
@@ -74,14 +83,21 @@ export function createPostgresAdapter(config: PostgresAdapterConfig): DatabaseAd
     },
 
     async transaction<T>(fn: (adapter: DatabaseAdapter) => Promise<T>): Promise<T> {
-      const result = await sql.begin(async () => {
-        return fn(adapter) as Promise<T>;
+      if ("savepoint" in sql) {
+        const result = await sql.savepoint(async (tx) => {
+          return fn(createAdapter(tx, async () => {}));
+        });
+        return result as T;
+      }
+
+      const result = await sql.begin(async (tx) => {
+        return fn(createAdapter(tx, async () => {}));
       });
       return result as T;
     },
 
     async close(): Promise<void> {
-      await sql.end();
+      await close();
     },
   };
 

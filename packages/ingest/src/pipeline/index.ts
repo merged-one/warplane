@@ -20,3 +20,15 @@ export { createCorrelator, type Correlator } from "./correlator.js";
 
 // Coordinator
 export { createPipeline, type Pipeline, type PipelineConfig } from "./coordinator.js";
+
+// Repair
+export {
+  repairCanonicalTraceChains,
+  type ChainRepairOptions,
+  type ChainRepairResult,
+} from "./chain-repair.js";
+export {
+  repairPlaceholderTraceTimestamps,
+  type TimestampRepairOptions,
+  type TimestampRepairResult,
+} from "./timestamp-repair.js";

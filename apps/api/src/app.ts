@@ -27,6 +27,8 @@ import {
   createStaleDetector,
   createOrchestrator,
   createRpcClient,
+  repairCanonicalTraceChains,
+  repairPlaceholderTraceTimestamps,
   type Pipeline,
   type Orchestrator,
 } from "@warplane/ingest";
@@ -59,11 +61,14 @@ const FIXTURES_DIR = path.resolve(
   import.meta.dirname ?? new URL(".", import.meta.url).pathname,
   "../../../harness/tmpnet/artifacts",
 );
+const AVALANCHE_RPC_MAX_BLOCK_RANGE = 2_000;
+const AVALANCHE_BACKFILL_BATCH_SIZE = 1_000;
 
 export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> {
   const logger = opts.logger ?? true;
 
   const app = Fastify({ logger });
+  let backgroundRepairTask: Promise<void> | undefined;
 
   // --- Database setup ---
   const db =
@@ -84,6 +89,11 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
   app.addHook("onClose", async () => {
     if (app.orchestrator) await app.orchestrator.stop();
     if (app.pipeline) app.pipeline.stop();
+    if (backgroundRepairTask) {
+      await backgroundRepairTask.catch(() => {
+        /* best-effort background repair */
+      });
+    }
     await db.close();
   });
 
@@ -164,8 +174,20 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
     const staleDetector = createStaleDetector(db, deliveryEngine);
     staleDetector.start(60_000); // scan for stale messages every 60s
 
+    const chainRegistry = new Map(
+      chainConfig.map((chain) => [
+        chain.blockchainId,
+        {
+          name: chain.name,
+          blockchainId: chain.blockchainId,
+          subnetId: "",
+          evmChainId: chain.evmChainId ?? 0,
+        },
+      ]),
+    );
+
     // Pipeline with alert integration
-    const pipeline = createPipeline(db, { alertEvaluator });
+    const pipeline = createPipeline(db, { alertEvaluator, chainRegistry });
     app.decorate("pipeline", pipeline);
 
     // Create RPC clients for each chain
@@ -187,14 +209,34 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
         chainId: c.blockchainId,
         contractAddress: c.teleporterAddress,
         startBlock: c.startBlock != null ? BigInt(c.startBlock) : undefined,
+        fetcher: { maxBlockRange: AVALANCHE_RPC_MAX_BLOCK_RANGE },
       })),
       onEvents: (chainId, events) => pipeline.handleEvents(chainId, events),
+      backfillBatchSize: AVALANCHE_BACKFILL_BATCH_SIZE,
     });
     app.decorate("orchestrator", orchestrator);
 
     // Start orchestrator in background (don't await — it runs continuously)
     orchestrator.start().catch((err) => {
       app.log.error(err, "Orchestrator start failed");
+    });
+
+    backgroundRepairTask = (async () => {
+      const chainRepairResult = await repairCanonicalTraceChains(db, chainRegistry, {
+        limit: 1_000,
+      });
+      if (chainRepairResult.scanned > 0) {
+        app.log.info(chainRepairResult, "Background chain repair completed");
+      }
+
+      const timestampRepairResult = await repairPlaceholderTraceTimestamps(db, rpcClients, {
+        limit: 1_000,
+      });
+      if (timestampRepairResult.scanned > 0) {
+        app.log.info(timestampRepairResult, "Background timestamp repair completed");
+      }
+    })().catch((err) => {
+      app.log.warn(err, "Background trace repair failed");
     });
   }
 

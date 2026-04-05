@@ -27,6 +27,7 @@ export interface RawLog {
 /** Metadata attached to every decoded event. */
 export interface LogMeta {
   blockNumber: bigint;
+  blockTimestamp?: bigint;
   transactionHash: string;
   logIndex: number;
   blockHash: string;

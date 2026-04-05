@@ -2,11 +2,13 @@ import { describe, expect, it, beforeAll, afterAll } from "vitest";
 import { buildApp } from "./app.js";
 import type { FastifyInstance } from "fastify";
 import { createTestAdapter, initTestSchema } from "@warplane/storage/test-utils";
+import { upsertCheckpoint, type DatabaseAdapter } from "@warplane/storage";
 
 let app: FastifyInstance;
+let adapter: DatabaseAdapter;
 
 beforeAll(async () => {
-  const adapter = createTestAdapter();
+  adapter = createTestAdapter();
   await initTestSchema(adapter);
   app = await buildApp({
     adapter,
@@ -30,10 +32,12 @@ describe("health", () => {
     expect(typeof body.uptime).toBe("number");
   });
 
-  it("GET /healthz returns ok (legacy)", async () => {
+  it("GET /healthz returns ok as a local compatibility alias", async () => {
     const res = await app.inject({ method: "GET", url: "/healthz" });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ status: "ok" });
+    const body = res.json();
+    expect(body.status).toBe("ok");
+    expect(body.traceCount).toBeGreaterThan(0);
   });
 });
 
@@ -104,6 +108,68 @@ describe("GET /api/v1/traces", () => {
     const body = res.json();
     for (const t of body.traces) {
       expect(t.execution).toBe("success");
+    }
+  });
+
+  it("filters by messageId prefix and returns the correct total", async () => {
+    const all = await app.inject({ method: "GET", url: "/api/v1/traces?pageSize=200" });
+    const target = all.json().traces[0];
+    const messageIdPrefix = target.messageId;
+
+    const res = await app.inject({
+      method: "GET",
+      url: `/api/v1/traces?messageId=${messageIdPrefix}&pageSize=200`,
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.total).toBe(body.traces.length);
+    expect(body.traces.length).toBeGreaterThan(0);
+    for (const trace of body.traces) {
+      expect(trace.messageId.startsWith(messageIdPrefix)).toBe(true);
+    }
+  });
+
+  it("filters by generic chain without overfilling the page or misreporting totals", async () => {
+    const all = await app.inject({ method: "GET", url: "/api/v1/traces?pageSize=200" });
+    const traces = all.json().traces;
+    const chainId =
+      traces.find((trace: { source: { blockchainId: string } }) => trace.source.blockchainId)
+        ?.source.blockchainId ?? traces[0].destination.blockchainId;
+    const full = await app.inject({
+      method: "GET",
+      url: `/api/v1/traces?chain=${encodeURIComponent(chainId)}&pageSize=200`,
+    });
+    const fullBody = full.json();
+
+    const res = await app.inject({
+      method: "GET",
+      url: `/api/v1/traces?chain=${encodeURIComponent(chainId)}&pageSize=2`,
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.traces.length).toBeLessThanOrEqual(2);
+    expect(body.total).toBe(fullBody.traces.length);
+    for (const trace of body.traces) {
+      expect(
+        trace.source.blockchainId === chainId || trace.destination.blockchainId === chainId,
+      ).toBe(true);
+    }
+  });
+
+  it("filters explicit source or destination chains and reports filtered totals", async () => {
+    const all = await app.inject({ method: "GET", url: "/api/v1/traces?pageSize=200" });
+    const traces = all.json().traces;
+    const sourceChainId = traces[0].source.blockchainId;
+
+    const res = await app.inject({
+      method: "GET",
+      url: `/api/v1/traces?sourceBlockchainId=${encodeURIComponent(sourceChainId)}&pageSize=200`,
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.total).toBe(body.traces.length);
+    for (const trace of body.traces) {
+      expect(trace.source.blockchainId).toBe(sourceChainId);
     }
   });
 
@@ -372,6 +438,64 @@ describe("GET /api/v1/pipeline/status", () => {
     const body = res.json();
     // Demo mode seeds 9 traces, so count should reflect DB state
     expect(body.traceCount).toBeGreaterThan(0);
+  });
+
+  it("prefers persisted checkpoints when local in-memory status lags", async () => {
+    await upsertCheckpoint(adapter, {
+      chainId: "chain-a",
+      contractAddress: "0xabc",
+      lastBlock: 75,
+      blockHash: "h75",
+    });
+
+    const previousOrchestrator = app.orchestrator;
+    const previousPipeline = app.pipeline;
+    app.orchestrator = {
+      start: async () => {},
+      stop: async () => {},
+      status: () => [
+        {
+          chainId: "chain-a",
+          mode: "backfill",
+          lastBlock: 50n,
+          error: undefined,
+        },
+      ],
+    };
+    app.pipeline = {
+      handleEvents: async () => {},
+      injectEvents: () => {},
+      flush: async () => {},
+      stats: () => ({
+        eventsReceived: 1,
+        eventsNormalized: 1,
+        eventsDropped: 0,
+        tracesCreated: 1,
+        tracesUpdated: 0,
+      }),
+      stop: () => {},
+    };
+
+    try {
+      const res = await app.inject({ method: "GET", url: "/api/v1/pipeline/status" });
+      expect(res.statusCode).toBe(200);
+      const body = res.json();
+      expect(body.status).toBe("running");
+      expect(body.chains).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            chainId: "chain-a",
+            mode: "backfill",
+            lastBlock: 75,
+            error: null,
+          }),
+        ]),
+      );
+      expect(body.stats.eventsReceived).toBe(1);
+    } finally {
+      app.orchestrator = previousOrchestrator;
+      app.pipeline = previousPipeline;
+    }
   });
 });
 

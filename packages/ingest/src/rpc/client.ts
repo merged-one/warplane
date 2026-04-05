@@ -119,6 +119,7 @@ export function createRpcClient(config: RpcClientConfig): RpcClient {
         number: block.number,
         hash: block.hash,
         parentHash: block.parentHash,
+        timestamp: block.timestamp,
       };
     },
 

@@ -1,7 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { createTestAdapter, initTestSchema } from "../test-utils/index.js";
 import type { DatabaseAdapter } from "../adapter.js";
-import { upsertTrace, getFailureClassification, getDeliveryLatencyStats } from "./traces.js";
+import {
+  upsertTrace,
+  getTracesByMessageIds,
+  listTraces,
+  countTraces,
+  getFailureClassification,
+  getDeliveryLatencyStats,
+} from "./traces.js";
 import type { MessageTrace } from "@warplane/domain";
 
 let db: DatabaseAdapter;
@@ -48,6 +55,88 @@ function makeTrace(overrides: Partial<MessageTrace> & { messageId: string }): Me
     ...overrides,
   } as MessageTrace;
 }
+
+describe("trace filtering", () => {
+  it("filters by messageId prefix", async () => {
+    await upsertTrace(db, makeTrace({ messageId: "msg-alpha" }));
+    await upsertTrace(db, makeTrace({ messageId: "msg-beta" }));
+
+    const traces = await listTraces(db, { messageId: "msg-al" });
+    const count = await countTraces(db, { messageId: "msg-al" });
+
+    expect(traces).toHaveLength(1);
+    expect(traces[0]!.messageId).toBe("msg-alpha");
+    expect(count).toBe(1);
+  });
+
+  it("treats generic chain filtering as source OR destination", async () => {
+    await upsertTrace(
+      db,
+      makeTrace({
+        messageId: "msg-source",
+        source: { name: "chain-x", blockchainId: "0xchain-x", subnetId: "subnet-x", evmChainId: 1 },
+        destination: {
+          name: "chain-y",
+          blockchainId: "0xchain-y",
+          subnetId: "subnet-y",
+          evmChainId: 2,
+        },
+      }),
+    );
+    await upsertTrace(
+      db,
+      makeTrace({
+        messageId: "msg-dest",
+        source: { name: "chain-z", blockchainId: "0xchain-z", subnetId: "subnet-z", evmChainId: 3 },
+        destination: {
+          name: "chain-x",
+          blockchainId: "0xchain-x",
+          subnetId: "subnet-x",
+          evmChainId: 1,
+        },
+      }),
+    );
+
+    const traces = await listTraces(db, { chain: "0xchain-x" });
+    const count = await countTraces(db, { chain: "0xchain-x" });
+
+    expect(traces.map((trace) => trace.messageId)).toEqual(["msg-source", "msg-dest"]);
+    expect(count).toBe(2);
+  });
+});
+
+describe("getTracesByMessageIds", () => {
+  it("returns the latest trace for each requested message ID", async () => {
+    await upsertTrace(
+      db,
+      makeTrace({
+        messageId: "msg-alpha",
+        scenario: "old",
+        execution: "pending",
+      }),
+    );
+    await upsertTrace(
+      db,
+      makeTrace({
+        messageId: "msg-alpha",
+        scenario: "test",
+        execution: "success",
+      }),
+    );
+    await upsertTrace(db, makeTrace({ messageId: "msg-beta", execution: "failed" }));
+
+    const traces = await getTracesByMessageIds(db, ["msg-alpha", "msg-beta", "missing"]);
+
+    expect(traces.size).toBe(2);
+    expect(traces.get("msg-alpha")?.execution).toBe("success");
+    expect(traces.get("msg-beta")?.execution).toBe("failed");
+  });
+
+  it("returns an empty map when no message IDs are provided", async () => {
+    const traces = await getTracesByMessageIds(db, []);
+    expect(traces.size).toBe(0);
+  });
+});
 
 // ---------------------------------------------------------------------------
 // getFailureClassification
@@ -213,6 +302,7 @@ describe("getDeliveryLatencyStats", () => {
             sendTime,
             receiveTime: receiveDate.toISOString(),
             blockSend: 100 + i,
+            blockRecv: 200 + i,
           },
           events: [
             {
@@ -251,6 +341,7 @@ describe("getDeliveryLatencyStats", () => {
           sendTime: "2026-04-01T12:00:00.000Z",
           receiveTime: "2026-04-01T12:00:02.000Z",
           blockSend: 100,
+          blockRecv: 101,
         },
         events: [],
       }),
@@ -264,6 +355,7 @@ describe("getDeliveryLatencyStats", () => {
           sendTime: "2026-04-01T12:30:00.000Z",
           receiveTime: "2026-04-01T12:30:04.000Z",
           blockSend: 200,
+          blockRecv: 201,
         },
         events: [],
       }),
@@ -298,5 +390,25 @@ describe("getDeliveryLatencyStats", () => {
     expect(stats.p90).toBe(0);
     expect(stats.p99).toBe(0);
     expect(stats.timeSeries).toEqual([]);
+  });
+
+  it("excludes partial success traces with unknown send blocks", async () => {
+    await upsertTrace(
+      db,
+      makeTrace({
+        messageId: "msg-partial-success",
+        execution: "success",
+        timestamps: {
+          sendTime: "1970-01-01T00:00:00.000Z",
+          receiveTime: "2026-04-01T12:00:05.000Z",
+          blockSend: 0,
+          blockRecv: 123,
+        },
+        events: [],
+      }),
+    );
+
+    const stats = await getDeliveryLatencyStats(db);
+    expect(stats).toEqual({ p50: 0, p90: 0, p99: 0, timeSeries: [] });
   });
 });

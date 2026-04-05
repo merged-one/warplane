@@ -58,13 +58,13 @@ API_PID=$!
 
 # Wait for API readiness
 for i in $(seq 1 30); do
-  if curl -sf "http://localhost:${API_PORT}/healthz" > /dev/null 2>&1; then
+  if curl -sf "http://localhost:${API_PORT}/health" > /dev/null 2>&1; then
     break
   fi
   sleep 1
 done
 
-if ! curl -sf "http://localhost:${API_PORT}/healthz" > /dev/null 2>&1; then
+if ! curl -sf "http://localhost:${API_PORT}/health" > /dev/null 2>&1; then
   echo "ERROR: API failed to start within 30s"
   exit 1
 fi
@@ -86,7 +86,7 @@ echo -e "  Dashboard:    ${BOLD}http://localhost:${WEB_PORT}${RESET}"
 echo -e "  API:          ${BOLD}http://localhost:${API_PORT}${RESET}"
 echo -e "  Swagger UI:   ${BOLD}http://localhost:${API_PORT}/docs${RESET}"
 echo -e "  OpenAPI spec: ${BOLD}http://localhost:${API_PORT}/openapi.json${RESET}"
-echo -e "  Health:       ${BOLD}http://localhost:${API_PORT}/healthz${RESET}"
+echo -e "  Health:       ${BOLD}http://localhost:${API_PORT}/health${RESET}"
 echo ""
 echo -e "${DIM}  Mode: seeded golden fixtures (no AvalancheGo required)${RESET}"
 echo -e "${DIM}  Data: 8 Teleporter traces, 5 scenarios, 2 L1 chains${RESET}"

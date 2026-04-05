@@ -7,14 +7,20 @@
 import type { DatabaseAdapter } from "../adapter.js";
 import type { MessageTrace, MessageEvent } from "@warplane/domain";
 
+const PLACEHOLDER_TRACE_TIMESTAMP = "1970-01-01T00:00:00.000Z";
+
 export interface TraceFilter {
   scenario?: string;
   execution?: string;
+  chain?: string;
   sourceChain?: string;
   destChain?: string;
+  messageId?: string;
   limit?: number;
   offset?: number;
 }
+
+const TRACE_LOOKUP_BATCH_SIZE = 500;
 
 /**
  * Upsert a trace and all its events.
@@ -25,9 +31,11 @@ export async function upsertTrace(
   trace: MessageTrace,
   importId?: number,
 ): Promise<number> {
-  const traceId = await upsertTraceRow(db, trace, importId);
-  await replaceEvents(db, traceId, trace.messageId, trace.events);
-  return traceId;
+  return db.transaction(async (tx) => {
+    const traceId = await upsertTraceRow(tx, trace, importId);
+    await replaceEvents(tx, traceId, trace.messageId, trace.events);
+    return traceId;
+  });
 }
 
 async function upsertTraceRow(
@@ -156,10 +164,53 @@ export async function getTrace(
 ): Promise<MessageTrace | undefined> {
   const sql = scenario
     ? "SELECT trace_json FROM traces WHERE message_id = ? AND scenario = ?"
-    : "SELECT trace_json FROM traces WHERE message_id = ? ORDER BY created_at DESC LIMIT 1";
+    : "SELECT trace_json FROM traces WHERE message_id = ? ORDER BY created_at DESC, id DESC LIMIT 1";
   const params = scenario ? [messageId, scenario] : [messageId];
   const result = await db.query<{ trace_json: string }>(sql, params);
   return result.rows[0] ? (JSON.parse(result.rows[0].trace_json) as MessageTrace) : undefined;
+}
+
+/**
+ * Get the latest trace for each message ID.
+ */
+export async function getTracesByMessageIds(
+  db: DatabaseAdapter,
+  messageIds: string[],
+  scenario?: string,
+): Promise<Map<string, MessageTrace>> {
+  const uniqueMessageIds = [...new Set(messageIds.filter(Boolean))];
+  const traces = new Map<string, MessageTrace>();
+
+  if (uniqueMessageIds.length === 0) {
+    return traces;
+  }
+
+  for (let i = 0; i < uniqueMessageIds.length; i += TRACE_LOOKUP_BATCH_SIZE) {
+    const batch = uniqueMessageIds.slice(i, i + TRACE_LOOKUP_BATCH_SIZE);
+    const placeholders = batch.map(() => "?").join(", ");
+    const params: unknown[] = [...batch];
+    const scenarioClause = scenario ? " AND scenario = ?" : "";
+
+    if (scenario) {
+      params.push(scenario);
+    }
+
+    const result = await db.query<{ message_id: string; trace_json: string }>(
+      `SELECT message_id, trace_json
+       FROM traces
+       WHERE message_id IN (${placeholders})${scenarioClause}
+       ORDER BY created_at DESC, id DESC`,
+      params,
+    );
+
+    for (const row of result.rows) {
+      if (!traces.has(row.message_id)) {
+        traces.set(row.message_id, JSON.parse(row.trace_json) as MessageTrace);
+      }
+    }
+  }
+
+  return traces;
 }
 
 /**
@@ -169,33 +220,51 @@ export async function listTraces(
   db: DatabaseAdapter,
   filter?: TraceFilter,
 ): Promise<MessageTrace[]> {
-  const conditions: string[] = [];
-  const params: unknown[] = [];
-
-  if (filter?.scenario) {
-    conditions.push("scenario = ?");
-    params.push(filter.scenario);
-  }
-  if (filter?.execution) {
-    conditions.push("execution = ?");
-    params.push(filter.execution);
-  }
-  if (filter?.sourceChain) {
-    conditions.push("source_blockchain_id = ?");
-    params.push(filter.sourceChain);
-  }
-  if (filter?.destChain) {
-    conditions.push("dest_blockchain_id = ?");
-    params.push(filter.destChain);
-  }
-
-  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  const { where, params } = buildTraceWhere(filter);
   const limit = filter?.limit ?? 100;
   const offset = filter?.offset ?? 0;
 
   const result = await db.query<{ trace_json: string }>(
     `SELECT trace_json FROM traces ${where} ORDER BY send_time ASC LIMIT ? OFFSET ?`,
     [...params, limit, offset],
+  );
+
+  return result.rows.map((r) => JSON.parse(r.trace_json) as MessageTrace);
+}
+
+export async function listTracesWithPlaceholderTimestamps(
+  db: DatabaseAdapter,
+  opts?: { limit?: number },
+): Promise<MessageTrace[]> {
+  const limit = opts?.limit ?? 100;
+  const result = await db.query<{ trace_json: string }>(
+    `SELECT trace_json
+     FROM traces
+     WHERE (send_time = ? AND block_send > 0)
+        OR (receive_time = ? AND block_recv IS NOT NULL)
+     ORDER BY updated_at ASC
+     LIMIT ?`,
+    [PLACEHOLDER_TRACE_TIMESTAMP, PLACEHOLDER_TRACE_TIMESTAMP, limit],
+  );
+
+  return result.rows.map((r) => JSON.parse(r.trace_json) as MessageTrace);
+}
+
+export async function listTracesNeedingChainRepair(
+  db: DatabaseAdapter,
+  opts?: { limit?: number },
+): Promise<MessageTrace[]> {
+  const limit = opts?.limit ?? 100;
+  const result = await db.query<{ trace_json: string }>(
+    `SELECT trace_json
+     FROM traces
+     WHERE source_blockchain_id = ''
+        OR dest_blockchain_id = ''
+        OR source_blockchain_id LIKE '0x%'
+        OR dest_blockchain_id LIKE '0x%'
+     ORDER BY updated_at ASC
+     LIMIT ?`,
+    [limit],
   );
 
   return result.rows.map((r) => JSON.parse(r.trace_json) as MessageTrace);
@@ -257,8 +326,25 @@ export async function getTimeline(
  */
 export async function countTraces(
   db: DatabaseAdapter,
-  filter?: Pick<TraceFilter, "scenario" | "execution">,
+  filter?: Pick<
+    TraceFilter,
+    "scenario" | "execution" | "chain" | "sourceChain" | "destChain" | "messageId"
+  >,
 ): Promise<number> {
+  const { where, params } = buildTraceWhere(filter);
+  const result = await db.query<{ count: number }>(
+    `SELECT COUNT(*) as count FROM traces ${where}`,
+    params,
+  );
+  return Number(result.rows[0]?.count ?? 0);
+}
+
+function buildTraceWhere(
+  filter?: Pick<
+    TraceFilter,
+    "scenario" | "execution" | "chain" | "sourceChain" | "destChain" | "messageId"
+  >,
+): { where: string; params: unknown[] } {
   const conditions: string[] = [];
   const params: unknown[] = [];
 
@@ -270,13 +356,27 @@ export async function countTraces(
     conditions.push("execution = ?");
     params.push(filter.execution);
   }
+  if (filter?.messageId) {
+    conditions.push("message_id LIKE ?");
+    params.push(`${filter.messageId}%`);
+  }
+  if (filter?.chain) {
+    conditions.push("(source_blockchain_id = ? OR dest_blockchain_id = ?)");
+    params.push(filter.chain, filter.chain);
+  }
+  if (filter?.sourceChain) {
+    conditions.push("source_blockchain_id = ?");
+    params.push(filter.sourceChain);
+  }
+  if (filter?.destChain) {
+    conditions.push("dest_blockchain_id = ?");
+    params.push(filter.destChain);
+  }
 
-  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-  const result = await db.query<{ count: number }>(
-    `SELECT COUNT(*) as count FROM traces ${where}`,
+  return {
+    where: conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "",
     params,
-  );
-  return Number(result.rows[0]?.count ?? 0);
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -338,6 +438,8 @@ export async function getDeliveryLatencyStats(
     "execution = 'success'",
     "send_time IS NOT NULL",
     "receive_time IS NOT NULL",
+    "block_send > 0",
+    "block_recv IS NOT NULL",
     "receive_time != send_time",
   ];
   const params: unknown[] = [];
