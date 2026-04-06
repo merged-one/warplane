@@ -1039,6 +1039,32 @@ h1 {
   color: var(--text-muted);
 }
 
+.expandable-identifier {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.expandable-identifier-text {
+  display: block;
+  max-width: 100%;
+}
+
+.expandable-identifier-text[data-expanded="true"] {
+  word-break: break-all;
+}
+
+.expandable-identifier-text[data-expanded="false"] {
+  white-space: nowrap;
+}
+
+.expandable-identifier-toggle {
+  flex-shrink: 0;
+}
+
 .trace-value-break {
   word-break: break-all;
 }

@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-li
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { AutoRefreshProvider, TzProvider } from "./hooks.js";
 import { Layout } from "./components/Layout.js";
+import { shortenIdentifier } from "./components/ExpandableIdentifier.js";
 import { DocsPage } from "./pages/DocsPage.js";
 import { FailuresPage } from "./pages/FailuresPage.js";
 import { OverviewPage } from "./pages/OverviewPage.js";
@@ -28,6 +29,13 @@ const mockChains = [
   },
 ];
 
+const SOURCE_TX_HASH = "0x1111111111111111111111111111111111111111111111111111111111111111";
+const RELAY_TX_HASH = "0x2222222222222222222222222222222222222222222222222222222222222222";
+const DEST_TX_HASH = "0x3333333333333333333333333333333333333333333333333333333333333333";
+const SENDER_ADDRESS = "0x111122223333444455556666777788889999AaAa";
+const RECIPIENT_ADDRESS = "0x999988887777666655554444333322221111BbBb";
+const RELAYER_ADDRESS = "0x55556666777788889999AAAAbbbbCCCCddddeeee";
+
 const mockTrace = {
   messageId: "cf6f0000000000000000000000000001",
   scenario: "basic_send_receive",
@@ -44,11 +52,11 @@ const mockTrace = {
     subnetId: "sub2",
     evmChainId: 99991,
   },
-  sender: "0xSender",
-  recipient: "0xRecipient",
-  sourceTxHash: "0xSourceTx",
-  relayTxHash: "0xRelayTx",
-  destinationTxHash: "0xDestTx",
+  sender: SENDER_ADDRESS,
+  recipient: RECIPIENT_ADDRESS,
+  sourceTxHash: SOURCE_TX_HASH,
+  relayTxHash: RELAY_TX_HASH,
+  destinationTxHash: DEST_TX_HASH,
   timestamps: {
     sendTime: "2026-04-01T00:01:00Z",
     receiveTime: "2026-04-01T00:01:30Z",
@@ -60,16 +68,20 @@ const mockTrace = {
       timestamp: "2026-04-01T00:01:00Z",
       chain: "source",
       blockNumber: 100,
-      txHash: "0xSourceTx",
+      txHash: SOURCE_TX_HASH,
     },
     {
       kind: "delivery_confirmed",
       timestamp: "2026-04-01T00:01:30Z",
       chain: "destination",
       blockNumber: 200,
-      txHash: "0xDestTx",
+      txHash: DEST_TX_HASH,
     },
   ],
+  relayer: {
+    address: RELAYER_ADDRESS,
+    txHash: RELAY_TX_HASH,
+  },
 };
 
 const mockFailedTrace = {
@@ -77,7 +89,7 @@ const mockFailedTrace = {
   messageId: "cf6f0000000000000000000000000002",
   scenario: "retry_failed_execution",
   execution: "failed" as const,
-  sourceTxHash: "0xFailedSourceTx",
+  sourceTxHash: "0x4444444444444444444444444444444444444444444444444444444444444444",
   destinationTxHash: undefined,
   relayTxHash: undefined,
   timestamps: {
@@ -90,7 +102,7 @@ const mockFailedTrace = {
       kind: "message_sent",
       timestamp: "2026-04-01T00:02:00Z",
       chain: "source",
-      txHash: "0xFailedSourceTx",
+      txHash: "0x4444444444444444444444444444444444444444444444444444444444444444",
     },
     {
       kind: "execution_failed",
@@ -105,7 +117,7 @@ const mockPendingTrace = {
   ...mockTrace,
   messageId: "cf6f0000000000000000000000000003",
   execution: "pending" as const,
-  sourceTxHash: "0xPendingSourceTx",
+  sourceTxHash: "0x5555555555555555555555555555555555555555555555555555555555555555",
   destinationTxHash: undefined,
   relayTxHash: undefined,
   timestamps: {
@@ -118,7 +130,7 @@ const mockPendingTrace = {
       kind: "message_sent",
       timestamp: "2026-04-01T00:03:00Z",
       chain: "source",
-      txHash: "0xPendingSourceTx",
+      txHash: "0x5555555555555555555555555555555555555555555555555555555555555555",
     },
     {
       kind: "relay_submitted",
@@ -134,9 +146,9 @@ const mockRetryTrace = {
   messageId: "cf6f0000000000000000000000000004",
   scenario: "retry_recovered",
   execution: "retry_success" as const,
-  sourceTxHash: "0xRetrySourceTx",
-  relayTxHash: "0xRetryRelayTx",
-  destinationTxHash: "0xRetryDestTx",
+  sourceTxHash: "0x6666666666666666666666666666666666666666666666666666666666666666",
+  relayTxHash: "0x7777777777777777777777777777777777777777777777777777777777777777",
+  destinationTxHash: "0x8888888888888888888888888888888888888888888888888888888888888888",
   timestamps: {
     sendTime: "2026-04-01T00:04:00Z",
     receiveTime: "2026-04-01T00:04:45Z",
@@ -145,14 +157,14 @@ const mockRetryTrace = {
   retry: {
     originalGasLimit: "150000",
     retryGasLimit: "300000",
-    retryTxHash: "0xRetryRelayTx",
+    retryTxHash: "0x7777777777777777777777777777777777777777777777777777777777777777",
   },
   events: [
     {
       kind: "message_sent",
       timestamp: "2026-04-01T00:04:00Z",
       chain: "source",
-      txHash: "0xRetrySourceTx",
+      txHash: "0x6666666666666666666666666666666666666666666666666666666666666666",
     },
     {
       kind: "execution_failed",
@@ -164,13 +176,13 @@ const mockRetryTrace = {
       kind: "retry_succeeded",
       timestamp: "2026-04-01T00:04:26Z",
       chain: "destination",
-      txHash: "0xRetryRelayTx",
+      txHash: "0x7777777777777777777777777777777777777777777777777777777777777777",
     },
     {
       kind: "delivery_confirmed",
       timestamp: "2026-04-01T00:04:45Z",
       chain: "destination",
-      txHash: "0xRetryDestTx",
+      txHash: "0x8888888888888888888888888888888888888888888888888888888888888888",
     },
   ],
 };
@@ -411,6 +423,15 @@ function renderPage(
   );
 }
 
+function getDefinitionValue(label: string): HTMLElement {
+  const term = screen.getByText(label);
+  const value = term.nextElementSibling;
+  if (!(value instanceof HTMLElement)) {
+    throw new Error(`Definition list value missing for ${label}`);
+  }
+  return value;
+}
+
 describe("Layout", () => {
   it("renders nav links", () => {
     renderPage("/docs");
@@ -557,6 +578,40 @@ describe("TraceDetailPage", () => {
     });
   });
 
+  it("truncates long identifiers and expands them on demand", async () => {
+    renderPage(`/traces/${mockTrace.messageId}`);
+    await waitFor(() => {
+      expect(screen.getByText("Trace Detail")).toBeInTheDocument();
+    });
+
+    const messageCard = screen.getByText("Message ID").closest(".card");
+    expect(messageCard).not.toBeNull();
+    if (!messageCard) throw new Error("Message ID card missing");
+
+    expect(
+      within(messageCard).getByText(shortenIdentifier(mockTrace.messageId)),
+    ).toBeInTheDocument();
+    fireEvent.click(within(messageCard).getByRole("button", { name: "Show full" }));
+    expect(within(messageCard).getByText(mockTrace.messageId)).toBeInTheDocument();
+    expect(within(messageCard).getByRole("button", { name: "Show less" })).toBeInTheDocument();
+
+    const senderValue = getDefinitionValue("Sender");
+    expect(within(senderValue).getByText(shortenIdentifier(mockTrace.sender))).toBeInTheDocument();
+    fireEvent.click(within(senderValue).getByRole("button", { name: "Show full" }));
+    expect(within(senderValue).getByText(mockTrace.sender)).toBeInTheDocument();
+
+    const sourceTxValue = getDefinitionValue("Source Tx");
+    expect(
+      within(sourceTxValue).getByText(shortenIdentifier(mockTrace.sourceTxHash)),
+    ).toBeInTheDocument();
+    fireEvent.click(within(sourceTxValue).getByRole("button", { name: "Show full" }));
+    expect(within(sourceTxValue).getByText(mockTrace.sourceTxHash)).toBeInTheDocument();
+    expect(within(sourceTxValue).getByRole("link", { name: "View on Explorer" })).toHaveAttribute(
+      "href",
+      `https://source.explorer/tx/${mockTrace.sourceTxHash}`,
+    );
+  });
+
   it("shows explorer links only when the selected event resolves to a chain with an explorer", async () => {
     renderPage(`/traces/${mockTrace.messageId}`);
     await waitFor(() => {
@@ -574,7 +629,7 @@ describe("TraceDetailPage", () => {
     if (!eventPanel) throw new Error("Event panel missing");
     expect(within(eventPanel).getByRole("link", { name: "View on Explorer" })).toHaveAttribute(
       "href",
-      "https://source.explorer/tx/0xSourceTx",
+      `https://source.explorer/tx/${mockTrace.sourceTxHash}`,
     );
 
     const destinationTimelineItem = screen

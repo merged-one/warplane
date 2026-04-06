@@ -5,6 +5,7 @@ import type { ChainRegistryEntry, MessageEvent, MessageTrace } from "../api.js";
 import { useFetch, useFormatTime } from "../hooks.js";
 import { ErrorBox } from "../components/ErrorBox.js";
 import { EventTimeline } from "../components/EventTimeline.js";
+import { ExpandableIdentifier } from "../components/ExpandableIdentifier.js";
 import { Loading } from "../components/Loading.js";
 import { StatusBadge } from "../components/StatusBadge.js";
 import {
@@ -106,7 +107,7 @@ export function TraceDetailPage() {
       <div className="card-grid">
         <div className="card">
           <div className="card-label">Message ID</div>
-          <div className="card-value mono trace-value-break">{displayTrace.messageId}</div>
+          <ExpandableIdentifier value={displayTrace.messageId} className="card-value" />
           <QuickActions
             copyId="message-id"
             copyValue={displayTrace.messageId}
@@ -146,13 +147,19 @@ export function TraceDetailPage() {
         <h2>Addresses</h2>
         <dl className="dl">
           <dt>Sender</dt>
-          <dd className="trace-detail-value mono">{displayTrace.sender}</dd>
+          <dd className="trace-detail-value">
+            <ExpandableIdentifier value={displayTrace.sender} />
+          </dd>
           <dt>Recipient</dt>
-          <dd className="trace-detail-value mono">{displayTrace.recipient}</dd>
+          <dd className="trace-detail-value">
+            <ExpandableIdentifier value={displayTrace.recipient} />
+          </dd>
           {displayTrace.relayer && (
             <>
               <dt>Relayer</dt>
-              <dd className="trace-detail-value mono">{displayTrace.relayer.address}</dd>
+              <dd className="trace-detail-value">
+                <ExpandableIdentifier value={displayTrace.relayer.address} />
+              </dd>
             </>
           )}
         </dl>
@@ -163,7 +170,7 @@ export function TraceDetailPage() {
         <dl className="dl">
           <dt>Source Tx</dt>
           <dd className="trace-detail-value">
-            <span className="mono trace-value-break">{displayTrace.sourceTxHash}</span>
+            <ExpandableIdentifier value={displayTrace.sourceTxHash} />
             <QuickActions
               copyId="source-tx"
               copyValue={displayTrace.sourceTxHash}
@@ -180,7 +187,7 @@ export function TraceDetailPage() {
             <>
               <dt>Relay Tx</dt>
               <dd className="trace-detail-value">
-                <span className="mono trace-value-break">{displayTrace.relayTxHash}</span>
+                <ExpandableIdentifier value={displayTrace.relayTxHash} />
                 <QuickActions
                   copyId="relay-tx"
                   copyValue={displayTrace.relayTxHash}
@@ -199,7 +206,7 @@ export function TraceDetailPage() {
             <>
               <dt>Destination Tx</dt>
               <dd className="trace-detail-value">
-                <span className="mono trace-value-break">{displayTrace.destinationTxHash}</span>
+                <ExpandableIdentifier value={displayTrace.destinationTxHash} />
                 <QuickActions
                   copyId="destination-tx"
                   copyValue={displayTrace.destinationTxHash}
@@ -218,7 +225,7 @@ export function TraceDetailPage() {
             <>
               <dt>Retry Tx</dt>
               <dd className="trace-detail-value">
-                <span className="mono trace-value-break">{displayTrace.retry.retryTxHash}</span>
+                <ExpandableIdentifier value={displayTrace.retry.retryTxHash} />
                 <QuickActions
                   copyId="retry-tx"
                   copyValue={displayTrace.retry.retryTxHash}
@@ -241,7 +248,9 @@ export function TraceDetailPage() {
           <h2>Fee Info</h2>
           <dl className="dl">
             <dt>Token</dt>
-            <dd className="trace-detail-value mono">{displayTrace.fee.feeTokenAddress}</dd>
+            <dd className="trace-detail-value">
+              <ExpandableIdentifier value={displayTrace.fee.feeTokenAddress} />
+            </dd>
             <dt>Initial</dt>
             <dd className="trace-detail-value">{displayTrace.fee.initialAmount}</dd>
             <dt>Added</dt>
@@ -303,7 +312,7 @@ export function TraceDetailPage() {
               <>
                 <dt>Transaction Hash</dt>
                 <dd className="trace-detail-value">
-                  <span className="mono trace-value-break">{selectedEvent.txHash}</span>
+                  <ExpandableIdentifier value={selectedEvent.txHash} />
                   <QuickActions
                     copyId={`event-tx-${selectedEventIdx}`}
                     copyValue={selectedEvent.txHash}
