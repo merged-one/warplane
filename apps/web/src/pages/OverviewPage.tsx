@@ -12,12 +12,24 @@ export function OverviewPage() {
   const chains = useFetch(() => getChains());
   const networks = useFetch(() => getNetworks());
   const traces = useFetch(() => getTraces({ pageSize: 200 }));
+  const recentTraces = useFetch(() => getTraces({ pageSize: 5, sort: "newest" }));
   const scenarios = useFetch(() => getScenarios());
   const fmt = useFormatTime();
 
   const loading =
-    health.loading || chains.loading || networks.loading || traces.loading || scenarios.loading;
-  const error = health.error || chains.error || networks.error || traces.error || scenarios.error;
+    health.loading ||
+    chains.loading ||
+    networks.loading ||
+    traces.loading ||
+    recentTraces.loading ||
+    scenarios.loading;
+  const error =
+    health.error ||
+    chains.error ||
+    networks.error ||
+    traces.error ||
+    recentTraces.error ||
+    scenarios.error;
 
   if (loading) return <Loading />;
   if (error) return <ErrorBox message={error} />;
@@ -133,7 +145,7 @@ export function OverviewPage() {
             </tr>
           </thead>
           <tbody>
-            {(traces.data?.traces ?? []).slice(0, 5).map((t) => (
+            {(recentTraces.data?.traces ?? []).map((t) => (
               <tr key={t.messageId}>
                 <td>
                   <Link to={`/traces/${t.messageId}`} className="mono">

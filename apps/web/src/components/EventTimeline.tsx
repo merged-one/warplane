@@ -57,6 +57,14 @@ export function EventTimeline({
             onClick={() => onSelectEvent?.(ev, i)}
             role={onSelectEvent ? "button" : undefined}
             tabIndex={onSelectEvent ? 0 : undefined}
+            aria-pressed={onSelectEvent ? isSelected : undefined}
+            onKeyDown={(event) => {
+              if (!onSelectEvent) return;
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onSelectEvent(ev, i);
+              }
+            }}
           >
             <div
               className={`timeline-dot ${isOffChain ? "timeline-dot-offchain" : "timeline-dot-onchain"}`}

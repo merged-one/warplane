@@ -184,6 +184,39 @@ describe("GET /api/v1/traces", () => {
     expect(body.page).toBe(1);
     expect(body.pageSize).toBe(2);
   });
+
+  it("passes through explicit sort ordering without changing filter semantics", async () => {
+    const oldest = await app.inject({
+      method: "GET",
+      url: "/api/v1/traces?sort=oldest&pageSize=200",
+    });
+    const newest = await app.inject({
+      method: "GET",
+      url: "/api/v1/traces?sort=newest&pageSize=200",
+    });
+
+    expect(oldest.statusCode).toBe(200);
+    expect(newest.statusCode).toBe(200);
+
+    const oldestBody = oldest.json();
+    const newestBody = newest.json();
+    const oldestTimes: number[] = oldestBody.traces.map(
+      (trace: { timestamps: { sendTime: string } }) => Date.parse(trace.timestamps.sendTime),
+    );
+    const newestTimes: number[] = newestBody.traces.map(
+      (trace: { timestamps: { sendTime: string } }) => Date.parse(trace.timestamps.sendTime),
+    );
+
+    expect(newestBody.total).toBe(oldestBody.total);
+    expect(newestBody.traces.length).toBe(oldestBody.traces.length);
+    expect(oldestTimes.every((time, index, arr) => index === 0 || arr[index - 1] <= time)).toBe(
+      true,
+    );
+    expect(newestTimes.every((time, index, arr) => index === 0 || arr[index - 1] >= time)).toBe(
+      true,
+    );
+    expect(newestTimes[0]).toBeGreaterThanOrEqual(oldestTimes[0]);
+  });
 });
 
 describe("GET /api/v1/traces/:messageId", () => {

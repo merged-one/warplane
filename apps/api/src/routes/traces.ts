@@ -23,6 +23,7 @@ export function registerTraceRoutes(app: FastifyInstance): void {
             sourceBlockchainId: { type: "string" },
             destinationBlockchainId: { type: "string" },
             messageId: { type: "string", description: "Partial message ID prefix search" },
+            sort: { type: "string", enum: ["newest", "oldest"] },
             page: { type: "integer", minimum: 1, default: 1 },
             pageSize: { type: "integer", minimum: 1, maximum: 200, default: 50 },
           },
@@ -48,6 +49,7 @@ export function registerTraceRoutes(app: FastifyInstance): void {
         sourceBlockchainId?: string;
         destinationBlockchainId?: string;
         messageId?: string;
+        sort?: "newest" | "oldest";
         page?: number;
         pageSize?: number;
       };
@@ -59,6 +61,7 @@ export function registerTraceRoutes(app: FastifyInstance): void {
         scenario: q.scenario,
         execution: q.status,
         messageId: q.messageId,
+        sort: q.sort,
         limit: pageSize,
         offset: (page - 1) * pageSize,
       };

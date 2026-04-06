@@ -16,6 +16,7 @@ export interface TraceFilter {
   sourceChain?: string;
   destChain?: string;
   messageId?: string;
+  sort?: "newest" | "oldest";
   limit?: number;
   offset?: number;
 }
@@ -223,9 +224,10 @@ export async function listTraces(
   const { where, params } = buildTraceWhere(filter);
   const limit = filter?.limit ?? 100;
   const offset = filter?.offset ?? 0;
+  const orderBy = filter?.sort === "newest" ? "send_time DESC, id DESC" : "send_time ASC, id ASC";
 
   const result = await db.query<{ trace_json: string }>(
-    `SELECT trace_json FROM traces ${where} ORDER BY send_time ASC LIMIT ? OFFSET ?`,
+    `SELECT trace_json FROM traces ${where} ORDER BY ${orderBy} LIMIT ? OFFSET ?`,
     [...params, limit, offset],
   );
 

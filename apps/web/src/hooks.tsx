@@ -81,6 +81,20 @@ export function useAutoRefresh() {
   return useContext(AutoRefreshContext);
 }
 
+export function useDebouncedValue<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = useState(value);
+
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      setDebounced(value);
+    }, delayMs);
+
+    return () => window.clearTimeout(id);
+  }, [delayMs, value]);
+
+  return debounced;
+}
+
 // ---- Timezone context ----
 
 type TzMode = "local" | "utc";
