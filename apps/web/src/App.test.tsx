@@ -517,7 +517,10 @@ describe("TracesPage", () => {
     await waitFor(() => {
       expect(screen.getByTestId("location")).toHaveTextContent("/traces");
     });
+    await new Promise((resolve) => window.setTimeout(resolve, 350));
     expect(screen.queryByRole("button", { name: /Status: Pending/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Message ID:/ })).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Message ID filter")).toHaveValue("");
   });
 });
 

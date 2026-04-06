@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { getChains, getScenarios, getTraces } from "../api.js";
 import type { ExecutionStatus, MessageTrace } from "../api.js";
@@ -24,6 +24,7 @@ export function TracesPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const fmt = useFormatTime();
+  const messageIdSyncTargetRef = useRef<string | null>(null);
 
   const scenario = searchParams.get("scenario") ?? "";
   const status = searchParams.get("status") ?? "";
@@ -38,10 +39,20 @@ export function TracesPage() {
   const debouncedMessageId = useDebouncedValue(messageIdInput.trim(), 300);
 
   useEffect(() => {
-    setMessageIdInput(messageId);
+    if (messageIdInput !== messageId) {
+      messageIdSyncTargetRef.current = messageId;
+      setMessageIdInput(messageId);
+    }
   }, [messageId]);
 
   useEffect(() => {
+    if (messageIdSyncTargetRef.current !== null) {
+      if (debouncedMessageId === messageIdSyncTargetRef.current) {
+        messageIdSyncTargetRef.current = null;
+      }
+      return;
+    }
+
     if (debouncedMessageId === messageId) {
       return;
     }
@@ -108,10 +119,13 @@ export function TracesPage() {
   }
 
   function clearAllFilters() {
+    messageIdSyncTargetRef.current = "";
+    setMessageIdInput("");
     setSearchParams(new URLSearchParams());
   }
 
   function clearMessageIdFilter() {
+    messageIdSyncTargetRef.current = "";
     setMessageIdInput("");
     updateParam("messageId", "");
   }
