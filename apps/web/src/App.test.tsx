@@ -517,7 +517,31 @@ describe("TracesPage", () => {
     await waitFor(() => {
       expect(screen.getByTestId("location")).toHaveTextContent("/traces");
     });
+    await new Promise((resolve) => window.setTimeout(resolve, 350));
     expect(screen.queryByRole("button", { name: /Status: Pending/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Message ID:/ })).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Message ID filter")).toHaveValue("");
+  });
+
+  it("allows typing a new message ID immediately after clearing filters", async () => {
+    renderPage(`/traces?messageId=${mockPendingTrace.messageId}`);
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", {
+          name: new RegExp(`Message ID: ${mockPendingTrace.messageId}`),
+        }),
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Clear all" }));
+    fireEvent.change(screen.getByLabelText("Message ID filter"), {
+      target: { value: mockTrace.messageId },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("location")).toHaveTextContent(`messageId=${mockTrace.messageId}`);
+    });
   });
 });
 

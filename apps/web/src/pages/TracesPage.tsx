@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { getChains, getScenarios, getTraces } from "../api.js";
 import type { ExecutionStatus, MessageTrace } from "../api.js";
-import { useDebouncedValue, useFetch, useFormatTime } from "../hooks.js";
+import { useFetch, useFormatTime } from "../hooks.js";
 import { ErrorBox } from "../components/ErrorBox.js";
 import { Loading } from "../components/Loading.js";
 import { StatusBadge } from "../components/StatusBadge.js";
@@ -24,6 +24,7 @@ export function TracesPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const fmt = useFormatTime();
+  const syncingMessageIdInputRef = useRef(false);
 
   const scenario = searchParams.get("scenario") ?? "";
   const status = searchParams.get("status") ?? "";
@@ -35,23 +36,38 @@ export function TracesPage() {
   const currentListUrl = `${location.pathname}${location.search}`;
 
   const [messageIdInput, setMessageIdInput] = useState(messageId);
-  const debouncedMessageId = useDebouncedValue(messageIdInput.trim(), 300);
+  const messageIdInputTrimmed = messageIdInput.trim();
 
   useEffect(() => {
-    setMessageIdInput(messageId);
+    if (messageIdInput !== messageId) {
+      syncingMessageIdInputRef.current = true;
+      setMessageIdInput(messageId);
+    }
   }, [messageId]);
 
   useEffect(() => {
-    if (debouncedMessageId === messageId) {
+    if (syncingMessageIdInputRef.current) {
+      if (messageIdInputTrimmed === messageId) {
+        syncingMessageIdInputRef.current = false;
+      }
       return;
     }
 
-    const next = new URLSearchParams(searchParams);
-    if (debouncedMessageId) next.set("messageId", debouncedMessageId);
-    else next.delete("messageId");
-    next.delete("page");
-    setSearchParams(next);
-  }, [debouncedMessageId, messageId, searchParams, setSearchParams]);
+    if (messageIdInputTrimmed === messageId) {
+      return;
+    }
+
+    const nextMessageId = messageIdInputTrimmed;
+    const timerId = window.setTimeout(() => {
+      const next = new URLSearchParams(searchParams);
+      if (nextMessageId) next.set("messageId", nextMessageId);
+      else next.delete("messageId");
+      next.delete("page");
+      setSearchParams(next);
+    }, 300);
+
+    return () => window.clearTimeout(timerId);
+  }, [messageIdInputTrimmed, messageId, searchParams, setSearchParams]);
 
   const { data, loading, error, reload } = useFetch(
     () =>
@@ -108,10 +124,13 @@ export function TracesPage() {
   }
 
   function clearAllFilters() {
+    syncingMessageIdInputRef.current = true;
+    setMessageIdInput("");
     setSearchParams(new URLSearchParams());
   }
 
   function clearMessageIdFilter() {
+    syncingMessageIdInputRef.current = true;
     setMessageIdInput("");
     updateParam("messageId", "");
   }
