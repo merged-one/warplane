@@ -38,7 +38,7 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-test("desktop traces workspace uses a full-width control panel at 1280px", async ({ page }) => {
+test("desktop traces page keeps the deployed toolbar shape at 1280px", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 1100 });
   await page.goto("/traces");
 
@@ -47,8 +47,8 @@ test("desktop traces workspace uses a full-width control panel at 1280px", async
   await expect(page.getByTestId("trace-results-bar")).toBeVisible();
   await expect(page.getByTestId("trace-table-desktop")).toBeVisible();
   await expect(page.getByTestId("trace-cards-mobile")).toBeHidden();
-  await expect(page.locator(".trace-workspace-controls-top")).toHaveCSS("flex-direction", "row");
-  await expect(page.locator(".trace-workspace-results-bar")).toHaveCSS("position", "sticky");
+  await expect(page.locator(".trace-toolbar-header")).toHaveCSS("flex-direction", "row");
+  await expectNoHorizontalOverflow(page);
 
   await captureScreenshot(page, "traces-1280.png");
 });
@@ -59,13 +59,8 @@ test("tablet traces workspace stacks cleanly at 1024px", async ({ page }) => {
 
   await expect(page.getByText("Showing 4 of 4 traces")).toBeVisible();
   await expect(page.getByTestId("trace-filter-inline")).toBeVisible();
-  await expect(page.locator(".trace-workspace-controls-top")).toHaveCSS("flex-direction", "column");
-
-  const fieldRows = await page.locator(".trace-workspace-filter-field").evaluateAll((elements) => {
-    return [...new Set(elements.map((element) => Math.round(element.getBoundingClientRect().top)))];
-  });
-  expect(fieldRows.length).toBe(2);
-
+  await expect(page.locator(".trace-toolbar-header")).toHaveCSS("flex-direction", "column");
+  await expect(page.locator(".trace-workspace-filter-form")).toBeVisible();
   await expectNoHorizontalOverflow(page);
   await captureScreenshot(page, "traces-1024.png");
 });
