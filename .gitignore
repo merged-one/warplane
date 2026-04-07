@@ -20,6 +20,8 @@ Thumbs.db
 # Build artifacts
 coverage/
 *.log
+playwright-report/
+test-results/
 
 # Database
 *.db
