@@ -2,11 +2,24 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { getChains, getScenarios, getTraces } from "../api.js";
 import type { ExecutionStatus, MessageTrace } from "../api.js";
-import { useFetch, useFormatTime } from "../hooks.js";
+import { useFetch, useFormatTime, useMediaQuery } from "../hooks.js";
 import { ErrorBox } from "../components/ErrorBox.js";
 import { Loading } from "../components/Loading.js";
 import { StatusBadge } from "../components/StatusBadge.js";
 import { getTraceLatencyLabel } from "../trace-utils.js";
+import {
+  applyTraceDraft,
+  areTraceDraftFiltersEqual,
+  countActiveTraceFilters,
+  createEmptyTraceDraft,
+  createTraceDraftFromQuery,
+  createTracesParams,
+  getTraceQuery,
+  patchTraceQuery,
+  serializeTraceQuery,
+  type TraceDraftFilters,
+  type TraceQueryState,
+} from "./tracesQuery.js";
 
 const PAGE_SIZE = 50;
 
@@ -24,66 +37,85 @@ export function TracesPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const fmt = useFormatTime();
-  const syncingMessageIdInputRef = useRef(false);
-
-  const scenario = searchParams.get("scenario") ?? "";
-  const status = searchParams.get("status") ?? "";
-  const sourceBlockchainId = searchParams.get("sourceBlockchainId") ?? "";
-  const destinationBlockchainId = searchParams.get("destinationBlockchainId") ?? "";
-  const messageId = searchParams.get("messageId") ?? "";
-  const legacyChain = searchParams.get("chain") ?? "";
-  const page = Number(searchParams.get("page") ?? "1");
+  const isMobile = useMediaQuery("(max-width: 768px)");
   const currentListUrl = `${location.pathname}${location.search}`;
-
-  const [messageIdInput, setMessageIdInput] = useState(messageId);
-  const messageIdInputTrimmed = messageIdInput.trim();
+  const committedQuery = getTraceQuery(searchParams);
+  const [draftFilters, setDraftFilters] = useState(() => createTraceDraftFromQuery(committedQuery));
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+  const preserveDraftOnNextCommitRef = useRef(false);
+  const filterButtonRef = useRef<HTMLButtonElement | null>(null);
+  const filterDrawerCloseButtonRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
-    if (messageIdInput !== messageId) {
-      syncingMessageIdInputRef.current = true;
-      setMessageIdInput(messageId);
+    if (preserveDraftOnNextCommitRef.current) {
+      preserveDraftOnNextCommitRef.current = false;
+      return;
     }
-  }, [messageId]);
+
+    setDraftFilters(createTraceDraftFromQuery(committedQuery));
+  }, [
+    committedQuery.destinationBlockchainId,
+    committedQuery.legacyChain,
+    committedQuery.messageId,
+    committedQuery.page,
+    committedQuery.scenario,
+    committedQuery.sourceBlockchainId,
+    committedQuery.status,
+  ]);
 
   useEffect(() => {
-    if (syncingMessageIdInputRef.current) {
-      if (messageIdInputTrimmed === messageId) {
-        syncingMessageIdInputRef.current = false;
+    if (!isMobile && isFilterDrawerOpen) {
+      setIsFilterDrawerOpen(false);
+    }
+  }, [isFilterDrawerOpen, isMobile]);
+
+  useEffect(() => {
+    if (!isFilterDrawerOpen) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeDrawer(true);
       }
-      return;
-    }
+    };
 
-    if (messageIdInputTrimmed === messageId) {
-      return;
-    }
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+    filterDrawerCloseButtonRef.current?.focus();
 
-    const nextMessageId = messageIdInputTrimmed;
-    const timerId = window.setTimeout(() => {
-      const next = new URLSearchParams(searchParams);
-      if (nextMessageId) next.set("messageId", nextMessageId);
-      else next.delete("messageId");
-      next.delete("page");
-      setSearchParams(next);
-    }, 300);
-
-    return () => window.clearTimeout(timerId);
-  }, [messageIdInputTrimmed, messageId, searchParams, setSearchParams]);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [
+    committedQuery.destinationBlockchainId,
+    committedQuery.legacyChain,
+    committedQuery.messageId,
+    committedQuery.page,
+    committedQuery.scenario,
+    committedQuery.sourceBlockchainId,
+    committedQuery.status,
+    isFilterDrawerOpen,
+  ]);
 
   const { data, loading, error, reload } = useFetch(
     () =>
       getTraces({
-        scenario: scenario || undefined,
-        status: status || undefined,
-        chain:
-          !sourceBlockchainId && !destinationBlockchainId ? legacyChain || undefined : undefined,
-        sourceBlockchainId: sourceBlockchainId || undefined,
-        destinationBlockchainId: destinationBlockchainId || undefined,
-        messageId: messageId || undefined,
-        sort: "newest",
-        page,
+        ...createTracesParams(committedQuery),
         pageSize: PAGE_SIZE,
       }),
-    [scenario, status, sourceBlockchainId, destinationBlockchainId, legacyChain, messageId, page],
+    [
+      committedQuery.destinationBlockchainId,
+      committedQuery.legacyChain,
+      committedQuery.messageId,
+      committedQuery.page,
+      committedQuery.scenario,
+      committedQuery.sourceBlockchainId,
+      committedQuery.status,
+    ],
   );
 
   const scenariosRes = useFetch(() => getScenarios());
@@ -96,50 +128,112 @@ export function TracesPage() {
   }));
 
   const totalPages = data ? Math.max(1, Math.ceil(data.total / PAGE_SIZE)) : 1;
+  const activeFilterCount = countActiveTraceFilters(committedQuery);
+  const hasDraftChanges = !areTraceDraftFiltersEqual(draftFilters, committedQuery);
   const statusLabel =
-    STATUS_CHIPS.find((chip) => chip.value === status)?.label ?? status.replace(/_/g, " ");
+    STATUS_CHIPS.find((chip) => chip.value === committedQuery.status)?.label ??
+    committedQuery.status.replace(/_/g, " ");
   const sourceChainName =
-    chainOptions.find((option) => option.id === sourceBlockchainId)?.name ?? sourceBlockchainId;
+    chainOptions.find((option) => option.id === committedQuery.sourceBlockchainId)?.name ??
+    committedQuery.sourceBlockchainId;
   const destinationChainName =
-    chainOptions.find((option) => option.id === destinationBlockchainId)?.name ??
-    destinationBlockchainId;
+    chainOptions.find((option) => option.id === committedQuery.destinationBlockchainId)?.name ??
+    committedQuery.destinationBlockchainId;
   const legacyChainName =
-    chainOptions.find((option) => option.id === legacyChain)?.name ?? legacyChain;
-  const activeFilterCount = [
-    scenario,
-    status,
-    sourceBlockchainId,
-    destinationBlockchainId,
-    legacyChain,
-    messageId,
-  ].filter(Boolean).length;
+    chainOptions.find((option) => option.id === committedQuery.legacyChain)?.name ??
+    committedQuery.legacyChain;
 
-  function updateParam(key: string, value: string, opts?: { clearLegacyChain?: boolean }) {
-    const next = new URLSearchParams(searchParams);
-    if (value) next.set(key, value);
-    else next.delete(key);
-    if (opts?.clearLegacyChain) next.delete("chain");
-    next.delete("page");
-    setSearchParams(next);
+  function commitQuery(nextQuery: TraceQueryState, opts?: { preserveDraft?: boolean }) {
+    if (opts?.preserveDraft) {
+      preserveDraftOnNextCommitRef.current = true;
+    }
+
+    setSearchParams(serializeTraceQuery(nextQuery));
+  }
+
+  function updateDraftFilter(
+    key: keyof Pick<
+      TraceDraftFilters,
+      "scenario" | "sourceBlockchainId" | "destinationBlockchainId" | "messageId"
+    >,
+    value: string,
+  ) {
+    setDraftFilters((current) => {
+      const nextDraft: TraceDraftFilters = {
+        ...current,
+        [key]: key === "messageId" ? value.trimStart() : value,
+      };
+
+      if ((key === "sourceBlockchainId" || key === "destinationBlockchainId") && value) {
+        nextDraft.legacyChain = "";
+      }
+
+      return nextDraft;
+    });
+  }
+
+  function openDrawer() {
+    setDraftFilters(createTraceDraftFromQuery(committedQuery));
+    setIsFilterDrawerOpen(true);
+  }
+
+  function closeDrawer(discardDraft: boolean) {
+    if (discardDraft) {
+      setDraftFilters(createTraceDraftFromQuery(committedQuery));
+    }
+
+    setIsFilterDrawerOpen(false);
+    window.setTimeout(() => {
+      filterButtonRef.current?.focus();
+    }, 0);
+  }
+
+  function applyDraftFilters(options?: { closeDrawerAfterApply?: boolean }) {
+    const nextQuery = applyTraceDraft(committedQuery, draftFilters);
+    commitQuery(nextQuery);
+
+    if (options?.closeDrawerAfterApply) {
+      closeDrawer(false);
+    }
+  }
+
+  function resetDraftFilters() {
+    setDraftFilters(createEmptyTraceDraft());
   }
 
   function clearAllFilters() {
-    syncingMessageIdInputRef.current = true;
-    setMessageIdInput("");
-    setSearchParams(new URLSearchParams());
+    setDraftFilters(createEmptyTraceDraft());
+    commitQuery({
+      scenario: "",
+      status: "",
+      sourceBlockchainId: "",
+      destinationBlockchainId: "",
+      legacyChain: "",
+      messageId: "",
+      page: 1,
+    });
+
+    if (isFilterDrawerOpen) {
+      closeDrawer(false);
+    }
   }
 
-  function clearMessageIdFilter() {
-    syncingMessageIdInputRef.current = true;
-    setMessageIdInput("");
-    updateParam("messageId", "");
+  function clearFilter(key: keyof TraceQueryState) {
+    if (key === "status") {
+      commitQuery(patchTraceQuery(committedQuery, { status: "" }), { preserveDraft: true });
+      return;
+    }
+
+    if (key === "page") {
+      return;
+    }
+
+    const nextQuery = patchTraceQuery(committedQuery, { [key]: "" } as Partial<TraceQueryState>);
+    commitQuery(nextQuery);
   }
 
   function goToPage(nextPage: number) {
-    const next = new URLSearchParams(searchParams);
-    if (nextPage > 1) next.set("page", String(nextPage));
-    else next.delete("page");
-    setSearchParams(next);
+    commitQuery(patchTraceQuery(committedQuery, { page: nextPage }), { preserveDraft: true });
   }
 
   function openTrace(trace: MessageTrace) {
@@ -147,144 +241,144 @@ export function TracesPage() {
   }
 
   return (
-    <div>
-      <h1>Traces</h1>
-      <p className="muted trace-page-subtitle">
-        Filter by status, route, or message ID, then drill into the full lifecycle without losing
-        list context.
-      </p>
-
-      <div className="trace-toolbar">
-        <div className="filter-chips" aria-label="Trace status filters">
-          {STATUS_CHIPS.map((chip) => (
-            <button
-              key={chip.value}
-              className={`chip${status === chip.value ? " chip-active" : ""}`}
-              onClick={() => updateParam("status", chip.value)}
-            >
-              {chip.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="trace-filter-grid">
-          <label className="filter-field">
-            <span>Scenario</span>
-            <select
-              aria-label="Scenario filter"
-              value={scenario}
-              onChange={(event) => updateParam("scenario", event.target.value)}
-            >
-              <option value="">All scenarios</option>
-              {scenarioNames.map((scenarioName) => (
-                <option key={scenarioName} value={scenarioName}>
-                  {scenarioName}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="filter-field">
-            <span>Source chain</span>
-            <select
-              aria-label="Source chain filter"
-              value={sourceBlockchainId}
-              onChange={(event) =>
-                updateParam("sourceBlockchainId", event.target.value, { clearLegacyChain: true })
-              }
-            >
-              <option value="">Any source</option>
-              {chainOptions.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.name}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="filter-field">
-            <span>Destination chain</span>
-            <select
-              aria-label="Destination chain filter"
-              value={destinationBlockchainId}
-              onChange={(event) =>
-                updateParam("destinationBlockchainId", event.target.value, {
-                  clearLegacyChain: true,
-                })
-              }
-            >
-              <option value="">Any destination</option>
-              {chainOptions.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.name}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="filter-field filter-field-wide">
-            <span>Message ID</span>
-            <input
-              aria-label="Message ID filter"
-              type="text"
-              placeholder="Debounced prefix search"
-              value={messageIdInput}
-              onChange={(event) => setMessageIdInput(event.target.value)}
-              className="input"
-            />
-          </label>
-        </div>
-
-        <div className="trace-toolbar-actions">
-          <button onClick={reload} className="btn btn-sm">
-            Refresh
-          </button>
-          <button
-            onClick={clearAllFilters}
-            className="btn btn-sm"
-            disabled={activeFilterCount === 0}
-          >
-            Clear all
-          </button>
-        </div>
+    <div className="trace-workspace">
+      <div className="trace-workspace-header">
+        <h1>Traces</h1>
+        <p className="muted trace-workspace-subtitle">
+          Investigate live and historical message delivery without losing your route, scenario, or
+          message search context.
+        </p>
       </div>
+
+      {isMobile && (
+        <div className="trace-workspace-mobile-bar" data-testid="trace-mobile-toolbar">
+          <div>
+            <div className="trace-workspace-mobile-label">Results</div>
+            <div className="trace-workspace-mobile-value">
+              {loading && !data ? "Loading traces" : `${data?.total ?? 0} traces`}
+            </div>
+          </div>
+          <div>
+            <div className="trace-workspace-mobile-label">Active</div>
+            <div className="trace-workspace-mobile-value">
+              {formatFilterCount(activeFilterCount)}
+            </div>
+          </div>
+          <button
+            type="button"
+            className="btn"
+            onClick={openDrawer}
+            ref={filterButtonRef}
+            aria-expanded={isFilterDrawerOpen}
+            aria-controls="trace-filter-drawer"
+          >
+            Filters
+          </button>
+        </div>
+      )}
+
+      {!isMobile && (
+        <div className="trace-toolbar" data-testid="trace-filter-inline">
+          <div className="trace-toolbar-header">
+            <div className="trace-toolbar-status">
+              <div className="trace-workspace-kicker">Quick status</div>
+              <TraceStatusChips
+                status={committedQuery.status}
+                onSelect={(value) =>
+                  commitQuery(patchTraceQuery(committedQuery, { status: value }), {
+                    preserveDraft: true,
+                  })
+                }
+              />
+            </div>
+            <p className="trace-toolbar-note">
+              Status updates immediately. Scenario, route, and message filters stay staged until you
+              apply them.
+            </p>
+          </div>
+
+          <TraceFilterForm
+            draftFilters={draftFilters}
+            scenarioNames={scenarioNames}
+            chainOptions={chainOptions}
+            hasDraftChanges={hasDraftChanges}
+            onApply={() => applyDraftFilters()}
+            onResetDraft={resetDraftFilters}
+            onUpdateDraft={updateDraftFilter}
+          />
+        </div>
+      )}
+
+      {isMobile && (
+        <section className="trace-workspace-panel trace-workspace-panel-mobile-status">
+          <div className="trace-workspace-kicker">Quick status</div>
+          <TraceStatusChips
+            status={committedQuery.status}
+            onSelect={(value) =>
+              commitQuery(patchTraceQuery(committedQuery, { status: value }), {
+                preserveDraft: true,
+              })
+            }
+          />
+        </section>
+      )}
 
       {activeFilterCount > 0 && (
         <div className="active-filter-list" aria-label="Active trace filters">
-          {status && (
-            <button className="active-filter-pill" onClick={() => updateParam("status", "")}>
+          {committedQuery.status && (
+            <button
+              type="button"
+              className="active-filter-pill"
+              onClick={() => clearFilter("status")}
+            >
               Status: {statusLabel}
             </button>
           )}
-          {scenario && (
-            <button className="active-filter-pill" onClick={() => updateParam("scenario", "")}>
-              Scenario: {scenario}
+          {committedQuery.scenario && (
+            <button
+              type="button"
+              className="active-filter-pill"
+              onClick={() => clearFilter("scenario")}
+            >
+              Scenario: {committedQuery.scenario}
             </button>
           )}
-          {sourceBlockchainId && (
+          {committedQuery.sourceBlockchainId && (
             <button
+              type="button"
               className="active-filter-pill"
-              onClick={() => updateParam("sourceBlockchainId", "", { clearLegacyChain: true })}
+              onClick={() => clearFilter("sourceBlockchainId")}
             >
               Source: {sourceChainName}
             </button>
           )}
-          {destinationBlockchainId && (
+          {committedQuery.destinationBlockchainId && (
             <button
+              type="button"
               className="active-filter-pill"
-              onClick={() => updateParam("destinationBlockchainId", "", { clearLegacyChain: true })}
+              onClick={() => clearFilter("destinationBlockchainId")}
             >
               Destination: {destinationChainName}
             </button>
           )}
-          {legacyChain && !sourceBlockchainId && !destinationBlockchainId && (
-            <button className="active-filter-pill" onClick={() => updateParam("chain", "")}>
-              Any chain: {legacyChainName}
-            </button>
-          )}
-          {messageId && (
-            <button className="active-filter-pill" onClick={clearMessageIdFilter}>
-              Message ID: {messageId}
+          {committedQuery.legacyChain &&
+            !committedQuery.sourceBlockchainId &&
+            !committedQuery.destinationBlockchainId && (
+              <button
+                type="button"
+                className="active-filter-pill"
+                onClick={() => clearFilter("legacyChain")}
+              >
+                Any chain: {legacyChainName}
+              </button>
+            )}
+          {committedQuery.messageId && (
+            <button
+              type="button"
+              className="active-filter-pill"
+              onClick={() => clearFilter("messageId")}
+            >
+              Message ID: {committedQuery.messageId}
             </button>
           )}
         </div>
@@ -295,11 +389,27 @@ export function TracesPage() {
 
       {data && (
         <>
-          <p className="muted trace-results-summary">
-            Showing {data.traces.length} of {data.total} traces (page {data.page}, newest first)
-          </p>
+          <div className="trace-results-summary" data-testid="trace-results-bar">
+            <p className="muted trace-results-summary-copy">
+              Showing {data.traces.length} of {data.total} traces (page {committedQuery.page} of{" "}
+              {totalPages}, newest first)
+            </p>
+            <div className="trace-results-summary-actions">
+              <button type="button" onClick={reload} className="btn btn-sm">
+                Refresh
+              </button>
+              <button
+                type="button"
+                onClick={clearAllFilters}
+                className="btn btn-sm"
+                disabled={activeFilterCount === 0}
+              >
+                Clear all
+              </button>
+            </div>
+          </div>
 
-          <div className="trace-table-desktop">
+          <div className="trace-table-desktop" data-testid="trace-table-desktop">
             <table className="table">
               <thead>
                 <tr>
@@ -349,8 +459,8 @@ export function TracesPage() {
                 ))}
                 {data.traces.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="muted">
-                      No traces match the current filters.
+                    <td colSpan={7}>
+                      <EmptyTraceState onClear={clearAllFilters} />
                     </td>
                   </tr>
                 )}
@@ -358,7 +468,7 @@ export function TracesPage() {
             </table>
           </div>
 
-          <div className="trace-cards-mobile">
+          <div className="trace-cards-mobile" data-testid="trace-cards-mobile">
             {data.traces.map((trace) => (
               <article
                 key={trace.messageId}
@@ -404,14 +514,222 @@ export function TracesPage() {
                 )}
               </article>
             ))}
-            {data.traces.length === 0 && (
-              <p className="muted">No traces match the current filters.</p>
-            )}
+
+            {data.traces.length === 0 && <EmptyTraceState onClear={clearAllFilters} />}
           </div>
 
-          <Pagination page={page} totalPages={totalPages} onGoToPage={goToPage} />
+          <Pagination page={committedQuery.page} totalPages={totalPages} onGoToPage={goToPage} />
         </>
       )}
+
+      {isMobile && isFilterDrawerOpen && (
+        <div className="trace-filter-drawer-shell">
+          <div className="trace-filter-drawer-backdrop" onClick={() => closeDrawer(true)} />
+          <div
+            className="trace-filter-drawer"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="trace-filter-drawer-title"
+            id="trace-filter-drawer"
+            data-testid="trace-filter-drawer"
+          >
+            <div className="trace-filter-drawer-header">
+              <div>
+                <div className="trace-workspace-kicker">Trace filters</div>
+                <h2 id="trace-filter-drawer-title">Refine results</h2>
+              </div>
+              <button
+                type="button"
+                className="btn btn-sm"
+                onClick={() => closeDrawer(true)}
+                ref={filterDrawerCloseButtonRef}
+              >
+                Close
+              </button>
+            </div>
+
+            <TraceFilterForm
+              draftFilters={draftFilters}
+              scenarioNames={scenarioNames}
+              chainOptions={chainOptions}
+              hasDraftChanges={hasDraftChanges}
+              onApply={() => applyDraftFilters({ closeDrawerAfterApply: true })}
+              onResetDraft={resetDraftFilters}
+              onUpdateDraft={updateDraftFilter}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TraceStatusChips({
+  status,
+  onSelect,
+}: {
+  status: ExecutionStatus | "";
+  onSelect: (value: ExecutionStatus | "") => void;
+}) {
+  return (
+    <div className="filter-chips" aria-label="Trace status filters">
+      {STATUS_CHIPS.map((chip) => (
+        <button
+          key={chip.value}
+          type="button"
+          className={`chip${status === chip.value ? " chip-active" : ""}`}
+          onClick={() => onSelect(chip.value)}
+        >
+          {chip.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function TraceFilterForm({
+  draftFilters,
+  scenarioNames,
+  chainOptions,
+  hasDraftChanges,
+  onApply,
+  onResetDraft,
+  onUpdateDraft,
+}: {
+  draftFilters: TraceDraftFilters;
+  scenarioNames: string[];
+  chainOptions: Array<{ id: string; name: string }>;
+  hasDraftChanges: boolean;
+  onApply: () => void;
+  onResetDraft: () => void;
+  onUpdateDraft: (
+    key: keyof Pick<
+      TraceDraftFilters,
+      "scenario" | "sourceBlockchainId" | "destinationBlockchainId" | "messageId"
+    >,
+    value: string,
+  ) => void;
+}) {
+  return (
+    <form
+      className="trace-workspace-filter-form"
+      onSubmit={(event) => {
+        event.preventDefault();
+        onApply();
+      }}
+    >
+      {draftFilters.legacyChain && (
+        <div className="trace-workspace-filter-note">
+          Legacy any-chain filter from the URL is active and will be preserved until you replace it
+          with source or destination filtering.
+        </div>
+      )}
+
+      <div className="trace-workspace-filter-grid">
+        <TraceSelectField
+          label="Scenario"
+          ariaLabel="Scenario filter"
+          value={draftFilters.scenario}
+          onChange={(value) => onUpdateDraft("scenario", value)}
+          emptyLabel="All scenarios"
+          options={scenarioNames.map((scenarioName) => ({
+            label: scenarioName,
+            value: scenarioName,
+          }))}
+        />
+
+        <TraceSelectField
+          label="Source chain"
+          ariaLabel="Source chain filter"
+          value={draftFilters.sourceBlockchainId}
+          onChange={(value) => onUpdateDraft("sourceBlockchainId", value)}
+          emptyLabel="Any source"
+          options={chainOptions.map((option) => ({
+            label: option.name,
+            value: option.id,
+          }))}
+        />
+
+        <TraceSelectField
+          label="Destination chain"
+          ariaLabel="Destination chain filter"
+          value={draftFilters.destinationBlockchainId}
+          onChange={(value) => onUpdateDraft("destinationBlockchainId", value)}
+          emptyLabel="Any destination"
+          options={chainOptions.map((option) => ({
+            label: option.name,
+            value: option.id,
+          }))}
+        />
+
+        <label className="trace-workspace-filter-field">
+          <span>Message ID</span>
+          <input
+            aria-label="Message ID filter"
+            type="text"
+            placeholder="Prefix match"
+            value={draftFilters.messageId}
+            onChange={(event) => onUpdateDraft("messageId", event.target.value)}
+            className="trace-workspace-control input"
+          />
+        </label>
+      </div>
+
+      <div className="trace-workspace-filter-actions">
+        <button type="button" className="btn" onClick={onResetDraft}>
+          Reset
+        </button>
+        <button type="submit" className="btn btn-primary" disabled={!hasDraftChanges}>
+          Apply filters
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function TraceSelectField({
+  label,
+  ariaLabel,
+  value,
+  onChange,
+  emptyLabel,
+  options,
+}: {
+  label: string;
+  ariaLabel: string;
+  value: string;
+  onChange: (value: string) => void;
+  emptyLabel: string;
+  options: Array<{ label: string; value: string }>;
+}) {
+  return (
+    <label className="trace-workspace-filter-field">
+      <span>{label}</span>
+      <span className="trace-workspace-select">
+        <select
+          aria-label={ariaLabel}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        >
+          <option value="">{emptyLabel}</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </span>
+    </label>
+  );
+}
+
+function EmptyTraceState({ onClear }: { onClear: () => void }) {
+  return (
+    <div className="trace-workspace-empty">
+      <p>No traces match the current filters.</p>
+      <button type="button" className="btn btn-sm" onClick={onClear}>
+        Clear filters
+      </button>
     </div>
   );
 }
@@ -469,4 +787,8 @@ function Pagination({
       )}
     </div>
   );
+}
+
+function formatFilterCount(count: number): string {
+  return `${count} active ${count === 1 ? "filter" : "filters"}`;
 }

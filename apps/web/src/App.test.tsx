@@ -12,378 +12,24 @@ import { RelayerOpsPage } from "./pages/RelayerOpsPage.js";
 import { ScenariosPage } from "./pages/ScenariosPage.js";
 import { TraceDetailPage } from "./pages/TraceDetailPage.js";
 import { TracesPage } from "./pages/TracesPage.js";
-
-const mockChains = [
-  {
-    name: "source",
-    blockchainId: "abc123",
-    subnetId: "sub1",
-    evmChainId: 99990,
-    explorerUrl: "https://source.explorer",
-  },
-  {
-    name: "destination",
-    blockchainId: "def456",
-    subnetId: "sub2",
-    evmChainId: 99991,
-  },
-];
-
-const SOURCE_TX_HASH = "0x1111111111111111111111111111111111111111111111111111111111111111";
-const RELAY_TX_HASH = "0x2222222222222222222222222222222222222222222222222222222222222222";
-const DEST_TX_HASH = "0x3333333333333333333333333333333333333333333333333333333333333333";
-const SENDER_ADDRESS = "0x111122223333444455556666777788889999AaAa";
-const RECIPIENT_ADDRESS = "0x999988887777666655554444333322221111BbBb";
-const RELAYER_ADDRESS = "0x55556666777788889999AAAAbbbbCCCCddddeeee";
-
-const mockTrace = {
-  messageId: "cf6f0000000000000000000000000001",
-  scenario: "basic_send_receive",
-  execution: "success" as const,
-  source: {
-    name: "source",
-    blockchainId: "abc123",
-    subnetId: "sub1",
-    evmChainId: 99990,
-  },
-  destination: {
-    name: "destination",
-    blockchainId: "def456",
-    subnetId: "sub2",
-    evmChainId: 99991,
-  },
-  sender: SENDER_ADDRESS,
-  recipient: RECIPIENT_ADDRESS,
-  sourceTxHash: SOURCE_TX_HASH,
-  relayTxHash: RELAY_TX_HASH,
-  destinationTxHash: DEST_TX_HASH,
-  timestamps: {
-    sendTime: "2026-04-01T00:01:00Z",
-    receiveTime: "2026-04-01T00:01:30Z",
-    blockSend: 100,
-  },
-  events: [
-    {
-      kind: "message_sent",
-      timestamp: "2026-04-01T00:01:00Z",
-      chain: "source",
-      blockNumber: 100,
-      txHash: SOURCE_TX_HASH,
-    },
-    {
-      kind: "delivery_confirmed",
-      timestamp: "2026-04-01T00:01:30Z",
-      chain: "destination",
-      blockNumber: 200,
-      txHash: DEST_TX_HASH,
-    },
-  ],
-  relayer: {
-    address: RELAYER_ADDRESS,
-    txHash: RELAY_TX_HASH,
-  },
-};
-
-const mockFailedTrace = {
-  ...mockTrace,
-  messageId: "cf6f0000000000000000000000000002",
-  scenario: "retry_failed_execution",
-  execution: "failed" as const,
-  sourceTxHash: "0x4444444444444444444444444444444444444444444444444444444444444444",
-  destinationTxHash: undefined,
-  relayTxHash: undefined,
-  timestamps: {
-    sendTime: "2026-04-01T00:02:00Z",
-    receiveTime: "2026-04-01T00:02:00Z",
-    blockSend: 200,
-  },
-  events: [
-    {
-      kind: "message_sent",
-      timestamp: "2026-04-01T00:02:00Z",
-      chain: "source",
-      txHash: "0x4444444444444444444444444444444444444444444444444444444444444444",
-    },
-    {
-      kind: "execution_failed",
-      timestamp: "2026-04-01T00:02:20Z",
-      chain: "destination",
-      details: "Out of gas",
-    },
-  ],
-};
-
-const mockPendingTrace = {
-  ...mockTrace,
-  messageId: "cf6f0000000000000000000000000003",
-  execution: "pending" as const,
-  sourceTxHash: "0x5555555555555555555555555555555555555555555555555555555555555555",
-  destinationTxHash: undefined,
-  relayTxHash: undefined,
-  timestamps: {
-    sendTime: "2026-04-01T00:03:00Z",
-    receiveTime: "2026-04-01T00:03:00Z",
-    blockSend: 300,
-  },
-  events: [
-    {
-      kind: "message_sent",
-      timestamp: "2026-04-01T00:03:00Z",
-      chain: "source",
-      txHash: "0x5555555555555555555555555555555555555555555555555555555555555555",
-    },
-    {
-      kind: "relay_submitted",
-      timestamp: "2026-04-01T00:03:20Z",
-      chain: "destination",
-      details: "Queued at relayer",
-    },
-  ],
-};
-
-const mockRetryTrace = {
-  ...mockTrace,
-  messageId: "cf6f0000000000000000000000000004",
-  scenario: "retry_recovered",
-  execution: "retry_success" as const,
-  sourceTxHash: "0x6666666666666666666666666666666666666666666666666666666666666666",
-  relayTxHash: "0x7777777777777777777777777777777777777777777777777777777777777777",
-  destinationTxHash: "0x8888888888888888888888888888888888888888888888888888888888888888",
-  timestamps: {
-    sendTime: "2026-04-01T00:04:00Z",
-    receiveTime: "2026-04-01T00:04:45Z",
-    blockSend: 400,
-  },
-  retry: {
-    originalGasLimit: "150000",
-    retryGasLimit: "300000",
-    retryTxHash: "0x7777777777777777777777777777777777777777777777777777777777777777",
-  },
-  events: [
-    {
-      kind: "message_sent",
-      timestamp: "2026-04-01T00:04:00Z",
-      chain: "source",
-      txHash: "0x6666666666666666666666666666666666666666666666666666666666666666",
-    },
-    {
-      kind: "execution_failed",
-      timestamp: "2026-04-01T00:04:12Z",
-      chain: "destination",
-      details: "Insufficient gas",
-    },
-    {
-      kind: "retry_succeeded",
-      timestamp: "2026-04-01T00:04:26Z",
-      chain: "destination",
-      txHash: "0x7777777777777777777777777777777777777777777777777777777777777777",
-    },
-    {
-      kind: "delivery_confirmed",
-      timestamp: "2026-04-01T00:04:45Z",
-      chain: "destination",
-      txHash: "0x8888888888888888888888888888888888888888888888888888888888888888",
-    },
-  ],
-};
-
-const allTraces = [mockTrace, mockFailedTrace, mockPendingTrace, mockRetryTrace];
-const tracesById = new Map(allTraces.map((trace) => [trace.messageId, trace]));
+import {
+  allTraces,
+  mockFailedTrace,
+  mockFetch,
+  mockPendingTrace,
+  mockRetryTrace,
+  mockTrace,
+} from "./test-utils/mockWarplaneApi.js";
 
 function LocationProbe() {
   const location = useLocation();
   return <div data-testid="location">{`${location.pathname}${location.search}`}</div>;
 }
 
-function mockFetch(url: string) {
-  const requestUrl = new URL(url, "http://warplane.test");
-
-  if (requestUrl.pathname === "/health") {
-    return json({ status: "ok", uptime: 1000, traceCount: allTraces.length, demoMode: true });
-  }
-
-  if (requestUrl.pathname === "/api/v1/chains") {
-    return json({ chains: mockChains });
-  }
-
-  if (requestUrl.pathname === "/api/v1/network") {
-    return json({
-      networks: [
-        {
-          schemaVersion: "1.0.0",
-          networkId: "test",
-          source: mockChains[0],
-          destination: mockChains[1],
-        },
-      ],
-    });
-  }
-
-  if (requestUrl.pathname === "/api/v1/scenarios") {
-    return json({
-      scenarios: [
-        {
-          scenario: "basic_send_receive",
-          startedAt: "2026-04-01T00:00:00Z",
-          completedAt: "2026-04-01T00:02:00Z",
-          passed: true,
-          messageIds: [mockTrace.messageId, mockPendingTrace.messageId],
-          traceFiles: [],
-        },
-        {
-          scenario: "retry_failed_execution",
-          startedAt: "2026-04-01T00:02:00Z",
-          completedAt: "2026-04-01T00:03:00Z",
-          passed: false,
-          messageIds: [mockFailedTrace.messageId],
-          traceFiles: [],
-          error: "Out of gas",
-        },
-        {
-          scenario: "retry_recovered",
-          startedAt: "2026-04-01T00:04:00Z",
-          completedAt: "2026-04-01T00:05:00Z",
-          passed: true,
-          messageIds: [mockRetryTrace.messageId],
-          traceFiles: [],
-        },
-      ],
-    });
-  }
-
-  if (requestUrl.pathname === "/api/v1/stats/failures") {
-    return json({ failures: [] });
-  }
-
-  if (requestUrl.pathname === "/api/v1/stats/latency") {
-    return json({ p50: 0, p90: 0, p99: 0, timeSeries: [] });
-  }
-
-  if (requestUrl.pathname === "/api/v1/relayer/health/history") {
-    return json({ history: [] });
-  }
-
-  if (requestUrl.pathname === "/api/v1/relayer/health") {
-    return json({ health: [] });
-  }
-
-  if (requestUrl.pathname === "/api/v1/sigagg/health/history") {
-    return json({ history: [] });
-  }
-
-  if (requestUrl.pathname === "/api/v1/sigagg/health") {
-    return json({ health: null });
-  }
-
-  if (requestUrl.pathname === "/api/v1/pipeline/status") {
-    return json({ status: "idle", traceCount: allTraces.length, uptime: 1000 });
-  }
-
-  if (requestUrl.pathname === "/api/v1/failures") {
-    return json({
-      failures: allTraces.filter((trace) =>
-        ["failed", "replay_blocked", "pending"].includes(trace.execution),
-      ),
-    });
-  }
-
-  if (requestUrl.pathname === "/api/v1/search") {
-    return json({
-      query: requestUrl.searchParams.get("q") ?? "",
-      traces: [mockTrace],
-      chains: mockChains,
-      scenarios: [
-        {
-          scenario: "basic_send_receive",
-          startedAt: "2026-04-01T00:00:00Z",
-          completedAt: "2026-04-01T00:02:00Z",
-          passed: true,
-          messageIds: [mockTrace.messageId],
-          traceFiles: [],
-        },
-      ],
-    });
-  }
-
-  if (requestUrl.pathname === "/api/v1/traces") {
-    return json(filterTraces(requestUrl));
-  }
-
-  if (requestUrl.pathname.startsWith("/api/v1/traces/")) {
-    const messageId = decodeURIComponent(requestUrl.pathname.split("/")[4] ?? "");
-    const trace = tracesById.get(messageId);
-
-    if (!trace) {
-      return json({ error: "not found" }, 404);
-    }
-
-    if (requestUrl.pathname.endsWith("/raw")) {
-      return json(trace);
-    }
-
-    if (requestUrl.pathname.endsWith("/timeline")) {
-      return json({ messageId: trace.messageId, events: trace.events });
-    }
-
-    return json(trace);
-  }
-
-  return json({ error: "not found" }, 404);
-}
-
-function filterTraces(requestUrl: URL) {
-  const scenario = requestUrl.searchParams.get("scenario");
-  const status = requestUrl.searchParams.get("status");
-  const sourceBlockchainId = requestUrl.searchParams.get("sourceBlockchainId");
-  const destinationBlockchainId = requestUrl.searchParams.get("destinationBlockchainId");
-  const chain = requestUrl.searchParams.get("chain");
-  const messageId = requestUrl.searchParams.get("messageId");
-  const sort = requestUrl.searchParams.get("sort");
-  const page = Number(requestUrl.searchParams.get("page") ?? "1");
-  const pageSize = Number(requestUrl.searchParams.get("pageSize") ?? "50");
-
-  const traces = [...allTraces]
-    .filter((trace) => (scenario ? trace.scenario === scenario : true))
-    .filter((trace) => (status ? trace.execution === status : true))
-    .filter((trace) =>
-      sourceBlockchainId ? trace.source.blockchainId === sourceBlockchainId : true,
-    )
-    .filter((trace) =>
-      destinationBlockchainId ? trace.destination.blockchainId === destinationBlockchainId : true,
-    )
-    .filter((trace) =>
-      chain
-        ? trace.source.blockchainId === chain || trace.destination.blockchainId === chain
-        : true,
-    )
-    .filter((trace) => (messageId ? trace.messageId.startsWith(messageId) : true))
-    .sort((left, right) => {
-      const delta = Date.parse(left.timestamps.sendTime) - Date.parse(right.timestamps.sendTime);
-      return sort === "newest" ? -delta : delta;
-    });
-
-  const offset = (page - 1) * pageSize;
-
-  return {
-    traces: traces.slice(offset, offset + pageSize),
-    total: traces.length,
-    page,
-    pageSize,
-  };
-}
-
-function json(data: unknown, status = 200) {
-  return Promise.resolve(
-    new Response(JSON.stringify(data), {
-      status,
-      headers: { "Content-Type": "application/json" },
-    }),
-  );
-}
-
 beforeEach(() => {
   vi.restoreAllMocks();
   vi.useRealTimers();
+  setViewportWidth(1280);
   vi.spyOn(globalThis, "fetch").mockImplementation((input) => mockFetch(String(input)));
   Object.defineProperty(globalThis.navigator, "clipboard", {
     configurable: true,
@@ -432,6 +78,14 @@ function getDefinitionValue(label: string): HTMLElement {
   return value;
 }
 
+function setViewportWidth(width: number) {
+  Object.defineProperty(window, "innerWidth", {
+    configurable: true,
+    writable: true,
+    value: width,
+  });
+}
+
 describe("Layout", () => {
   it("renders nav links", () => {
     renderPage("/docs");
@@ -453,19 +107,18 @@ describe("OverviewPage", () => {
 });
 
 describe("TracesPage", () => {
-  it("shows newest-first traces with the investigation toolbar", async () => {
+  it("shows newest-first traces with the workspace layout", async () => {
     renderPage("/traces");
     await waitFor(() => {
       expect(screen.getByText(/Showing 4 of 4 traces/)).toBeInTheDocument();
     });
-    expect(screen.getByLabelText("Scenario filter")).toBeInTheDocument();
-    expect(screen.getByLabelText("Source chain filter")).toBeInTheDocument();
-    expect(screen.getByLabelText("Destination chain filter")).toBeInTheDocument();
-    expect(screen.getByLabelText("Message ID filter")).toBeInTheDocument();
+    expect(screen.getByTestId("trace-filter-inline")).toBeInTheDocument();
+    expect(screen.getByTestId("trace-results-bar")).toBeInTheDocument();
+    expect(screen.queryByTestId("trace-mobile-toolbar")).not.toBeInTheDocument();
     expect(screen.getAllByText("retry_recovered").length).toBeGreaterThan(0);
   });
 
-  it("syncs filters into the URL and resets pagination", async () => {
+  it("keeps status chips immediate while draft filters apply in one step", async () => {
     renderPage("/traces?page=2");
 
     await waitFor(() => {
@@ -480,22 +133,23 @@ describe("TracesPage", () => {
     fireEvent.change(screen.getByLabelText("Source chain filter"), {
       target: { value: "abc123" },
     });
-    await waitFor(() => {
-      expect(screen.getByTestId("location")).toHaveTextContent("sourceBlockchainId=abc123");
-    });
-
     fireEvent.change(screen.getByLabelText("Message ID filter"), {
       target: { value: mockPendingTrace.messageId },
     });
 
+    expect(screen.getByTestId("location")).toHaveTextContent("/traces?status=pending");
+
+    fireEvent.click(screen.getByRole("button", { name: "Apply filters" }));
+
     await waitFor(() => {
-      expect(screen.getByTestId("location")).toHaveTextContent(
-        `messageId=${mockPendingTrace.messageId}`,
-      );
+      const locationText = screen.getByTestId("location").textContent ?? "";
+      expect(locationText).toContain("status=pending");
+      expect(locationText).toContain("sourceBlockchainId=abc123");
+      expect(locationText).toContain(`messageId=${mockPendingTrace.messageId}`);
     });
   });
 
-  it("shows active filters and clears them", async () => {
+  it("shows active filters, clears pills, and clears all", async () => {
     renderPage(
       `/traces?status=pending&scenario=basic_send_receive&sourceBlockchainId=abc123&messageId=${mockPendingTrace.messageId}`,
     );
@@ -512,36 +166,85 @@ describe("TracesPage", () => {
       screen.getByRole("button", { name: new RegExp(`Message ID: ${mockPendingTrace.messageId}`) }),
     ).toBeInTheDocument();
 
+    fireEvent.click(screen.getByRole("button", { name: /Scenario: basic_send_receive/ }));
+    await waitFor(() => {
+      expect(screen.getByTestId("location")).not.toHaveTextContent("scenario=");
+    });
+
     fireEvent.click(screen.getByRole("button", { name: "Clear all" }));
 
     await waitFor(() => {
       expect(screen.getByTestId("location")).toHaveTextContent("/traces");
     });
-    await new Promise((resolve) => window.setTimeout(resolve, 350));
     expect(screen.queryByRole("button", { name: /Status: Pending/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Message ID:/ })).not.toBeInTheDocument();
     expect(screen.getByLabelText("Message ID filter")).toHaveValue("");
   });
 
-  it("allows typing a new message ID immediately after clearing filters", async () => {
-    renderPage(`/traces?messageId=${mockPendingTrace.messageId}`);
+  it("preserves the legacy chain filter until a directional filter replaces it", async () => {
+    renderPage("/traces?chain=abc123");
 
     await waitFor(() => {
       expect(
         screen.getByRole("button", {
-          name: new RegExp(`Message ID: ${mockPendingTrace.messageId}`),
+          name: /Any chain: source/,
         }),
       ).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Clear all" }));
-    fireEvent.change(screen.getByLabelText("Message ID filter"), {
-      target: { value: mockTrace.messageId },
+    fireEvent.change(screen.getByLabelText("Source chain filter"), {
+      target: { value: "abc123" },
     });
+    fireEvent.click(screen.getByRole("button", { name: "Apply filters" }));
 
     await waitFor(() => {
-      expect(screen.getByTestId("location")).toHaveTextContent(`messageId=${mockTrace.messageId}`);
+      const locationText = screen.getByTestId("location").textContent ?? "";
+      expect(locationText).toContain("sourceBlockchainId=abc123");
+      expect(locationText).not.toContain("chain=");
     });
+  });
+
+  it("uses the mobile drawer and discards unapplied edits on close", async () => {
+    setViewportWidth(768);
+    renderPage("/traces?status=pending");
+
+    await waitFor(() => {
+      expect(screen.getByTestId("trace-mobile-toolbar")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Filters" }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("trace-filter-drawer")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText("Scenario filter"), {
+      target: { value: "retry_recovered" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+
+    await waitFor(() => {
+      expect(screen.queryByTestId("trace-filter-drawer")).not.toBeInTheDocument();
+    });
+    expect(screen.getByTestId("location")).toHaveTextContent("/traces?status=pending");
+
+    fireEvent.click(screen.getByRole("button", { name: "Filters" }));
+    await waitFor(() => {
+      expect(screen.getByTestId("trace-filter-drawer")).toBeInTheDocument();
+    });
+    expect(screen.getByLabelText("Scenario filter")).toHaveValue("");
+
+    fireEvent.change(screen.getByLabelText("Scenario filter"), {
+      target: { value: "retry_recovered" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Apply filters" }));
+
+    await waitFor(() => {
+      const locationText = screen.getByTestId("location").textContent ?? "";
+      expect(locationText).toContain("status=pending");
+      expect(locationText).toContain("scenario=retry_recovered");
+    });
+    expect(screen.queryByTestId("trace-filter-drawer")).not.toBeInTheDocument();
   });
 });
 

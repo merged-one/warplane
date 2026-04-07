@@ -95,6 +95,39 @@ export function useDebouncedValue<T>(value: T, delayMs: number): T {
   return debounced;
 }
 
+export function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return false;
+    }
+
+    return window.matchMedia(query).matches;
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia(query);
+    const update = () => {
+      setMatches(mediaQuery.matches);
+    };
+
+    update();
+
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", update);
+      return () => mediaQuery.removeEventListener("change", update);
+    }
+
+    mediaQuery.addListener(update);
+    return () => mediaQuery.removeListener(update);
+  }, [query]);
+
+  return matches;
+}
+
 // ---- Timezone context ----
 
 type TzMode = "local" | "utc";
