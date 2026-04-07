@@ -277,41 +277,13 @@ export function TracesPage() {
         </div>
       )}
 
-      <div className="trace-workspace-shell">
-        {!isMobile && (
-          <aside className="trace-workspace-sidebar" data-testid="trace-workspace-sidebar">
-            <div className="trace-workspace-sidebar-panel">
-              <section className="trace-workspace-panel">
-                <div className="trace-workspace-kicker">Quick status</div>
-                <TraceStatusChips
-                  status={committedQuery.status}
-                  onSelect={(value) =>
-                    commitQuery(patchTraceQuery(committedQuery, { status: value }), {
-                      preserveDraft: true,
-                    })
-                  }
-                />
-              </section>
-
-              <section className="trace-workspace-panel" data-testid="trace-filter-inline">
-                <div className="trace-workspace-kicker">Filters</div>
-                <TraceFilterForm
-                  draftFilters={draftFilters}
-                  scenarioNames={scenarioNames}
-                  chainOptions={chainOptions}
-                  hasDraftChanges={hasDraftChanges}
-                  onApply={() => applyDraftFilters()}
-                  onResetDraft={resetDraftFilters}
-                  onUpdateDraft={updateDraftFilter}
-                />
-              </section>
-            </div>
-          </aside>
-        )}
-
-        <section className="trace-workspace-results">
-          {isMobile && (
-            <section className="trace-workspace-panel trace-workspace-panel-mobile-status">
+      {!isMobile && (
+        <section
+          className="trace-workspace-panel trace-workspace-controls"
+          data-testid="trace-filter-inline"
+        >
+          <div className="trace-workspace-controls-top">
+            <div className="trace-workspace-status-block">
               <div className="trace-workspace-kicker">Quick status</div>
               <TraceStatusChips
                 status={committedQuery.status}
@@ -321,234 +293,274 @@ export function TracesPage() {
                   })
                 }
               />
-            </section>
-          )}
+            </div>
+            <p className="trace-workspace-controls-copy">
+              Status updates immediately. Scenario, route, and message filters stay staged until you
+              apply them.
+            </p>
+          </div>
 
+          <TraceFilterForm
+            draftFilters={draftFilters}
+            scenarioNames={scenarioNames}
+            chainOptions={chainOptions}
+            hasDraftChanges={hasDraftChanges}
+            onApply={() => applyDraftFilters()}
+            onResetDraft={resetDraftFilters}
+            onUpdateDraft={updateDraftFilter}
+          />
+        </section>
+      )}
+
+      <section className="trace-workspace-results">
+        {isMobile && (
+          <section className="trace-workspace-panel trace-workspace-panel-mobile-status">
+            <div className="trace-workspace-kicker">Quick status</div>
+            <TraceStatusChips
+              status={committedQuery.status}
+              onSelect={(value) =>
+                commitQuery(patchTraceQuery(committedQuery, { status: value }), {
+                  preserveDraft: true,
+                })
+              }
+            />
+          </section>
+        )}
+
+        <div className="trace-workspace-results-panel">
           <div className="trace-workspace-results-bar" data-testid="trace-results-bar">
-            <div className="trace-workspace-results-meta">
-              <p className="trace-workspace-results-count">
-                {data ? `Showing ${data.traces.length} of ${data.total} traces` : "Loading traces"}
-              </p>
-              <p className="muted">
-                Page {committedQuery.page} of {totalPages} · newest first
-              </p>
+            <div className="trace-workspace-results-primary">
+              <div className="trace-workspace-results-context">
+                <p className="trace-workspace-results-count">
+                  {data
+                    ? `Showing ${data.traces.length} of ${data.total} traces`
+                    : "Loading traces"}
+                </p>
+                <p className="trace-workspace-results-page">
+                  Page {committedQuery.page} of {totalPages} · newest first
+                </p>
+                {activeFilterCount === 0 && (
+                  <span className="muted trace-workspace-active-empty">No active filters</span>
+                )}
+              </div>
+
+              <div className="trace-workspace-results-actions">
+                <button type="button" onClick={reload} className="btn btn-sm">
+                  Refresh
+                </button>
+                <button
+                  type="button"
+                  onClick={clearAllFilters}
+                  className="btn btn-sm"
+                  disabled={activeFilterCount === 0}
+                >
+                  Clear all
+                </button>
+              </div>
             </div>
 
-            <div className="trace-workspace-results-actions">
-              <button type="button" onClick={reload} className="btn btn-sm">
-                Refresh
-              </button>
-              <button
-                type="button"
-                onClick={clearAllFilters}
-                className="btn btn-sm"
-                disabled={activeFilterCount === 0}
-              >
-                Clear all
-              </button>
-            </div>
-
-            <div className="trace-workspace-active-filters" aria-label="Active trace filters">
-              {activeFilterCount === 0 && (
-                <span className="muted trace-workspace-active-empty">No active filters</span>
-              )}
-              {committedQuery.status && (
-                <button
-                  type="button"
-                  className="active-filter-pill"
-                  onClick={() => clearFilter("status")}
-                >
-                  Status: {statusLabel}
-                </button>
-              )}
-              {committedQuery.scenario && (
-                <button
-                  type="button"
-                  className="active-filter-pill"
-                  onClick={() => clearFilter("scenario")}
-                >
-                  Scenario: {committedQuery.scenario}
-                </button>
-              )}
-              {committedQuery.sourceBlockchainId && (
-                <button
-                  type="button"
-                  className="active-filter-pill"
-                  onClick={() => clearFilter("sourceBlockchainId")}
-                >
-                  Source: {sourceChainName}
-                </button>
-              )}
-              {committedQuery.destinationBlockchainId && (
-                <button
-                  type="button"
-                  className="active-filter-pill"
-                  onClick={() => clearFilter("destinationBlockchainId")}
-                >
-                  Destination: {destinationChainName}
-                </button>
-              )}
-              {committedQuery.legacyChain &&
-                !committedQuery.sourceBlockchainId &&
-                !committedQuery.destinationBlockchainId && (
+            {activeFilterCount > 0 && (
+              <div className="trace-workspace-active-filters" aria-label="Active trace filters">
+                {committedQuery.status && (
                   <button
                     type="button"
                     className="active-filter-pill"
-                    onClick={() => clearFilter("legacyChain")}
+                    onClick={() => clearFilter("status")}
                   >
-                    Any chain: {legacyChainName}
+                    Status: {statusLabel}
                   </button>
                 )}
-              {committedQuery.messageId && (
-                <button
-                  type="button"
-                  className="active-filter-pill"
-                  onClick={() => clearFilter("messageId")}
-                >
-                  Message ID: {committedQuery.messageId}
-                </button>
-              )}
-            </div>
+                {committedQuery.scenario && (
+                  <button
+                    type="button"
+                    className="active-filter-pill"
+                    onClick={() => clearFilter("scenario")}
+                  >
+                    Scenario: {committedQuery.scenario}
+                  </button>
+                )}
+                {committedQuery.sourceBlockchainId && (
+                  <button
+                    type="button"
+                    className="active-filter-pill"
+                    onClick={() => clearFilter("sourceBlockchainId")}
+                  >
+                    Source: {sourceChainName}
+                  </button>
+                )}
+                {committedQuery.destinationBlockchainId && (
+                  <button
+                    type="button"
+                    className="active-filter-pill"
+                    onClick={() => clearFilter("destinationBlockchainId")}
+                  >
+                    Destination: {destinationChainName}
+                  </button>
+                )}
+                {committedQuery.legacyChain &&
+                  !committedQuery.sourceBlockchainId &&
+                  !committedQuery.destinationBlockchainId && (
+                    <button
+                      type="button"
+                      className="active-filter-pill"
+                      onClick={() => clearFilter("legacyChain")}
+                    >
+                      Any chain: {legacyChainName}
+                    </button>
+                  )}
+                {committedQuery.messageId && (
+                  <button
+                    type="button"
+                    className="active-filter-pill"
+                    onClick={() => clearFilter("messageId")}
+                  >
+                    Message ID: {committedQuery.messageId}
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
-          {loading && <Loading />}
-          {error && <ErrorBox message={error} onRetry={reload} />}
+          <div className="trace-workspace-results-body">
+            {loading && <Loading />}
+            {error && <ErrorBox message={error} onRetry={reload} />}
 
-          {data && (
-            <>
-              <div className="trace-table-desktop" data-testid="trace-table-desktop">
-                <table className="table trace-results-table">
-                  <thead>
-                    <tr>
-                      <th>Message</th>
-                      <th>Route</th>
-                      <th>Status</th>
-                      <th>Scenario</th>
-                      <th>Timeline</th>
-                      <th>Sent</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.traces.map((trace) => (
-                      <tr
-                        key={trace.messageId}
-                        className="trace-row"
-                        onClick={() => openTrace(trace)}
-                        style={{ cursor: "pointer" }}
-                      >
-                        <td>
-                          <div className="trace-result-heading">
-                            <Link
-                              to={`/traces/${trace.messageId}`}
-                              state={{ returnTo: currentListUrl }}
-                              className="mono trace-row-link"
-                              onClick={(event) => event.stopPropagation()}
-                            >
-                              {trace.messageId.slice(0, 12)}...
-                            </Link>
-                            {trace.execution === "pending" && (
-                              <span className="trace-live-state">
-                                <span className="live-dot" title="In progress" /> Live
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="trace-result-heading">
+            {data && (
+              <>
+                <div className="trace-table-desktop" data-testid="trace-table-desktop">
+                  <table className="table trace-results-table">
+                    <thead>
+                      <tr>
+                        <th>Message</th>
+                        <th>Route</th>
+                        <th>Status</th>
+                        <th>Scenario</th>
+                        <th>Timeline</th>
+                        <th>Sent</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.traces.map((trace) => (
+                        <tr
+                          key={trace.messageId}
+                          className="trace-row"
+                          onClick={() => openTrace(trace)}
+                          style={{ cursor: "pointer" }}
+                        >
+                          <td>
+                            <div className="trace-result-heading">
+                              <Link
+                                to={`/traces/${trace.messageId}`}
+                                state={{ returnTo: currentListUrl }}
+                                className="mono trace-row-link"
+                                onClick={(event) => event.stopPropagation()}
+                              >
+                                {trace.messageId.slice(0, 12)}...
+                              </Link>
+                              {trace.execution === "pending" && (
+                                <span className="trace-live-state">
+                                  <span className="live-dot" title="In progress" /> Live
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td>
+                            <div className="trace-result-heading">
+                              {trace.source.name} → {trace.destination.name}
+                            </div>
+                            <div className="trace-result-subline mono">
+                              {trace.source.blockchainId.slice(0, 10)}... →{" "}
+                              {trace.destination.blockchainId.slice(0, 10)}...
+                            </div>
+                          </td>
+                          <td>
+                            <StatusBadge status={trace.execution} />
+                          </td>
+                          <td>{trace.scenario}</td>
+                          <td>
+                            <div className="trace-result-heading">{trace.events.length} events</div>
+                            <div className="trace-result-subline">
+                              Latency {getTraceLatencyLabel(trace)}
+                            </div>
+                          </td>
+                          <td>{fmt(trace.timestamps.sendTime)}</td>
+                        </tr>
+                      ))}
+                      {data.traces.length === 0 && (
+                        <tr>
+                          <td colSpan={6}>
+                            <EmptyTraceState onClear={clearAllFilters} />
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="trace-cards-mobile" data-testid="trace-cards-mobile">
+                  {data.traces.map((trace) => (
+                    <article
+                      key={trace.messageId}
+                      className="trace-card"
+                      onClick={() => openTrace(trace)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          openTrace(trace);
+                        }
+                      }}
+                    >
+                      <div className="trace-card-top">
+                        <div className="trace-card-heading">
+                          <Link
+                            to={`/traces/${trace.messageId}`}
+                            state={{ returnTo: currentListUrl }}
+                            className="mono trace-row-link"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            {trace.messageId.slice(0, 16)}...
+                          </Link>
+                          <div className="trace-card-route">
                             {trace.source.name} → {trace.destination.name}
                           </div>
-                          <div className="trace-result-subline mono">
-                            {trace.source.blockchainId.slice(0, 10)}... →{" "}
-                            {trace.destination.blockchainId.slice(0, 10)}...
-                          </div>
-                        </td>
-                        <td>
-                          <StatusBadge status={trace.execution} />
-                        </td>
-                        <td>{trace.scenario}</td>
-                        <td>
-                          <div className="trace-result-heading">{trace.events.length} events</div>
-                          <div className="trace-result-subline">
-                            Latency {getTraceLatencyLabel(trace)}
-                          </div>
-                        </td>
-                        <td>{fmt(trace.timestamps.sendTime)}</td>
-                      </tr>
-                    ))}
-                    {data.traces.length === 0 && (
-                      <tr>
-                        <td colSpan={6}>
-                          <EmptyTraceState onClear={clearAllFilters} />
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="trace-cards-mobile" data-testid="trace-cards-mobile">
-                {data.traces.map((trace) => (
-                  <article
-                    key={trace.messageId}
-                    className="trace-card"
-                    onClick={() => openTrace(trace)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        openTrace(trace);
-                      }
-                    }}
-                  >
-                    <div className="trace-card-top">
-                      <div className="trace-card-heading">
-                        <Link
-                          to={`/traces/${trace.messageId}`}
-                          state={{ returnTo: currentListUrl }}
-                          className="mono trace-row-link"
-                          onClick={(event) => event.stopPropagation()}
-                        >
-                          {trace.messageId.slice(0, 16)}...
-                        </Link>
-                        <div className="trace-card-route">
-                          {trace.source.name} → {trace.destination.name}
                         </div>
+                        <StatusBadge status={trace.execution} />
                       </div>
-                      <StatusBadge status={trace.execution} />
-                    </div>
 
-                    <div className="trace-card-grid">
-                      <span>Scenario</span>
-                      <span>{trace.scenario}</span>
-                      <span>Timeline</span>
-                      <span>
-                        {trace.events.length} events · {getTraceLatencyLabel(trace)}
-                      </span>
-                      <span>Sent</span>
-                      <span>{fmt(trace.timestamps.sendTime)}</span>
-                    </div>
-
-                    {trace.execution === "pending" && (
-                      <div className="trace-live-state">
-                        <span className="live-dot" title="In progress" /> Live trace
+                      <div className="trace-card-grid">
+                        <span>Scenario</span>
+                        <span>{trace.scenario}</span>
+                        <span>Timeline</span>
+                        <span>
+                          {trace.events.length} events · {getTraceLatencyLabel(trace)}
+                        </span>
+                        <span>Sent</span>
+                        <span>{fmt(trace.timestamps.sendTime)}</span>
                       </div>
-                    )}
-                  </article>
-                ))}
 
-                {data.traces.length === 0 && <EmptyTraceState onClear={clearAllFilters} />}
-              </div>
+                      {trace.execution === "pending" && (
+                        <div className="trace-live-state">
+                          <span className="live-dot" title="In progress" /> Live trace
+                        </div>
+                      )}
+                    </article>
+                  ))}
 
-              <Pagination
-                page={committedQuery.page}
-                totalPages={totalPages}
-                onGoToPage={goToPage}
-              />
-            </>
-          )}
-        </section>
-      </div>
+                  {data.traces.length === 0 && <EmptyTraceState onClear={clearAllFilters} />}
+                </div>
+
+                <Pagination
+                  page={committedQuery.page}
+                  totalPages={totalPages}
+                  onGoToPage={goToPage}
+                />
+              </>
+            )}
+          </div>
+        </div>
+      </section>
 
       {isMobile && isFilterDrawerOpen && (
         <div className="trace-filter-drawer-shell">
@@ -653,65 +665,55 @@ function TraceFilterForm({
         </div>
       )}
 
-      <label className="trace-workspace-filter-field">
-        <span>Scenario</span>
-        <select
-          aria-label="Scenario filter"
+      <div className="trace-workspace-filter-grid">
+        <TraceSelectField
+          label="Scenario"
+          ariaLabel="Scenario filter"
           value={draftFilters.scenario}
-          onChange={(event) => onUpdateDraft("scenario", event.target.value)}
-        >
-          <option value="">All scenarios</option>
-          {scenarioNames.map((scenarioName) => (
-            <option key={scenarioName} value={scenarioName}>
-              {scenarioName}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <label className="trace-workspace-filter-field">
-        <span>Source chain</span>
-        <select
-          aria-label="Source chain filter"
-          value={draftFilters.sourceBlockchainId}
-          onChange={(event) => onUpdateDraft("sourceBlockchainId", event.target.value)}
-        >
-          <option value="">Any source</option>
-          {chainOptions.map((option) => (
-            <option key={option.id} value={option.id}>
-              {option.name}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <label className="trace-workspace-filter-field">
-        <span>Destination chain</span>
-        <select
-          aria-label="Destination chain filter"
-          value={draftFilters.destinationBlockchainId}
-          onChange={(event) => onUpdateDraft("destinationBlockchainId", event.target.value)}
-        >
-          <option value="">Any destination</option>
-          {chainOptions.map((option) => (
-            <option key={option.id} value={option.id}>
-              {option.name}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <label className="trace-workspace-filter-field">
-        <span>Message ID</span>
-        <input
-          aria-label="Message ID filter"
-          type="text"
-          placeholder="Prefix match"
-          value={draftFilters.messageId}
-          onChange={(event) => onUpdateDraft("messageId", event.target.value)}
-          className="input"
+          onChange={(value) => onUpdateDraft("scenario", value)}
+          emptyLabel="All scenarios"
+          options={scenarioNames.map((scenarioName) => ({
+            label: scenarioName,
+            value: scenarioName,
+          }))}
         />
-      </label>
+
+        <TraceSelectField
+          label="Source chain"
+          ariaLabel="Source chain filter"
+          value={draftFilters.sourceBlockchainId}
+          onChange={(value) => onUpdateDraft("sourceBlockchainId", value)}
+          emptyLabel="Any source"
+          options={chainOptions.map((option) => ({
+            label: option.name,
+            value: option.id,
+          }))}
+        />
+
+        <TraceSelectField
+          label="Destination chain"
+          ariaLabel="Destination chain filter"
+          value={draftFilters.destinationBlockchainId}
+          onChange={(value) => onUpdateDraft("destinationBlockchainId", value)}
+          emptyLabel="Any destination"
+          options={chainOptions.map((option) => ({
+            label: option.name,
+            value: option.id,
+          }))}
+        />
+
+        <label className="trace-workspace-filter-field">
+          <span>Message ID</span>
+          <input
+            aria-label="Message ID filter"
+            type="text"
+            placeholder="Prefix match"
+            value={draftFilters.messageId}
+            onChange={(event) => onUpdateDraft("messageId", event.target.value)}
+            className="trace-workspace-control input"
+          />
+        </label>
+      </div>
 
       <div className="trace-workspace-filter-actions">
         <button type="button" className="btn" onClick={onResetDraft}>
@@ -722,6 +724,42 @@ function TraceFilterForm({
         </button>
       </div>
     </form>
+  );
+}
+
+function TraceSelectField({
+  label,
+  ariaLabel,
+  value,
+  onChange,
+  emptyLabel,
+  options,
+}: {
+  label: string;
+  ariaLabel: string;
+  value: string;
+  onChange: (value: string) => void;
+  emptyLabel: string;
+  options: Array<{ label: string; value: string }>;
+}) {
+  return (
+    <label className="trace-workspace-filter-field">
+      <span>{label}</span>
+      <span className="trace-workspace-select">
+        <select
+          aria-label={ariaLabel}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        >
+          <option value="">{emptyLabel}</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </span>
+    </label>
   );
 }
 
